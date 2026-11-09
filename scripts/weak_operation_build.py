@@ -4,8 +4,12 @@ import hashlib
 from weak_operation_source import once
 
 
-def build(args, folder, fixtures, emitted, run, env, language, level, variant, clock):
+def build(args, folder, fixtures, emitted, run, env, language, level, variant, mode, clock):
     assert language in ('c', 'rs', 'swift', 'fwp') and level in (1, 2)
+    assert mode in ('phases', 'profiles')
+    assert (clock is None) == (mode == 'profiles')
+    assert mode != 'profiles' or (language != 'fwp' and variant == 'ordinary')
+    caller_name = 'weak_operation_time' if mode == 'phases' else 'weak_operation_storage'
     assert variant in ('ordinary', 'wrong-lookup', 'backward-clock', 'release-observed', 'omit-owner', 'omit-weak')
     diagnostic = variant in ('release-observed', 'omit-owner', 'omit-weak')
     assert not diagnostic or language in ('c', 'fwp')
@@ -22,7 +26,7 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, c
                 source = once(source, '    if (!acquired) return 0;', '    if (!acquired) return 1;')
                 source = once(source, '    return 1;', '    return 0;')
         factory.write_text(source)
-        source = (fixtures / 'weak_operation_time.c').read_text()
+        source = (fixtures / (caller_name + '.c')).read_text()
         if variant == 'omit-owner':
             source = once(source, '        for (int64_t i = 0; i < population; i++) reference_release_owner(owners[i]);', '')
         elif variant == 'omit-weak':
@@ -32,14 +36,17 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, c
         flags = ['-std=gnu11', '-O' + str(level), '-ffp-contract=off', '-fno-lto', '-march=' + args.c_arch, '-fstack-usage',
                  '-I', fixtures, '-DREFERENCE_FWP=' + str(int(language == 'fwp')),
                  '-DREFERENCE_DIAGNOSTIC=' + str(int(diagnostic))]
+        if mode == 'profiles':
+            flags += ['-g']
         warnings = ['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']
         run([args.cc, *flags, *warnings, '-c', factory, '-o', part / 'factory.o'], (0, '', ''), env)
         run([args.cc, *flags, '-Wall', '-Wextra', '-Werror', '-c', caller, '-o', part / 'caller.o'], (0, '', ''), env)
-        link = [args.cc, '-fno-lto', part / 'factory.o', part / 'caller.o', clock, '-lm', '-lpthread', '-ldl', '-o', binary]
+        link = [args.cc, '-fno-lto', part / 'factory.o', part / 'caller.o',
+                *([] if clock is None else [clock]), '-lm', '-lpthread', '-ldl', '-o', binary]
         run(link, (0, '', ''), env)
     elif language == 'rs':
         flags = ['--edition=2021', '-C', 'opt-level=' + str(level), '-C', 'overflow-checks=yes', '-C', 'lto=off',
-                 '-C', 'embed-bitcode=no', '-C', 'codegen-units=16', '-C', 'debuginfo=0', '-C', 'panic=unwind',
+                 '-C', 'embed-bitcode=no', '-C', 'codegen-units=16', '-C', 'debuginfo=' + ('2' if mode == 'profiles' else '0'), '-C', 'panic=unwind',
                  '-C', 'target-cpu=' + args.rust_cpu, '--target', args.target, '-D', 'warnings']
         source = (fixtures / 'weak_operation_peer.rs').read_text()
         if variant == 'wrong-lookup':
@@ -48,13 +55,18 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, c
         factory.write_text(source)
         library = part / 'libweak_operation.rlib'
         run([args.rustc, *flags, '--crate-name', 'weak_operation', '--crate-type', 'rlib', factory, '-o', library], (0, '', ''), env)
-        run([args.ar, 'crs', part / 'libreference_clock.a', clock], (0, '', ''), env)
-        link = [args.rustc, *flags, fixtures / 'weak_operation_time.rs', '--extern', f'weak_operation={library}',
-                '-L', 'native=' + str(part), '-l', 'static=reference_clock', '-o', binary]
+        native_clock = []
+        if clock is not None:
+            run([args.ar, 'crs', part / 'libreference_clock.a', clock], (0, '', ''), env)
+            native_clock = ['-L', 'native=' + str(part), '-l', 'static=reference_clock']
+        link = [args.rustc, *flags, fixtures / (caller_name + '.rs'), '--extern', f'weak_operation={library}',
+                *native_clock, '-o', binary]
         run(link, (0, '', ''), env)
     else:
         flags = ['-swift-version', '6', '-target', args.target, '-warnings-as-errors',
                  *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization'])]
+        if mode == 'profiles':
+            flags += ['-g']
         source = (fixtures / 'weak_operation_peer.swift').read_text()
         if variant == 'wrong-lookup':
             source = once(source, 'else { return false }', 'else { return true }')
@@ -63,12 +75,14 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, c
         factory.write_text(source)
         run([args.swiftc, *flags, '-parse-as-library', '-module-name', 'WeakOperation', '-emit-module',
              '-emit-module-path', part / 'WeakOperation.swiftmodule', '-emit-object', factory, '-o', part / 'factory.o'], (0, '', ''), env)
-        link = [args.swiftc, *flags, '-I', part, '-import-objc-header', fixtures / 'callable_phase_clock.h',
-                fixtures / 'weak_operation_time.swift', part / 'factory.o', clock, '-o', binary]
+        link = [args.swiftc, *flags, '-I', part,
+                *([] if clock is None else ['-import-objc-header', fixtures / 'callable_phase_clock.h']),
+                fixtures / (caller_name + '.swift'), part / 'factory.o',
+                *([] if clock is None else [clock]), '-o', binary]
         run(link, (0, '', ''), env)
     image = binary.read_bytes()
     assert image[:6] == b'\x7fELF\x02\x01'
     assert int.from_bytes(image[18:20], 'little') == {'aarch64': 183, 'x86_64': 62}[args.arch]
-    metadata = dict(language=language, level=level, variant=variant, imageBytes=len(image),
+    metadata = dict(language=language, level=level, variant=variant, mode=mode, imageBytes=len(image),
                     binarySha256=hashlib.sha256(image).hexdigest(), link=list(map(str, link)))
     return binary, metadata

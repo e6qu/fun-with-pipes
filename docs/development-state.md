@@ -61,6 +61,13 @@ totals. It also explicitly matches the production C driver's `-ffp-contract=off`
 setting. The six-phase workloads use integer operations. Both changes are covered
 by the consolidated verification; no passing result is claimed yet.
 
+Prepared next in the same PR: [native weak storage](measurements/weak-operation-storage.md).
+The collector uses the existing C/Rust/Swift operation modules, four explicit
+lifetime prefixes, actual omitted owners and raw-stack reconstruction. Expected:
+three binaries, 24 ordinary results and 48 profiles per host. Native execution is
+pending. Keep the currently queued source unchanged; this addition does not
+establish a new timing, storage or ARC result.
+
 The queue has no explanatory annotations or assigned runners. These workflows
 have no concurrency lock or environment approval. A separate older 146-job
 workflow occupied runners during review and has since ended; that does not
@@ -100,11 +107,25 @@ fails. Its original invalid workflow expression and all 27 passing status/input
 controls remain in that receipt. Docs `42606196247` passes 410 link sets and 106
 preparation pairs after restoring the handoff's required Status column.
 
-About 12 GiB is free, below the required 64 GiB. Keep tests/builds/profiles on
-GitHub; do not bypass the guard. Active target data is empty. Inspected caches
-cannot restore the reserve. Use bounded report reads and runner-side large
-archive audits. Ownership and parser jobs use reusable workflows; keep the
-numerical dispatcher below GitHub's 512,000-byte limit.
+Free space recovered to about 145 GiB. Full builds/profiles remain on GitHub.
+Focused local checks use `python3 scripts/local-guard.py` with unchanged limits:
+
+- `python3 scripts/test-parser-process-memory.py`: eight pass; the actual Linux
+  `/proc` checkpoint test is explicitly Linux-only. The first local run exposed
+  its missing platform declaration; a portable timeout/reaping test now also
+  passes. Linux CI must still execute the real checkpoint test.
+- `python3 scripts/test-weak-operation-phases.py`: three pass.
+- `python3 scripts/test-weak-operation-profiles.py`: four pass.
+- Python syntax compilation of the new collector, storage reader, tests and
+  updated build/caller modules: pass. These are not native compiler checks.
+- `python3 scripts/check-roadmap.py`: 412 document link sets, 106 immutable
+  preparation pairs and all five roadmap steps pass; commit messages pass.
+
+The first sandboxed guard invocation could not inspect `ps`; the same guard
+passed with process-monitoring access. No resource limit was raised or bypassed.
+Keep bounded report reads and runner-side large archive audits. Ownership and
+parser jobs use reusable workflows; keep the numerical dispatcher below
+GitHub's 512,000-byte limit.
 
 The user merged #272 as `32d643d0a3e29c25a55d9b05c5492c0ab73e7c20`. Its tree equals
 tested `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`; its one-line message follows the

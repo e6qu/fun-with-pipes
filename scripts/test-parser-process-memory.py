@@ -70,6 +70,10 @@ class MappingReader(unittest.TestCase):
     def test_premature_exit_is_not_a_snapshot(self):
         self.check_child('sys.exit(7)\n', ValueError)
 
+    def test_missing_first_checkpoint_times_out_and_reaps_child(self):
+        self.check_child('time.sleep(10)\n', TimeoutError)
+
+    @unittest.skipUnless(sys.platform == 'linux', 'actual stopped-process snapshots require Linux /proc')
     def test_missing_next_checkpoint_times_out_and_reaps_child(self):
         self.check_child('os.write(1, b"0\\n")\nos.kill(os.getpid(), signal.SIGSTOP)\nos.read(0, 1)\ntime.sleep(10)\n', TimeoutError)
 

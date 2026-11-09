@@ -130,7 +130,7 @@ def main():
                 group = f'{language} O{level} {variant}'
                 try:
                     binary, metadata = build(args, folder, fixtures, emitted, run, environment, language, level,
-                                             variant, backward if variant == 'backward-clock' else clock)
+                                             variant, 'phases', backward if variant == 'backward-clock' else clock)
                     report['builds'].append(metadata)
                 except Exception as error:
                     failure('build ' + group, error)

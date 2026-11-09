@@ -76,7 +76,10 @@ On each native Linux ARM64/AMD64 host:
 The expected batch has 36 separate-module builds, 252 native checks and two
 interpreter checks. Native Rust/Swift allocation release still needs the verified
 allocator observer; a successful expired lookup test proves no such byte count.
-ARC-operation counts remain unmeasured.
+ARC-operation counts remain unmeasured. The separate
+[native storage preparation](weak-operation-storage.md) uses the same operation
+modules and explicit lifetime prefixes to distinguish target release from
+backing-storage release. It is not yet a verified storage result.
 
 ## Before timing
 

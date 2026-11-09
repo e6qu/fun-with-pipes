@@ -25,7 +25,9 @@ copy controls fail. [Full platform delivery passes](structured-callback-delivery
 
 [Parser process memory](parser-process-memory.md) and
 [weak-reference phases](weak-operation-phases.md) are prepared and queued for
-native verification. They claim no new memory or timing result.
+native verification. The [native weak-storage collector](weak-operation-storage.md)
+is also prepared, separating target release from the storage retained by weak
+references. These preparations claim no new memory or timing result.
 
 ## Latest deliveries
 

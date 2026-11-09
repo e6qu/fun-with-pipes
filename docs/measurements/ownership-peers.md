@@ -150,8 +150,10 @@ register a listener, call it while its owner exists, remove that owner, then ver
 that a later lookup reports expiration instead of using freed storage.
 
 The [operation-phase preparation](weak-operation-phases.md) defines six actual
-phase boundaries, native representations and the required fault controls. It is
-not yet verified and claims no new timing result.
+phase boundaries, native representations and the required fault controls.
+[Native storage preparation](weak-operation-storage.md) follows the same targets
+through strong-owner and weak-owner release. Neither is verified yet; no new
+timing or storage result is claimed.
 
 Compare two scopes separately:
 
