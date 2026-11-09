@@ -99,12 +99,18 @@ rebuilt-compiler or GCC pass. Native source `54b818abc` is frozen as
 parent comparison's result-cell attribution requirement without changing the
 queued timing source or claiming native backing bytes/ARC counts.
 
-[The callback-service specification](measurements/weak-callback-service.md) now
-fixes two queue sizes, 16-integer payloads, four success/cancellation/expiration/
-handled-error cases and independent receiving counts/checksums. Implement its
-ordinary fwp/C/Rust/Swift programs and missing-delivery/release controls next;
-freeze final repetitions only after those checks pass. It is not yet code or a
-measured service-throughput result.
+[The callback service](measurements/weak-callback-service.md) now has ordinary
+fwp/C/Rust/Swift programs for two queue sizes, 16-integer payloads and four
+success/cancellation/expiration/handled-error cases. Missing-delivery variants
+must fail the independent receiver oracle; C also rejects actual omitted payload
+and registration releases. Guarded Apple Clang/Rust/Swift O2 checks pass for all
+eight native variants. A needless Foundation import exposed a local SDK mismatch;
+using the platform C module removes that dependency and both Swift variants pass.
+The SDK itself was not modified. Three reader tests pass. Production GCC/fwp,
+raw/optimized interpretation and Swift's two production levels are prepared in
+the `weak-callback-service` workflow suite, not yet verified. Full Swift/fwp
+physical-release and all-peer allocation observers, then frozen timing collection,
+remain required; these checks are not a service-throughput result.
 
 ## Other evidence and unresolved measurements
 

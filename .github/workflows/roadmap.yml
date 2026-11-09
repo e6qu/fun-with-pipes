@@ -39,6 +39,7 @@ jobs:
           python3 scripts/test-weak-operation-profiles.py
           python3 scripts/test-weak-operation-reuse.py
           python3 scripts/test-weak-operation-census.py
+          python3 scripts/test-weak-callback-service.py
       - name: Retained scalar Swift closure allocation reports
         run: |
           python3 scripts/test-swift-closure-records.py

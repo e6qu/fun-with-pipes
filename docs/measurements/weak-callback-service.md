@@ -1,6 +1,6 @@
-# Callback service: next comparison
+# Callback service comparison
 
-**Not implemented or measured yet.** This is the remaining application-shaped
+**Correctness fixtures prepared; native runner verification and measurements remain open.** This is the application-shaped
 part of the [weak-registration comparison](ownership-peers.md#weak-registrations).
 [Reference-operation timings](weak-operation-time.md) exclude queue handling and
 callbacks; their results must not be presented as service throughput.
@@ -50,10 +50,48 @@ identical internal algorithms.
 
 The existing lifetime controls remain prerequisites: acquired ownership across
 callbacks/reentry, outside-owner release during a callback, cancellation and
-error cleanup. Add real missing-delivery and omitted-payload/registration-release
-controls for this program. Verify raw/optimized fwp interpretation and native
+error cleanup. The new programs contain real missing-delivery controls for all
+four languages and omitted-payload/registration-release controls for C.
+Verify raw/optimized fwp interpretation and native
 O1/O2 behavior, ordinary errors and cleanup before timing. Use separate observers
 for allocations/live storage and ordinary execution for timing.
+
+## Prepared checks
+
+[`weak_callback_service.fwp`](../../tests/fixtures/weak_callback_service.fwp),
+[C](../../tests/fixtures/weak_callback_service.c),
+[Rust](../../tests/fixtures/weak_callback_service.rs) and
+[Swift](../../tests/fixtures/weak_callback_service.swift) each report all eight
+size/case combinations. For 64 messages, success delivers 64 payloads totaling
+39,936; cancellation delivers 48; the handled-error case delivers 33 totaling
+12,408. Expiration delivers none. The receiver reads the stored arrays, rather
+than accepting the callback's checksum as its own result.
+
+- [The runner](../../scripts/check-weak-callback-service.py) builds C/Rust/fwp
+  at O1/O2 and Swift at `-Onone`/`-O -whole-module-optimization`.
+- Each language also builds a real missing-enqueue variant. It must preserve
+  callback counts while producing zero received messages and fail the ordinary
+  oracle. C variants actually omit payload or registration release and must
+  fail its live-allocation counters.
+- fwp also runs ordinary/missing-delivery programs through raw and optimized
+  interpretation. No new Cargo test target is introduced.
+- The C fixture counts actual allocation/free calls. Rust checks that no other
+  strong/weak registrations survive dispatch. Neither result establishes native
+  allocator peak bytes or complete Swift/fwp physical release; those observers
+  remain required before timing acceptance.
+
+Local guarded O2 checks pass for Apple Clang, Rust and Swift, including every
+native fault variant. These do not verify Linux GCC or the rebuilt fwp compiler.
+The initial Swift Foundation import hit an installed SDK mismatch; the fixture
+uses only the standard library and platform C module now, and both local Swift
+variants pass. No SDK installation or resource limit was changed.
+
+The pending collections differ: C uses a contiguous array of explicit owners,
+Rust consumes a `Vec`, Swift clears consumed optional entries, and fwp folds a
+list until error. C/Rust/Swift receiving queues use ordinary contiguous storage;
+fwp sends through its runtime channel. Preserve these differences in cost reports.
+The current C allocation counters make this a correctness build, not the final
+ordinary timing executable.
 
 ## Collection, after correctness
 
