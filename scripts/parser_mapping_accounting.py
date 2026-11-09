@@ -2,7 +2,7 @@
 import hashlib
 import json
 
-from parser_process_memory import CONTROL_NAME, accounting, mappings, validate_mapping_control
+from parser_process_memory import CONTROL_NAME, accounting, check_kernel_accounting, mappings, validate_mapping_control
 
 
 def check_accounting(result, folder, reservation):
@@ -16,12 +16,11 @@ def check_accounting(result, folder, reservation):
         policy_path = folder / snapshot['kernelAccountingFile']
         assert hashlib.sha256(policy_path.read_bytes()).hexdigest() == snapshot['kernelAccountingSha256']
         policy = json.loads(policy_path.read_text())
-        assert policy['kernel'] and set(policy['system']) == {'CommitLimitKiB', 'Committed_ASKiB'}
-        assert all(type(value) is int and value >= 0 for value in policy['system'].values())
-        policies.append(policy['policy'])
+        check_kernel_accounting(policy)
+        policies.append((policy['kernel'], policy['policy']))
         rows.append([row for row in memory if row['name'] == CONTROL_NAME])
     assert all(policy == policies[0] for policy in policies), 'host changed overcommit policy during observation'
-    mode = policies[0]['overcommit_memory']
+    mode = policies[0][1]['overcommit_memory']
     assert mode in (0, 1, 2)
     no_reserve = reservation == 'no-reserve' and mode != 2
     for phase in (1, 2, 3):

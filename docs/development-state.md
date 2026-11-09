@@ -1,15 +1,14 @@
 # Current work
 
-**Next:** run the prepared four-language service timing batch, including its
-freshly generated fwp entry checks, then connect the verified parser memory
-observers to actual parser allocations/checkpoints. Follow the
+**Next:** finish the service timing and parser accounting runner batches, then
+connect verified allocator events to actual parser allocations. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
 incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; latest implementation source `19ee8ee9b`, tag
-`roadmap/weak-service-audit-repair-2026-11-09`. PR branch:
+`ownership-buffer-review`; service timing source `0fa6d394b`, tag
+`roadmap/weak-callback-time-2026-11-09`. PR branch:
 `ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
 Integrate the complete preparation batch into this PR before final production
 verification. Preserve unrelated root-worktree changes and inactive handoffs.
@@ -29,6 +28,11 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 
 ## Current verified results and failures
 
+- **Service timing:** source `0fa6d394b`, run `42672736829`; docs `42672743140`.
+  Attempt 1 of both failed before creating jobs with GitHub internal server
+  errors (`27d9f1a8-da4c-4db1-968e-dffff64b5229` and
+  `836e820e-5b51-437a-8447-c0aa52e6909d`). Exact-source attempt 2 was requested;
+  no measurement from attempt 1 exists. No timing conclusion yet.
 - **Service native profiles:** source `c0ac432fc`, run `42664664795`, AMD64
   `129325013027`, ARM64 `129325013096`: 16 diagnostic builds and 80 profiles per
   host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
@@ -76,7 +80,7 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
 
 ## Prepared work and delivery checks
 
-- Service timing implementation is prepared: 28 O1/O2 or Onone/O native builds,
+- Service timing implementation is published: 28 O1/O2 or Onone/O native builds,
   178 result/fault checks, 64 invalid arguments and two interpreter modes gate
   collection. A C-only pilot fixes each work count before two balanced sessions;
   both service and process clocks retain separate 2% copy controls. The collector
@@ -88,6 +92,10 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   the clock for 14 repairs it. Only affected Swift builds were repeated. Four
   timing-reader tests and two descriptor-boundary tests pass. No local fwp build
   or benchmark was run.
+- Parser accounting validation now rejects invalid kernel/system records and
+  policy changes during a process. Seven archive corruptions include policies
+  whose hashes and journals were updated consistently. Local reader checks pass
+  10 tests; the Linux stopped-child check remains runner-only.
 - Parser: connect verified allocator events to actual C/Rust/fwp allocations,
   cover mapped/retry paths, avoid double-counting resize overlap, and apply mapping
   accounting to actual checkpoints. Calibration alone is not a parser peak.

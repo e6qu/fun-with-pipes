@@ -73,6 +73,17 @@ def accounting(rows):
                 noReserveMappingKiB=sum(row['fields']['Size'] for row in rows if 'nr' in row['flags']))
 
 
+def check_kernel_accounting(record):
+    """Reject invalid policy/system counters before interpreting mapping flags."""
+    assert isinstance(record, dict) and isinstance(record['kernel'], str) and record['kernel']
+    policy, system = record['policy'], record['system']
+    assert set(policy) == {'overcommit_memory', 'overcommit_ratio', 'overcommit_kbytes'}
+    assert all(type(value) is int and value >= 0 for value in policy.values())
+    assert policy['overcommit_memory'] in (0, 1, 2), 'invalid overcommit mode'
+    assert set(system) == {'CommitLimitKiB', 'Committed_ASKiB'}
+    assert all(type(value) is int and value >= 0 for value in system.values())
+
+
 def kernel_accounting():
     fields = {}
     for line in Path('/proc/meminfo').read_text().splitlines():
@@ -88,8 +99,10 @@ def kernel_accounting():
               for key in ('overcommit_memory', 'overcommit_ratio', 'overcommit_kbytes')}
     if policy['overcommit_memory'] not in (0, 1, 2):
         raise ValueError('unknown overcommit policy')
-    return dict(kernel=platform.release(), policy=policy, system=fields,
-                scope='System-wide commit quantities; not a per-process reservation or guaranteed RAM')
+    record = dict(kernel=platform.release(), policy=policy, system=fields,
+                  scope='System-wide commit quantities; not a per-process reservation or guaranteed RAM')
+    check_kernel_accounting(record)
+    return record
 
 
 def read_exact(stream, count, deadline):

@@ -66,7 +66,9 @@ jobs:
           cargo build --locked --offline --bin fwp 2>&1 | tee parser-memory-setup/build.log
       - name: Mapping reader and child cleanup controls
         id: reader
-        run: python3 scripts/test-parser-process-memory.py
+        run: |
+          python3 scripts/test-parser-process-memory.py
+          python3 scripts/test-parser-mapping-accounting.py
       - name: Native parser owned entries, aliases and failure cleanup
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         shell: bash

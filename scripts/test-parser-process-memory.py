@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from parser_process_memory import accounting, checkpoint_process, mappings, summary
+from parser_process_memory import accounting, check_kernel_accounting, checkpoint_process, mappings, summary
 
 SPEC = importlib.util.spec_from_file_location('parser_memory_collector', Path(__file__).with_name('measure-parser-process-memory.py'))
 COLLECTOR = importlib.util.module_from_spec(SPEC)
@@ -36,6 +36,19 @@ VmFlags: mr mw me sd
 
 
 class MappingReader(unittest.TestCase):
+    def test_kernel_policy_and_system_quantities(self):
+        record = dict(kernel='test', policy=dict(overcommit_memory=0, overcommit_ratio=50,
+            overcommit_kbytes=0), system=dict(CommitLimitKiB=1000, Committed_ASKiB=2000))
+        # System commitments may exceed the limit in the host's existing policy.
+        check_kernel_accounting(record)
+        for key, value in (('overcommit_memory', 9), ('overcommit_memory', True),
+                           ('overcommit_ratio', -1), ('overcommit_kbytes', '0')):
+            with self.subTest(key=key, value=value), self.assertRaises(AssertionError):
+                check_kernel_accounting(record | {'policy': record['policy'] | {key: value}})
+        for value in (-1, False, 1.5, '1000'):
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                check_kernel_accounting(record | {'system': record['system'] | {'CommitLimitKiB': value}})
+
     def test_reservation_is_not_residency(self):
         self.assertEqual(summary(mappings(SNAPSHOT)), dict(mappedKiB=12, residentKiB=4,
             proportionalKiB=4, privateKiB=4, anonymousKiB=4, swapKiB=0, noAccessKiB=8))

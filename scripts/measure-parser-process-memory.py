@@ -13,7 +13,7 @@ import subprocess
 import traceback
 
 from parser_memory_source import MEASURE, ROOT, fwp, native
-from parser_process_memory import accounting, checkpoint_process, mappings, summary, validate_mapping_control
+from parser_process_memory import accounting, check_kernel_accounting, checkpoint_process, mappings, summary, validate_mapping_control
 from process_wait import run_capture
 
 CASES = (('small', 5, False), ('medium', 9, False), ('large', 13, False), ('left', 64, True))
@@ -369,6 +369,7 @@ def audit(args):
             snapshots=row['snapshots'], failure=None, timeoutSeconds=90)
         assert (folder / 'stderr.txt').read_text() == row['stderr']
         assert [part['phase'] for part in row['snapshots']] == list(range(5))
+        policies = []
         for part in row['snapshots']:
             assert part['file'] == f'phase-{part["phase"]}.smaps'
             path = folder / part['file']
@@ -378,6 +379,10 @@ def audit(args):
             policy = folder / part['kernelAccountingFile']
             assert policy.name == f'phase-{part["phase"]}.accounting.json'
             assert digest(policy) == part['kernelAccountingSha256']
+            record = json.loads(policy.read_text())
+            check_kernel_accounting(record)
+            policies.append((record['kernel'], record['policy']))
+        assert all(policy == policies[0] for policy in policies), 'kernel or overcommit policy changed between checkpoints'
 
     for name, expected_error in CONTROLS:
         control = report['controls'][name]

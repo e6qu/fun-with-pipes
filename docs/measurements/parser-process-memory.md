@@ -1,9 +1,9 @@
-# Parser memory: next measurement
+# Parser process-memory measurements
 
-**Preparation only. No process-memory result is claimed.** The current
-[parser checks](ownership-peer-checks-2026-11-08/README.md#parser-storage)
-observe successful allocation API transitions. They cannot see temporary old/new
-storage inside the allocator's `realloc` implementation.
+**[Ordinary RSS and checkpoint observations pass on both Linux hosts](parser-entry-cleanup-2026-11-09/README.md).**
+The next capture adds kernel policy and accountable mapping extents to those
+checkpoints. Allocator-internal parser peaks remain open: successful allocation
+API transitions cannot see temporary old/new storage inside `realloc`.
 
 Keep the existing benchmark grammar and inputs: balanced trees of 31, 511 and
 8,191 nodes, plus the 127-node left-nested tree. This is a prefix-expression
@@ -27,7 +27,12 @@ no earlier compiler or custom replacement runtime is used.
 
 For stopped-process snapshots, record mapping size, resident pages, private
 clean/dirty pages, anonymous pages and swap separately. Preserve raw maps and
-all numeric fields used in summaries. Kernel documentation distinguishes
+all numeric fields used in summaries. Also record complete `VmFlags`, kernel
+version, overcommit settings and the separately sampled system commit counters.
+Sum `ac` and `nr` mapping extents separately, using the
+[verified accounting controls](parser-mapping-accounting-2026-11-09/README.md).
+Reject malformed policy records or policy changes during a checkpoint sequence.
+Kernel documentation distinguishes
 [mapping size from resident pages](https://www.kernel.org/doc/html/latest/filesystems/proc.html).
 A reserved address range is not physical memory. A GNU-time RSS result of zero
 is retained as an unresolved counter observation, never described as a process
@@ -98,8 +103,10 @@ units/maps, premature exit, wrong checkpoint order, timeout and child reaping.
 only at verified current-code boundaries. Source changes fail those checks rather
 than silently selecting a different function. The audit reconstructs prepared
 source and inputs, checks actual ELF architectures, and independently reads every
-raw mapping, result, process journal and build/RSS counter. Five actual evidence
-corruptions must be rejected even after their manifest hashes are updated.
+raw mapping, result, process journal and build/RSS counter. Seven actual evidence
+corruptions must be rejected even after their manifest hashes are updated. The
+invalid/changed-policy controls also update the snapshot journals consistently,
+so rejection requires checking the policy itself.
 
 [The native workflow](../../.github/workflows/parser-process-memory.yml) also
 preserves the allocation-transition, invalid-input, omitted-release and frame
