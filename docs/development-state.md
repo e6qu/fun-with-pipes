@@ -6,21 +6,21 @@ batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4
 incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; published source `3c214f136`, tag
-`roadmap/parser-accounting-controls-2026-11-09`. PR branch:
+`ownership-buffer-review`; latest implementation source `19ee8ee9b`, tag
+`roadmap/weak-service-audit-repair-2026-11-09`. PR branch:
 `ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
 Integrate the complete preparation batch into this PR before final production
 verification. Preserve unrelated root-worktree changes and inactive handoffs.
 
 ## Roadmap status
 
-| Step | Delivered | Remaining |
-|---|---|---|
-| 1 | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
-| 2 | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
-| 3 | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and memory controls | Service timing; parser internal peaks and applying accounting observations |
-| 5 | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
+| Step | Status | Delivered | Remaining |
+|---|---|---|---|
+| 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
+| 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
+| 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and memory controls | Service timing; parser internal peaks and applying accounting observations |
+| 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Retain original noisy/unmet timing results. Fewer operations or smaller images do
 not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
@@ -82,6 +82,9 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
 - Parser: connect verified allocator events to actual C/Rust/fwp allocations,
   cover mapped/retry paths, avoid double-counting resize overlap, and apply mapping
   accounting to actual checkpoints. Calibration alone is not a parser peak.
+- The handoff rewrite briefly removed the status column required by its checker;
+  the column is restored. The audit now passes 426 doc link sets, 106 immutable
+  preparation pairs and all five roadmap steps.
 - Local focused checks use `python3 scripts/local-guard.py` unchanged. Disk free
   space is about 142 GiB. Full builds, profiles and suites stay on GitHub.
 - Complete parser-control artifacts are under 128 KiB compressed each; all raw
