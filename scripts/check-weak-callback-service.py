@@ -98,7 +98,7 @@ def main():
                     if language != 'fwp':
                         caller = (ROOT / 'tests/fixtures' / ('weak_callback_service_check.' + language)).read_text()
                         binary, built = build_native(args, folder, language, code, variant, level,
-                                                     'diagnostic', False, caller, run, env)
+                                                     'diagnostic', False, None, caller, run, env)
                     else:
                         command = [args.compiler.resolve(), 'build', '--memory', 'dynamic', '-O' + str(level),
                                    path, '-o', binary]

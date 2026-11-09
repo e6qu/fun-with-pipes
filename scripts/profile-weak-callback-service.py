@@ -193,7 +193,7 @@ def collect(args):
         for variant, code in variants(language, source).items():
             for level in (1, 2):
                 try:
-                    binary, _ = build_native(args, folder, language, code, variant, level, 'diagnostic', False, caller, run, env)
+                    binary, _ = build_native(args, folder, language, code, variant, level, 'diagnostic', False, None, caller, run, env)
                     omitted = variant.startswith('omitted-')
                     row = run([binary], (79, '', 'service storage not released\n') if omitted else (0, None, ''), env)
                     if not omitted:
@@ -211,7 +211,7 @@ def collect(args):
                 continue
             label = language + '-' + variant
             try:
-                binary, linked = build_native(args, folder, language, source, variant, 2, 'plain', True, caller, run, env)
+                binary, linked = build_native(args, folder, language, source, variant, 2, 'plain', True, None, caller, run, env)
                 image = binary.read_bytes()
                 assert image[:6] == b'\x7fELF\x02\x01'
                 assert int.from_bytes(image[18:20], 'little') == {'aarch64': 183, 'x86_64': 62}[args.arch]

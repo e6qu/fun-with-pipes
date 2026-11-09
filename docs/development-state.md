@@ -1,6 +1,8 @@
 # Current work
 
-**Next:** publish and verify the service archive-audit repair, then implement the
+**Next:** run the prepared four-language service timing batch, including its
+freshly generated fwp entry checks, then connect the verified parser memory
+observers to actual parser allocations/checkpoints. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
 incomplete; do not merge an interim green head.
@@ -32,13 +34,12 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
   host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
   service storage is released; actual omitted payload/weak releases retain exactly
   the expected bytes. [Results and limits](measurements/weak-callback-profiles-2026-11-09/README.md).
-- **Service archive audit:** run `42666652513` / `129332006025` reconstructs both
-  complete archives, then fails because its diagnostic rule rejects heaptrack's
-  normal stderr statistics. The prepared repair parses the exact three-counter
-  block, checks allocation totals against raw stacks and rejects unexpected text.
-  Four reader tests and all 164 real status blocks pass locally. Re-run only this
-  audit, not the successful profiles. The repaired runner also preserves compact
-  raw journals/stacks. Original failure reports/logs are retained.
+- **Service archive audit:** repair `f3f023820`, run `42669442687` /
+  `129341760168`, passes: both archives reconstruct, all 954 command records and
+  164 heaptrack status blocks are checked. Docs `42669449481` / `129341771404`
+  passes. The audit now parses normal profiler stderr and rejects extra warnings;
+  it does not suppress diagnostics. Compact complete journals/stacks and the
+  original failed audit remain retained. No native profile was rerun.
 - **Allocator calibration:** source `3c214f136`, run `42666642464`, AMD64
   `129331964348`, ARM64 `129331964527`: four real resize controls pass with empty
   debugger stderr. Source-path/timestamp issues are repaired, not suppressed.
@@ -75,10 +76,18 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
 
 ## Prepared work and delivery checks
 
-- Service timing protocol separates service calls from process time. The prepared
-  fwp/C entry adapter derives result offsets from emitted descriptors, rejects
-  non-I64 fields, and includes ordinary tuple/result allocation and cleanup.
-  Reader tests pass; actual generated/native adapter verification remains pending.
+- Service timing implementation is prepared: 28 O1/O2 or Onone/O native builds,
+  178 result/fault checks, 64 invalid arguments and two interpreter modes gate
+  collection. A C-only pilot fixes each work count before two balanced sessions;
+  both service and process clocks retain separate 2% copy controls. The collector
+  also records RSS, build costs and native images; six changed-evidence controls
+  must fail. Linux execution of this new batch remains pending.
+- Guarded local C/Rust/Swift O2 callers pass 48 result cases and actual missing
+  delivery/backward-clock controls. The first Swift link found that the local
+  clock object targeted macOS 15 while Swift targeted 14; explicitly compiling
+  the clock for 14 repairs it. Only affected Swift builds were repeated. Four
+  timing-reader tests and two descriptor-boundary tests pass. No local fwp build
+  or benchmark was run.
 - Parser: connect verified allocator events to actual C/Rust/fwp allocations,
   cover mapped/retry paths, avoid double-counting resize overlap, and apply mapping
   accounting to actual checkpoints. Calibration alone is not a parser peak.

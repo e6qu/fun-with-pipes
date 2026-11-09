@@ -59,9 +59,15 @@ failed because its stricter diagnostic rule rejected heaptrack's normal stderr
 statistics. Both archives had already reconstructed. The repair parses the exact
 three-counter status block, checks allocation totals against retained stacks and
 still rejects added warnings or unexpected text. Four reader tests and all 164
-real status blocks pass locally; repaired runner verification is pending.
+real status blocks pass locally. Repair source `f3f023820` passes
+[run 42669442687 / job 129341760168](https://github.com/e6qu/fun-with-pipes/actions/runs/42669442687/job/129341760168),
+artifact `13697573842`: both archives reconstruct, all 954 command records are
+audited, and all 164 profiler status blocks match their raw allocation totals.
+[Documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/42669449481)
+also passes. No native profile was rerun.
 
 [files.json](files.json) preserves the original reports, complete native/docs logs
 and failed audit. Raw journals exceed the local download limit: the repaired audit
-processes them on GitHub and will retain compact journals/stack archives without
-rerunning the profiles or increasing local limits.
+processed them on GitHub and retained the compact journals and complete stack/text
+archives here. Their compressed hashes match the runner report; local limits were
+not increased.

@@ -38,6 +38,7 @@ jobs:
           python3 scripts/test-parser-allocator-observation.py
           python3 scripts/test-weak-callback-profiles.py
           python3 scripts/test-weak-callback-source.py
+          python3 scripts/test-weak-callback-timing.py
           python3 scripts/test-weak-operation-phases.py
           python3 scripts/test-weak-operation-timing.py
           python3 scripts/test-weak-operation-profiles.py

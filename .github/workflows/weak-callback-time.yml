@@ -1,0 +1,108 @@
+name: Queued callback service measurements
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Immutable timing tag for this exact source
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  service:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+    runs-on: ${{ matrix.runner }}
+    container: swift:6.4.2-noble
+    timeout-minutes: 120
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - name: Native compilers and measurement tools
+        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config time llvm
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        env:
+          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Exact native source and tag
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_TAG")" = "$GITHUB_SHA"
+          swiftc --version
+          cat /etc/os-release
+      - name: Build current fwp
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir weak-service-time-setup
+          cargo fetch --locked 2>&1 | tee weak-service-time-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee weak-service-time-setup/build.log
+      - name: Verify service outputs, ownership, clocks and measurement reader before pilot
+        run: |
+          python3 scripts/test-weak-callback-source.py
+          python3 scripts/test-weak-callback-timing.py
+          python3 scripts/check-measurement-clocks.py --cc gcc
+          python3 scripts/check-weak-callback-timing.py --cc gcc --rustc rustc --swiftc swiftc \
+            --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
+            --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-service-time-checks
+      - name: C-only pilot and two complete paired sessions
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/measure-weak-callback-service.py collect
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
+          --arch "${{ matrix.arch }}" --cc gcc --rustc rustc --swiftc swiftc
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
+          --objdump llvm-objdump --readelf readelf --output weak-service-time-evidence
+      - name: Reconstruct every result from raw observations
+        run: >-
+          python3 scripts/measure-weak-callback-service.py audit --input weak-service-time-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+      - name: Reject altered pilot, ordering, copies, timings and RSS
+        run: >-
+          python3 scripts/check-weak-callback-timing-audit.py --input weak-service-time-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output weak-service-time-audit-controls
+      - name: Retain completed and failed observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: weak-callback-time-${{ matrix.arch }}
+          path: |
+            weak-service-time-setup/
+            weak-service-time-checks/
+            weak-service-time-evidence/
+            weak-service-time-audit-controls/
+          if-no-files-found: error
