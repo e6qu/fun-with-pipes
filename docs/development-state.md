@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** verify the prepared parser allocator calibration on Linux ARM64/AMD64,
-then connect actual resize events to parser storage. Continue callback-service
-allocation observations and frozen timing collection in this same batch. Keep it in
+**Next:** verify native service allocation profiles and the parser debugger
+source-path repair, then connect resize events to parser storage. Continue service
+timing collection in this same batch. Keep it in
 [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is incomplete;
 do not merge an interim green head.
 
@@ -149,13 +149,23 @@ remain required; these checks are not a service-throughput result.
   memory remain unresolved; [the next observer steps](measurements/parser-internal-memory.md)
   require matching libc/source identity and actual path/accounting controls. These are not completed by endpoint snapshots.
 
-The [allocator calibration](measurements/parser-internal-memory.md) is prepared:
-ordinary in-place/moving/shrink/failed resize controls, installed libc/debug build
-IDs and matching source packages, actual internal allocation/free events via GDB.
-The control never reads freed blocks. Two reader tests, Python syntax and Clang C
-syntax checks pass; Linux/GDB verification is pending. It does not yet measure
-parser peaks, mapped/retry paths or committed memory. No fwp build is needed for
-this focused calibration.
+[Allocator event calibration](measurements/parser-allocator-calibration-2026-11-09/README.md)
+passes at `0f8c2669b`: run `42661050319`, AMD64 `129312418213`, ARM64
+`129312418586`, docs `42661056292` / `129312429448`. All four real resize
+controls and two reader tests pass; downloaded observations reconstruct exactly.
+Command-journal audit found five GDB missing-source display warnings per host.
+The prepared repair extracts the hashed allocator source, sets GDB's source
+search path and rejects stderr. Preserve the original warnings. Parser peaks,
+mapped/retry paths and committed memory remain unmeasured.
+
+The service now separates native modules from output formatting and selects
+plain/diagnostic observers explicitly. Guarded Apple Clang/Rust/Swift O2 checks
+pass for 11 ordinary/fault module builds and five profile-caller builds (40 case
+results, 30 invalid arguments). Three allocation-reader tests pass. The prepared
+native profile suite verifies 16 diagnostic O1/O2 or Onone/O builds, then 80
+allocation profiles, including actual C omitted-release controls. It does not
+rebuild fwp or repeat the unchanged physical-ownership regression. Linux profiles
+and new module boundaries remain unverified until the focused jobs pass.
 
 ## Delivery and local checks
 

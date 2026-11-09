@@ -1,6 +1,6 @@
 # Parser memory: remaining observer work
 
-**Allocator calibration prepared; native verification and parser observations remain open.** [Ordinary RSS and stopped-process mapping
+**[Allocator event calibration passes on both Linux hosts](parser-allocator-calibration-2026-11-09/README.md); source-display repair and parser observations remain open.** [Ordinary RSS and stopped-process mapping
 snapshots now pass](parser-entry-cleanup-2026-11-09/README.md). They leave two
 different questions open: temporary storage inside a resize, and the meaning of
 commit accounting for this process. Neither is answered by final vector capacity.

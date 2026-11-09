@@ -77,6 +77,9 @@ def main():
             member, = [member for member in archive.getmembers() if member.name.endswith('/malloc/malloc.c')]
             malloc_source = archive.extractfile(member).read()
         report['glibcSource'].update(mallocMember=member.name, mallocSha256=hashlib.sha256(malloc_source).hexdigest())
+        source_root = folder / 'glibc-source'
+        (source_root / 'malloc').mkdir(parents=True)
+        (source_root / 'malloc/malloc.c').write_bytes(malloc_source)
         fixture = folder / 'calibration.c'
         shutil.copyfile(ROOT / 'tests/fixtures/parser_allocator_calibration.c', fixture)
         shutil.copyfile(ROOT / 'scripts/parser_allocator_gdb.py', folder / 'observer.py')
@@ -90,9 +93,9 @@ def main():
         report['binarySha256'] = hashlib.sha256(binary.read_bytes()).hexdigest()
         save()
         observed = run([args.gdb, '--batch', '--nx', '-ex', 'set auto-load off',
-                        '-x', folder / 'observer.py', '--args', binary],
+                        '-ex', 'directory ' + str(source_root), '-x', folder / 'observer.py', '--args', binary],
                        env | {'FWP_ALLOCATOR_OBSERVATION': str(folder / 'observation.json')})
-        assert EXPECTED in observed['stdout'], observed
+        assert EXPECTED in observed['stdout'] and observed['stderr'] == '', observed
         observation = json.loads((folder / 'observation.json').read_text())
         report['observation'] = observed['index']
         report['calibration'] = check_observation(observation)

@@ -1,15 +1,10 @@
 // Native ARC target, weak registrations, owned array payloads and thrown errors.
-#if os(Linux)
-import Glibc
-#else
-import Darwin
-#endif
 
 final class Target { var inbox: [[Int64]] = [] }
 struct Pending { let payload: [Int64]; weak var target: Target? }
-struct Stats {
-    var calls: Int64 = 0, cancelled: Int64 = 0, expired: Int64 = 0, errors: Int64 = 0
-    var sent: Int64 = 0, received: Int64 = 0, sum: Int64 = 0, receivedSum: Int64 = 0
+public struct Stats {
+    public var calls: Int64 = 0, cancelled: Int64 = 0, expired: Int64 = 0, errors: Int64 = 0
+    public var sent: Int64 = 0, received: Int64 = 0, sum: Int64 = 0, receivedSum: Int64 = 0
 }
 enum CallbackFailure: Error { case delivered }
 func callback(_ active: Target, _ payload: consuming [Int64], _ fail: Bool, _ stats: inout Stats) throws {
@@ -34,7 +29,7 @@ func dispatch(_ pending: consuming [Pending?], _ mode: Int, _ stats: inout Stats
         } catch { preconditionFailure("unexpected callback error") }
     }
 }
-func runCase(_ population: Int, _ mode: Int) {
+public func serviceRun(_ population: Int, _ mode: Int) -> Stats {
     var stats = Stats()
     var owner: Target? = Target()
     owner!.inbox.reserveCapacity(population)
@@ -50,12 +45,5 @@ func runCase(_ population: Int, _ mode: Int) {
         }
     }
     owner = nil
-    print("{\"population\":\(population),\"mode\":\(mode),\"calls\":\(stats.calls),\"cancelled\":\(stats.cancelled),\"expired\":\(stats.expired),\"errors\":\(stats.errors),\"sent\":\(stats.sent),\"received\":\(stats.received),\"sum\":\(stats.sum),\"received_sum\":\(stats.receivedSum)}")
+    return stats
 }
-if CommandLine.arguments.count != 1 {
-    Array("expected no arguments\n".utf8).withUnsafeBufferPointer { data in
-        _ = write(STDERR_FILENO, data.baseAddress, data.count)
-    }
-    exit(2)
-}
-for population in [64, 4096] { for mode in 0..<4 { runCase(population, mode) } }

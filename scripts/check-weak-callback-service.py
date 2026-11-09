@@ -11,6 +11,7 @@ import traceback
 
 from process_wait import run_capture
 from weak_callback_service import decode_missing_delivery, decode_output, variants
+from weak_callback_service_build import build_native
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -37,7 +38,8 @@ def main():
                   compilerSha256=hashlib.sha256(args.compiler.read_bytes()).hexdigest(),
                   settings={key: str(value) for key, value in vars(args).items()},
                   scope='Service correctness and C release counters; not timing, ARC counts or all-peer storage proof',
-                  versions={}, sourceHashes={}, builds=[], checks=[], interpreter=[], failures=[])
+                  versions={}, sourceHashes={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                              for path in sorted((ROOT / "tests/fixtures").glob("weak_callback_service*"))}, builds=[], checks=[], interpreter=[], failures=[])
     commands = []
 
     def save():
@@ -93,22 +95,14 @@ def main():
                 group = f'{language} {variant} level={level}'
                 binary = folder / f'{language}-{variant}-{level}'
                 try:
-                    if language == 'c':
-                        command = [args.cc, '-std=c11', '-O' + str(level), '-fno-lto', '-ffp-contract=off',
-                                   '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror', path, '-o', binary]
-                    elif language == 'rs':
-                        command = [args.rustc, '--edition=2021', '-C', 'opt-level=' + str(level),
-                                   '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'panic=unwind',
-                                   '-C', 'target-cpu=' + args.rust_cpu, '--target', args.target,
-                                   '-D', 'warnings', path, '-o', binary]
-                    elif language == 'swift':
-                        command = [args.swiftc, '-swift-version', '6',
-                                   *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization']),
-                                   '-warnings-as-errors', '-target', args.target, path, '-o', binary]
+                    if language != 'fwp':
+                        caller = (ROOT / 'tests/fixtures' / ('weak_callback_service_check.' + language)).read_text()
+                        binary, built = build_native(args, folder, language, code, variant, level,
+                                                     'diagnostic', False, caller, run, env)
                     else:
                         command = [args.compiler.resolve(), 'build', '--memory', 'dynamic', '-O' + str(level),
                                    path, '-o', binary]
-                    built = run(command, (0, '', ''), env)
+                        built = run(command, (0, '', ''), env)
                     image = binary.read_bytes()
                     assert image[:6] == b'\x7fELF\x02\x01'
                     assert int.from_bytes(image[18:20], 'little') == {'aarch64': 183, 'x86_64': 62}[args.arch]

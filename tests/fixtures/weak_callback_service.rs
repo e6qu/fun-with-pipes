@@ -2,6 +2,11 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
+#[cfg(not(any(service_plain, service_diagnostic)))]
+compile_error!("Select service_plain or service_diagnostic explicitly");
+#[cfg(all(service_plain, service_diagnostic))]
+compile_error!("Select exactly one service observation policy");
+
 struct Target {
     inbox: RefCell<Vec<Vec<i64>>>,
 }
@@ -10,15 +15,15 @@ struct Pending {
     target: Weak<Target>,
 }
 #[derive(Default)]
-struct Stats {
-    calls: i64,
-    cancelled: i64,
-    expired: i64,
-    errors: i64,
-    sent: i64,
-    received: i64,
-    sum: i64,
-    received_sum: i64,
+pub struct Stats {
+    pub calls: i64,
+    pub cancelled: i64,
+    pub expired: i64,
+    pub errors: i64,
+    pub sent: i64,
+    pub received: i64,
+    pub sum: i64,
+    pub received_sum: i64,
 }
 fn callback(active: &Target, payload: Vec<i64>, fail: bool, stats: &mut Stats) -> Result<(), ()> {
     stats.calls += 1;
@@ -31,7 +36,8 @@ fn callback(active: &Target, payload: Vec<i64>, fail: bool, stats: &mut Stats) -
         Ok(())
     }
 }
-fn run_case(population: usize, mode: usize) {
+#[inline(never)]
+pub fn service_run(population: usize, mode: usize) -> Stats {
     let mut stats = Stats::default();
     let mut owner = Some(Rc::new(Target {
         inbox: RefCell::new(Vec::with_capacity(population)),
@@ -71,21 +77,11 @@ fn run_case(population: usize, mode: usize) {
             stats.received += 1;
             stats.received_sum += payload.iter().sum::<i64>();
         }
-        assert_eq!(Rc::strong_count(&target), 1);
-        assert_eq!(Rc::weak_count(&target), 0);
-    }
-    println!("{{\"population\":{population},\"mode\":{mode},\"calls\":{},\"cancelled\":{},\"expired\":{},\"errors\":{},\"sent\":{},\"received\":{},\"sum\":{},\"received_sum\":{}}}",
-        stats.calls, stats.cancelled, stats.expired, stats.errors, stats.sent,
-        stats.received, stats.sum, stats.received_sum);
-}
-fn main() {
-    if std::env::args().len() != 1 {
-        eprintln!("expected no arguments");
-        std::process::exit(2);
-    }
-    for population in [64, 4096] {
-        for mode in 0..4 {
-            run_case(population, mode);
+        #[cfg(service_diagnostic)]
+        {
+            assert_eq!(Rc::strong_count(&target), 1);
+            assert_eq!(Rc::weak_count(&target), 0);
         }
     }
+    stats
 }

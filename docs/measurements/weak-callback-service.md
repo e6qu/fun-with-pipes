@@ -118,3 +118,33 @@ record allocations, peak/final live storage, ordinary RSS, compiler costs and
 native images. Preserve failed/noisy controls; no unchanged qualification reruns.
 The exact repetition cap and sampling counts must be fixed with the implemented
 caller before the first timing run.
+
+## Native allocation observation
+
+The prepared `weak-callback-profiles` suite builds the C, Rust and Swift service
+in a separate module from its caller. Result formatting happens after service
+cleanup. Explicit diagnostic builds retain release counters/assertions; plain
+builds omit those observers. Neither build changes the ordinary queue or payload
+containers. The unchanged fwp service already has a separate physical-owner check.
+
+The native profile protocol is fixed before collection:
+
+- GCC/Rust O2 and Swift O with whole-module optimization, debug information,
+  explicit native targets, no cross-module LTO. Correctness also runs C/Rust
+  O1/O2 and Swift Onone/O with actual delivery and release faults.
+- Eight cases: 64 or 4,096 pending messages, each owning 16 integers; success,
+  cancellation, expired receiver and handled callback error. Each process runs
+  one case and verifies both sender and independently drained receiver totals.
+- Two heaptrack profiles per case/language. Preserve all stacks and command
+  output; verify unwinding and known allocation/free controls first.
+- Attribute service allocation requests, bytes at the **whole-process heap peak**
+  and unreleased bytes by the service's module entry. Report Swift type-metadata
+  construction separately. Keep process totals and caller/runtime costs visible.
+- C variants actually omit payload release or weak-registration release. The
+  observer must detect respectively `128 × population` or 16 unreleased bytes,
+  although ordinary numeric results remain correct. Run every variant and keep
+  failures, rather than stopping at the first language.
+
+This is native allocator evidence, not ARC operation counts, managed fwp bytes,
+RSS or elapsed-time evidence. A stack's bytes at the process peak are not its own
+independent maximum. Service timing remains a separate next step.

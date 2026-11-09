@@ -168,7 +168,7 @@ jobs:
           python3 scripts/check-measurement-clocks.py --cc gcc
           python3 scripts/check-swift-arithmetic.py --swiftc swiftc --target "${{ matrix.arch }}-unknown-linux-gnu" --output swift-arithmetic
       - name: Allocation profiler
-        if: contains(fromJSON('["weak-operation-profiles","swift-allocations","swift-closure-allocations","returned-buffer-profiles"]'), inputs.suite)
+        if: contains(fromJSON('["weak-callback-profiles","weak-operation-profiles","swift-allocations","swift-closure-allocations","returned-buffer-profiles"]'), inputs.suite)
         shell: bash
         run: |
           set -euo pipefail
@@ -194,6 +194,15 @@ jobs:
         run: >-
           python3 scripts/audit-first-buffer-profiles.py --arch "${{ matrix.arch }}"
           --gh gh --output returned-buffer-profiles-first-audit
+      - name: Native service allocations and actual missing releases
+        if: ${{ !cancelled() && inputs.suite == 'weak-callback-profiles' }}
+        run: |
+          python3 scripts/test-weak-callback-profiles.py
+          python3 scripts/profile-weak-callback-service.py collect --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
+            --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace \
+            --unwind-library-directory swift-setup/unwinder/lib --output weak-callback-profiles
       - name: Native weak storage and staged release controls
         if: ${{ !cancelled() && inputs.suite == 'weak-operation-profiles' }}
         run: |
@@ -266,7 +275,7 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('weak-callback-service/**', 'weak-operation-census/**', 'weak-operation-reuse/**', 'weak-operation-profiles/**', 'weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('weak-callback-profiles/**', 'weak-callback-service/**', 'weak-operation-census/**', 'weak-operation-reuse/**', 'weak-operation-profiles/**', 'weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
@@ -283,6 +292,7 @@ jobs:
             weak-operation-profiles/
             weak-operation-reuse/
             weak-operation-census/
+            weak-callback-profiles/
             weak-callback-service/
             weak-callback-service-ownership/
             weak-callback-service-logs/

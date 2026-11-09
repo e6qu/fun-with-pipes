@@ -59,7 +59,7 @@ def variants(language, source):
     result = {'ordinary': source, 'missing-delivery': replace_once(source, *delivery[language])}
     if language == 'c':
         result.update({
-            'omitted-payload-release': replace_once(source, '    payloads--;\n    free(payload);', ''),
+            'omitted-payload-release': replace_once(source, '    if (!payload) return;', '    if (!payload) return;\n    return; /* actual omitted payload release */'),
             'omitted-registration-release': replace_once(source, '    drop_weak(entry->weak);', ''),
         })
     return result

@@ -35,6 +35,7 @@ jobs:
           python3 scripts/test-returned-buffer-profiles.py
           python3 scripts/test-parser-process-memory.py
           python3 scripts/test-parser-allocator-observation.py
+          python3 scripts/test-weak-callback-profiles.py
           python3 scripts/test-weak-operation-phases.py
           python3 scripts/test-weak-operation-timing.py
           python3 scripts/test-weak-operation-profiles.py

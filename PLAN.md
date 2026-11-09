@@ -82,7 +82,7 @@ Milestone 4 now fills four concrete comparison gaps:
    now show substantial C/Rust lookup gaps and mixed Swift comparisons; the
    [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
    temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
-   passes. Complete service physical-release/allocation observations and timings
+   and fwp physical release pass. Complete native service allocation observations and timings
    before attributing whole-service cost to weak references.
 4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
    and RSS/checkpoint observations now pass on both Linux hosts. Complete allocator-internal transient peaks and

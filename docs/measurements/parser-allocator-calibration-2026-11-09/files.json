@@ -1,0 +1,47 @@
+{
+  "amd-report.json.gz": {
+    "bytes": 2303,
+    "sha256": "2937eee79b29cdb25526a5bc5478f21108f5715a1a37ecf44a526ea253f37721",
+    "compressedSha256": "1ad09d13451456547dae8fa3511f95bb55487058d4554be25382d7293123e460"
+  },
+  "amd-commands.jsonl.gz": {
+    "bytes": 7721,
+    "sha256": "ccc140195c81ce83354b790bfc471ca58bd2e33d84c1b016dfabd637081b6b44",
+    "compressedSha256": "1af3c909aff10d8148e79524d3ccd24b5a9ecb0d03c24dcf15f04f52db912166"
+  },
+  "amd-observation.json.gz": {
+    "bytes": 4962,
+    "sha256": "3b461c8d263441351f033bfd731927bded69466a2276af301460ffe8449bdb64",
+    "compressedSha256": "3e17f5b07c08f4f08b53d3f1292e354b2dd810a50f411eced128b11a1dd521f1"
+  },
+  "amd-job.log.gz": {
+    "bytes": 223829,
+    "sha256": "66415377d14f39b5679f922c523501c3dfb3958a5f98dfdce6907b7055c059c6",
+    "compressedSha256": "f16e0667b09d3289c73817ca697b932e1382b12568359d372633f0565f78debd"
+  },
+  "arm-report.json.gz": {
+    "bytes": 2308,
+    "sha256": "5fa1c16b362efe05c72a183ac9e69fea82d7c1ad3c7c818978cf8fa9fe0edf87",
+    "compressedSha256": "af4625eb959369a51c4d93c8d004ec9db2a590a9d811dc8fd16515ffe02d398e"
+  },
+  "arm-commands.jsonl.gz": {
+    "bytes": 7961,
+    "sha256": "93a1df695a5777f75cf20d80137134c454d648a04640fef42ae580c4ed9e0a6a",
+    "compressedSha256": "f3752a5896d915808d53ad7b17ebbb15dcf736276a7c6b80f40a29e7bcc492ef"
+  },
+  "arm-observation.json.gz": {
+    "bytes": 4974,
+    "sha256": "a06a2f8dc77854dbce3794badf083b342dc1266a98e7b2d782acd7c96f5d828c",
+    "compressedSha256": "85e592935226adf580ff439a10507a028b237ed2e60638be8574ded4c7a77ec6"
+  },
+  "arm-job.log.gz": {
+    "bytes": 223144,
+    "sha256": "85d8394d6b1a20135b5e3972b63c7d1f43a2eb40a6e813136f714fc7d9791234",
+    "compressedSha256": "8881f2b36df20ce4d00436a05ce383fad6559cfcfb93b8e87040aa82a32bce9f"
+  },
+  "docs-job.log.gz": {
+    "bytes": 442738,
+    "sha256": "a0838a2ce945c9383b192f4958169dc32093d942b39f4449b0b344639dffc3df",
+    "compressedSha256": "6c6266f56f86cb8da91348a47f3592a1ad7aae9bc6b40b1a3d53e824c69ab1de"
+  }
+}
