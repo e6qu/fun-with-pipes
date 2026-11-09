@@ -1,6 +1,6 @@
 # fwp parser allocation events
 
-**Prepared; native execution pending.** Extend the
+**[Both native hosts pass at O1/O2](parser-heap-events-2026-11-09/README.md).** Extend the
 [verified C/Rust parser observations](parser-native-allocator-2026-11-09/README.md)
 to fwp's actual heap and region blocks. Keep the ordinary parser, its owning
 function entry, worker thread and cleanup behavior.

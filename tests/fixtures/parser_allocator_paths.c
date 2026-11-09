@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 void parser_memory_checkpoint(unsigned phase);
+static volatile uintptr_t warmup_address;
 
 static void fill(unsigned char *p, size_t bytes) {
     if (!p) exit(91);
@@ -26,6 +27,12 @@ static void check(const unsigned char *p, size_t bytes) {
 
 static int mapped(void) {
     if (!mallopt(M_MMAP_THRESHOLD, 131072) || !mallopt(M_MMAP_MAX, 65536)) return 94;
+    /* Initialize libc's thread cache before the observation, as the real parser
+     * does while reading its input. Its metadata is not parser-owned storage. */
+    unsigned char *warmup = malloc(16);
+    warmup_address = (uintptr_t)warmup;
+    fill(warmup, 16);
+    free(warmup);
     parser_memory_checkpoint(0);
     unsigned char *old = malloc(1 << 20);
     fill(old, 1 << 20);

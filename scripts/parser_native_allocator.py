@@ -73,26 +73,45 @@ def check_allocation_events(report, expected, threads):
         temporary = {row['chunk']['address']: row['chunk'] for row in live.values()}
         old_address = old['chunk']['address'] if old else None
         releases, acquisitions, remaps = [], [], []
+        mapping = None
+        mapping_returned = False
         for offset, row in enumerate(rows[1:-1], 1):
             kind, name = row['kind'], row['function']
             layout = row.get('chunk')
-            if kind == 'internal-enter' and name in ('_int_free', 'munmap_chunk', '__libc_free') and layout:
+            if name == '__mremap':
+                assert old and old['chunk']['mapped'] and row['mapping']['flags'] == 1
+                if kind == 'internal-enter':
+                    assert mapping is None
+                    mapping = row['mapping']
+                    assert mapping['address'] <= old_address
+                    assert mapping['address'] + mapping['oldBytes'] == old_address + old['chunk']['bytes']
+                else:
+                    assert kind == 'internal-return' and mapping == row['mapping'] and layout is None and not mapping_returned
+                    mapping_returned = True
+                    if row['pointer'] != (1 << 64) - 1:
+                        displacement = old_address - mapping['address']
+                        # A successful remap gives the new extent immediately;
+                        # libc's final live header must confirm its chunk layout.
+                        layout = dict(address=row['pointer'] + displacement,
+                                      bytes=mapping['newBytes'] - displacement, mapped=True)
+                        assert layout == last['chunk']
+                        temporary.pop(old_address)
+                        temporary[layout['address']] = layout
+                        remaps.append(offset)
+                        peak_chunks = max(peak_chunks, extent_bytes(temporary.values()))
+            elif kind == 'internal-enter' and name in ('_int_free', 'munmap_chunk', '__libc_free') and layout:
                 if layout['address'] == old_address:
                     releases.append(offset)
                 temporary.pop(layout['address'], None)
             elif kind == 'internal-return' and layout:
-                if name == 'mremap_chunk':
-                    assert old and old['chunk']['mapped'] and layout['mapped']
-                    temporary.pop(old_address, None)
-                    remaps.append(offset)
-                else:
-                    assert name in ('_int_malloc', '__libc_malloc', '_int_realloc')
-                    if name in ('_int_malloc', '__libc_malloc'):
-                        acquisitions.append((offset, layout['address']))
-                        if old_address in temporary and last['chunk'] == layout and last['pointer'] != pointer:
-                            overlap_requested = max(overlap_requested, requested_live + after)
+                assert name in ('_int_malloc', '__libc_malloc', '_int_realloc')
+                if name in ('_int_malloc', '__libc_malloc'):
+                    acquisitions.append((offset, layout['address']))
+                    if old_address in temporary and last['chunk'] == layout and last['pointer'] != pointer:
+                        overlap_requested = max(overlap_requested, requested_live + after)
                 temporary[layout['address']] = layout
                 peak_chunks = max(peak_chunks, extent_bytes(temporary.values()))
+        assert mapping is None or mapping_returned, 'mapped resize lacks its actual return'
         if function == '__libc_free':
             assert pointer and last['pointer'] is None and last['chunk'] is None
             assert len(releases) == 1, 'free lacked its actual allocator release'
@@ -101,17 +120,16 @@ def check_allocation_events(report, expected, threads):
         else:
             result, layout = last['pointer'], last['chunk']
             assert result and layout and result == layout['address'] + report['chunkHeaderBytes']
-            if pointer and result != pointer:
-                if remaps:
-                    assert len(remaps) == 1 and not releases
-                    path = 'mapped-remap'
-                else:
-                    allocated = [offset for offset, address in acquisitions if address == layout['address']]
-                    assert allocated and len(releases) == 1 and min(allocated) < releases[0], 'moving resize lacks allocation-before-release'
-                    path = 'mapped-copy' if old['chunk']['mapped'] else 'arena-move'
-                    if any(row['kind'] == 'internal-return' and row['function'] == '_int_realloc'
-                           and row['pointer'] == 0 for row in rows):
-                        path = 'arena-retry-copy'
+            if remaps:
+                assert pointer and len(remaps) == 1 and not releases
+                path = 'mapped-remap'
+            elif pointer and result != pointer:
+                allocated = [offset for offset, address in acquisitions if address == layout['address']]
+                assert allocated and len(releases) == 1 and min(allocated) < releases[0], 'moving resize lacks allocation-before-release'
+                path = 'mapped-copy' if old['chunk']['mapped'] else 'arena-move'
+                if any(row['kind'] == 'internal-return' and row['function'] == '_int_realloc'
+                       and row['pointer'] == 0 for row in rows):
+                    path = 'arena-retry-copy'
             else:
                 path = 'in-place' if pointer else ('mapped-allocation' if layout['mapped'] else 'arena-allocation')
             if pointer:
@@ -119,6 +137,8 @@ def check_allocation_events(report, expected, threads):
             assert result not in live
             live[result] = dict(requested=after, chunk=layout)
             peak_chunks = max(peak_chunks, extent_bytes(row['chunk'] for row in live.values()))
+        final_chunks = [row['chunk'] for row in live.values()]
+        assert extent_bytes([*temporary.values(), *final_chunks]) == extent_bytes(final_chunks), 'unattributed allocator-internal storage'
         transitions.append([before, after])
         operations.append(dict(operation=first['operation'], phase=first['phase'], path=path,
                                before=before, after=after))

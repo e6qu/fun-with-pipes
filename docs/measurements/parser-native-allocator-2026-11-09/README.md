@@ -31,7 +31,7 @@ allocator pages, whole-process RSS or maximum kernel-internal storage.
 glibc source, all events, commands, manifests and full logs. All eight observations
 and four faults reconstruct per host. [Derived results](summary.json) preserve
 every operation classification. Binaries remain in the named original artifacts.
-[fwp's separate heap and region observer](../parser-heap-events.md) is pending.
+[fwp's separate heap and region observations now pass](../parser-heap-events-2026-11-09/README.md).
 
 ## Retained first failures
 

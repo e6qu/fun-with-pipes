@@ -1,0 +1,20 @@
+{
+  "amd-first-records.tar.gz": {
+    "sha256": "d289bacd3413fc197df5167289e27df795b77393a6d38b2b9a62a13941172207"
+  },
+  "arm-first-records.tar.gz": {
+    "sha256": "165c580a6b8c93206c59e004d871ef904ff8f91545abca2a350c51e28881d2bf"
+  },
+  "amd-first-job.log.gz": {
+    "sha256": "0a81f2247e755aea7b8592426d2fca464700ca7cae8a3a72ab0e504259fa8ce6",
+    "uncompressedSha256": "f584778fbf1155325efe8aaa7ae8a97bb170a8109985347e5191163b49f1e84d"
+  },
+  "arm-first-job.log.gz": {
+    "sha256": "ac789194e5ff7a58592c223aabc08083c59d1bee6abd04e537aa3132c481eb69",
+    "uncompressedSha256": "eede70370b0498eeaeb752d2398db4ca7b95a2ae7ab258ba8b9ab4252c494429"
+  },
+  "docs-first-job.log.gz": {
+    "sha256": "b383c6d71b0b6852c2a3b279557a3686060869a723e9941b9ae6bf6925b3054a",
+    "uncompressedSha256": "4ae8c18f01d533d9f0dd4ea75414d5c78c1db840e38ca706781123a6e01f2833"
+  }
+}

@@ -128,8 +128,10 @@ def main():
                         try:
                             check_events(events, nodes)
                         except AssertionError as error:
-                            if mode == 'omit-region-release':
-                                assert str(error) == 'parser allocations remain live', error
+                            diagnostic = {'omit-region-release': 'parser allocations remain live',
+                                'omit-allocation-event': 'resize source lacks its allocation event',
+                                'wrong-slot-size': 'heap live bytes disagree with allocation events'}[mode]
+                            assert str(error) == diagnostic, error
                             report['faults'].append(dict(case=name, mode=mode, level=level, command=row['index'], diagnostic=str(error)))
                         else:
                             raise AssertionError('actual missing release or broken observer accepted')

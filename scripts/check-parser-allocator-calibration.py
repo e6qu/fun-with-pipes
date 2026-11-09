@@ -76,6 +76,9 @@ def main():
         with tarfile.open(source_archive) as archive:
             member, = [member for member in archive.getmembers() if member.name.endswith('/malloc/malloc.c')]
             malloc_source = archive.extractfile(member).read()
+            remap_member, = [member for member in archive.getmembers()
+                            if member.name.endswith('/sysdeps/unix/sysv/linux/mremap.c')]
+            remap_source = archive.extractfile(remap_member).read()
         report['glibcSource'].update(mallocMember=member.name, mallocSha256=hashlib.sha256(malloc_source).hexdigest())
         source_root = folder / 'glibc-source'
         (source_root / 'malloc').mkdir(parents=True)
@@ -83,6 +86,12 @@ def main():
         source_path.write_bytes(malloc_source)
         os.utime(source_path, (member.mtime, member.mtime))
         report['glibcSource']['mallocArchiveMtime'] = member.mtime
+        remap_path = source_root / 'sysdeps/unix/sysv/linux/mremap.c'
+        remap_path.parent.mkdir(parents=True)
+        remap_path.write_bytes(remap_source)
+        os.utime(remap_path, (remap_member.mtime, remap_member.mtime))
+        report['glibcSource'].update(remapMember=remap_member.name,
+            remapSha256=hashlib.sha256(remap_source).hexdigest(), remapArchiveMtime=remap_member.mtime)
         fixture = folder / 'calibration.c'
         shutil.copyfile(ROOT / 'tests/fixtures/parser_allocator_calibration.c', fixture)
         shutil.copyfile(ROOT / 'scripts/parser_allocator_gdb.py', folder / 'observer.py')

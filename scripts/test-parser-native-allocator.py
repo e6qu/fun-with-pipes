@@ -33,8 +33,9 @@ def observation(path, duplicate, omit_release):
         new = layout(address, size, old['mapped'])
         record('api-enter', function='__libc_realloc', pointer=old['address'] + 16, chunk=old, requested=size)
         if selected_path == 'mapped':
-            record('internal-enter', function='mremap_chunk', chunk=old, adjustedBytes=size + 16)
-            record('internal-return', function='mremap_chunk', pointer=address, chunk=new)
+            mapping = dict(address=old['address'], oldBytes=old['bytes'], newBytes=new['bytes'], flags=1)
+            record('internal-enter', function='__mremap', mapping=mapping)
+            record('internal-return', function='__mremap', pointer=address, chunk=None, mapping=mapping)
         elif selected_path in ('move', 'retry'):
             if selected_path == 'retry':
                 record('internal-enter', function='_int_realloc', chunk=old, oldBytes=old['bytes'], adjustedBytes=size + 16)
@@ -95,6 +96,37 @@ class NativeAllocator(unittest.TestCase):
         result = check_parser_events(observation('retry', True, False), 16)
         self.assertEqual(result['operations'][3]['path'], 'arena-retry-copy')
         self.assertEqual(result['observedOwnedChunkPeakBytes'], 880)
+
+    def test_failed_remap_then_copy_counts_both_live_allocations(self):
+        report = observation('move', False, False)
+        for row in report['events']:
+            if row.get('chunk') is not None and row['chunk']['address'] == 8192:
+                row['chunk']['mapped'] = True
+            if row['operation'] == 4 and row.get('function') == '_int_free':
+                row['function'] = 'munmap_chunk'
+        start = next(i for i, row in enumerate(report['events'])
+                     if row['operation'] == 4 and row['kind'] == 'api-enter')
+        original = report['events'][start]
+        mapping = dict(address=8192, oldBytes=208, newBytes=400, flags=1)
+        report['events'][start + 1:start + 1] = [
+            dict(original, kind='internal-enter', function='__mremap', mapping=mapping),
+            dict(original, kind='internal-return', function='__mremap', pointer=(1 << 64) - 1, chunk=None, mapping=mapping),
+        ]
+        result = check_parser_events(report, 16)
+        self.assertEqual(result['operations'][3]['path'], 'mapped-copy')
+        self.assertEqual(result['requestedPeakWithObservedResizeOverlapBytes'], 832)
+        self.assertEqual(result['observedOwnedChunkPeakBytes'], 880)
+        del report['events'][start + 2]
+        with self.assertRaisesRegex(AssertionError, 'mapped resize lacks its actual return'):
+            check_parser_events(report, 16)
+
+    def test_allocator_metadata_cannot_be_counted_as_parser_storage(self):
+        report = observation('move', False, False)
+        extra = dict(report['events'][2], kind='internal-return', pointer=65552,
+                     chunk=dict(address=65536, bytes=656, mapped=False))
+        report['events'].insert(3, extra)
+        with self.assertRaisesRegex(AssertionError, 'unattributed allocator-internal storage'):
+            check_parser_events(report, 16)
 
     def test_missing_and_reordered_internal_events(self):
         original = observation('move', False, False)

@@ -75,7 +75,8 @@ def check_events(events, nodes):
         elif kind == 'resize-begin':
             assert resize is None and row['fresh'] == 0
             if row['old']:
-                assert row['old'] in live and row['before'] <= live[row['old']]['requested']
+                assert row['old'] in live, 'resize source lacks its allocation event'
+                assert row['before'] <= live[row['old']]['requested']
             resize = dict(old=row['old'], before=row['before'], after=row['after'], fresh=None)
         elif kind in ('resize-copy', 'resize-end'):
             assert resize is not None

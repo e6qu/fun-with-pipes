@@ -67,7 +67,9 @@ the debugger never changes their data, allocation results or control flow.
 
 - **Mapped resize:** explicitly enable mapped large allocations, allocate 1 MiB,
   resize to 4 MiB, verify preserved bytes and release it. Require an actual
-  successful `mremap_chunk` return. A changed address does not count as two
+  successful `__mremap` return, whose extent must match libc's final live chunk
+  header. The internal `mremap_chunk` helper may be inlined, so its parameter
+  names cannot reliably be read at a function breakpoint. A changed address does not count as two
   simultaneously owned allocations.
 - **Arena retry:** prepare reusable storage in a worker's arena, then limit only
   this process's virtual address space to its existing size. Transfer a small
@@ -80,7 +82,12 @@ The retry control explicitly permits a two-thread transfer at a checkpoint.
 Each allocation operation still starts and finishes on one thread. Actual parser
 traces still require a single thread throughout. The process's hard resource limit
 is preserved; this control neither changes the runner's limits nor sets a new
-production allocation policy. Six reader tests preserve those distinctions.
+production allocation policy. Eight reader tests preserve those distinctions,
+including failed-remap copying, missing mapping returns and allocator metadata.
+The control initializes libc's thread cache before observation, as the parser
+does while reading input; otherwise its metadata would be unrelated live storage.
+The reader rejects internal storage it cannot attribute, rather than charging it
+to the parser. Matching distro source is retained for both malloc and mremap.
 
 A failed mapped-remap followed by a copy is still only a synthetic reader case;
 do not claim it occurred in these controls or the fixed parser inputs. Results

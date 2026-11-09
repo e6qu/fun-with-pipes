@@ -139,6 +139,7 @@ def main():
                         observation_path = folder / (name + '-' + language + '-' + mode + '.json')
                         row = run([args.gdb, '--batch', '--nx', '-iex', 'set auto-load off',
                             '-ex', 'directory ' + str(calibration / 'glibc-source'),
+                            '-ex', 'directory ' + str(calibration / 'glibc-source/sysdeps/unix/sysv/linux'),
                             '-ex', f'set substitute-path /rustc/{revision}/library {rust_source}',
                             '-x', observer, '--args', *command], env | {'FWP_PARSER_ALLOCATOR_EVENTS': str(observation_path)})
                         outputs = [json.loads(line) for line in row['stdout'].splitlines() if line.startswith('{"rounds":')]
@@ -175,7 +176,8 @@ def main():
                 assert ordinary['stdout'] == expected_output
                 observation_path = folder / ('path-' + mode + '.json')
                 observed = run([args.gdb, '--batch', '--nx', '-iex', 'set auto-load off',
-                    '-ex', 'directory ' + str(calibration / 'glibc-source'), '-x', observer,
+                    '-ex', 'directory ' + str(calibration / 'glibc-source'),
+                    '-ex', 'directory ' + str(calibration / 'glibc-source/sysdeps/unix/sysv/linux'), '-x', observer,
                     '--args', path_binary, mode], env | {'FWP_PARSER_ALLOCATOR_EVENTS': str(observation_path)})
                 assert expected_output in observed['stdout']
                 observation = json.loads(observation_path.read_text())
@@ -184,8 +186,9 @@ def main():
                 result = check_allocation_events(observation, transitions, 1 if mode == 'mapped' else 2)
                 if mode == 'mapped':
                     remaps = [row for row in observation['events']
-                              if row['kind'] == 'internal-return' and row['function'] == 'mremap_chunk']
-                    assert len(remaps) == 1 and remaps[0]['pointer'] and remaps[0]['chunk']['mapped']
+                              if row['kind'] == 'internal-return' and row['function'] == '__mremap']
+                    assert len(remaps) == 1 and remaps[0]['pointer'] != (1 << 64) - 1
+                    assert result['operations'][1]['path'] == 'mapped-remap'
                     assert result['requestedPeakWithObservedResizeOverlapBytes'] == 4 << 20
                 else:
                     assert result['operations'][2]['path'] == 'arena-retry-copy'

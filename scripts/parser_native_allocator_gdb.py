@@ -69,7 +69,7 @@ def record(kind, **values):
 
 
 class Returned(gdb.Breakpoint):
-    def __init__(self, frame, function, root, pointer_kind):
+    def __init__(self, frame, function, root, pointer_kind, details):
         caller = frame.older()
         while caller is not None and caller.type() in (gdb.INLINE_FRAME, gdb.TAILCALL_FRAME):
             caller = caller.older()
@@ -81,6 +81,7 @@ class Returned(gdb.Breakpoint):
         self.function = function
         self.root = root
         self.pointer_kind = pointer_kind
+        self.details = details
         RETURNS.append(self)
 
 
@@ -108,7 +109,7 @@ def observe():
     REPORT['architecture'] = architecture
     REPORT['chunkHeaderBytes'] = HEADER_BYTES
     names = ('parser_memory_checkpoint', '__libc_malloc', '__libc_realloc', '__libc_free',
-             '_int_malloc', '_int_realloc', '_int_free', 'mremap_chunk', 'munmap_chunk')
+             '_int_malloc', '_int_realloc', '_int_free', '__mremap', 'munmap_chunk')
     points = {gdb.Breakpoint(name, internal=True): name for name in names}
     for point, name in points.items():
         if point.pending:
@@ -142,11 +143,14 @@ def observe():
                     value = frame.read_register(RETURN_REGISTER)
                     if value.is_optimized_out:
                         raise RuntimeError('unavailable allocator return: ' + point.function)
-                    pointer = int(value)
-                    layout = chunk(pointer) if point.pointer_kind == 'chunk' else allocation(pointer)
+                    pointer = int(value) & ((1 << 64) - 1)
+                    # The remap result is a mapping address, not a malloc user
+                    # pointer. Its header is updated later by libc; do not read it.
+                    layout = None if point.pointer_kind == 'mapping' else allocation(pointer)
                 record('api-return' if point.root else 'internal-return',
                        function=point.function, pointer=pointer, chunk=layout,
-                       returnAddress=point.address, callerStack=point.stack)
+                       returnAddress=point.address, callerStack=point.stack,
+                       mapping=point.details.get('mapping'))
                 RETURNS.pop()
                 point.delete()
                 if point.root:
@@ -199,14 +203,15 @@ def observe():
             values.update(chunk=chunk(argument(frame, 'oldp')), oldBytes=argument(frame, 'oldsize'),
                           adjustedBytes=argument(frame, 'nb'))
             pointer_kind = 'allocation'
-        elif name == 'mremap_chunk':
-            values.update(chunk=chunk(argument(frame, 'p')), adjustedBytes=argument(frame, 'new_size'))
-            pointer_kind = 'chunk'
+        elif name == '__mremap':
+            values['mapping'] = dict(address=argument(frame, 'addr'), oldBytes=argument(frame, 'old_len'),
+                                     newBytes=argument(frame, 'new_len'), flags=argument(frame, 'flags'))
+            pointer_kind = 'mapping'
         else:
             values['chunk'] = chunk(argument(frame, 'p'))
         record('api-enter' if root else 'internal-enter', **values)
         if pointer_kind is not None:
-            Returned(frame, name, root, pointer_kind)
+            Returned(frame, name, root, pointer_kind, values)
         save()
     REPORT['exitCode'] = EXIT_CODE
     if EXIT_CODE != 0 or PHASE != 4 or OPERATION is not None or RETURNS or REPORT['errors']:

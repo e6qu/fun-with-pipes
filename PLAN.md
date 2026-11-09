@@ -94,8 +94,10 @@ Milestone 4 now fills four concrete comparison gaps:
    separating accountable address ranges from resident pages. [Actual C/Rust
    allocation events](docs/measurements/parser-native-allocator-2026-11-09/README.md)
    now expose 30% more peak requested storage than endpoint capacities for the
-   largest input. Complete the [fwp heap/region observer](docs/measurements/parser-heap-events.md)
-   and classify remaining unobserved allocator paths explicitly.
+   largest input. [fwp heap/region observations also pass](docs/measurements/parser-heap-events-2026-11-09/README.md):
+   the largest charged peak is during tokenization, and evaluation allocates
+   nothing. Finish the [mapped-path repair](docs/measurements/parser-allocator-paths-2026-11-09/README.md);
+   retain explicit limits for allocator paths that did not execute.
    Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 

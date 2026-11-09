@@ -36,8 +36,11 @@ both sessions on both hosts: large full delivery takes 18.65–20.23× C's time 
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
 the memory observations pass on both Linux hosts. [Actual parser accounting](parser-process-accounting-2026-11-09/README.md)
-now separates accountable address ranges from resident pages. Allocator resize
-calibration also passes; actual parser internal peaks remain open.
+now separates accountable address ranges from resident pages. [Actual C/Rust
+resize overlap](parser-native-allocator-2026-11-09/README.md) and [fwp heap/region
+events](parser-heap-events-2026-11-09/README.md) now pass. The largest fwp charged
+peak occurs during tokenization; evaluation allocates nothing. [Arena retry
+passes; mapped observation is under repair](parser-allocator-paths-2026-11-09/README.md).
 
 ## Latest deliveries
 

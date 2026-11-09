@@ -208,8 +208,8 @@ The larger [four-language service](weak-callback-service-2026-11-09/README.md)
 now verifies independently received payloads and fwp physical release.
 [C/Rust/Swift service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
 and their complete command audit pass on both hosts. The separate
-[timing batch](weak-callback-time-2026-11-09/README.md) must pass its native caller
-checks before collecting measurements.
+[timing batch](weak-callback-time-2026-11-09/README.md) now passes native caller
+checks, both paired sessions and complete evidence audits on both hosts.
 
 The verified two-message queue gives each message an owned payload and a weak
 target link. It checks two paths:
@@ -266,6 +266,11 @@ controls on both hosts after repairing the parser entry ownership bug.
 [Actual accounting observations](parser-process-accounting-2026-11-09/README.md)
 now retain kernel policy and accountable/no-reservation extents at every checkpoint.
 These do not promise physical RAM or establish allocator-internal transient peaks.
+The [actual C/Rust allocation traces](parser-native-allocator-2026-11-09/README.md)
+now include observed old/new resize overlap, and [fwp heap/region events](parser-heap-events-2026-11-09/README.md)
+reconstruct its charged storage and region subdivision. The largest fwp peak is
+during tokenization; tree evaluation allocates nothing. Native arena-retry and
+mapped-resize calibration are the final observer-path checks, not new timing runs.
 
 ## Before collecting timings
 

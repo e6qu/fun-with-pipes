@@ -1,7 +1,7 @@
 # Parser memory: remaining observer work
 
-**[Actual C/Rust owned-chunk peaks now pass](parser-native-allocator-2026-11-09/README.md);
-[fwp's heap/region events](parser-heap-events.md) remain in preparation.** [Resize calibration](parser-allocator-calibration-2026-11-09/README.md)
+**[Actual C/Rust owned-chunk peaks](parser-native-allocator-2026-11-09/README.md)
+and [fwp's heap/region events](parser-heap-events-2026-11-09/README.md) now pass.** [Resize calibration](parser-allocator-calibration-2026-11-09/README.md)
 and [actual parser RSS/mapping accounting](parser-process-accounting-2026-11-09/README.md)
 pass on both Linux hosts. Neither final vector capacity nor stopped-process
 snapshots establish temporary storage inside a resize.
