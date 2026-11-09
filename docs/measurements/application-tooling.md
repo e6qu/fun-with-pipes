@@ -45,8 +45,11 @@ three calculations through raw/optimized interpretation, native O1/O2, the REPL,
 notebook input edits/errors and debugger stops. These new execution checks are
 prepared but have not yet run on native CI. The browser checks now also exercise
 all three applications, stale/error states, explicit effects and source-only
-save/reopen; browser execution is pending. Retained application disassembly still
-needs its application-specific checks.
+save/reopen. The [inspection script](../../scripts/check-application-disassembly.py)
+retains generated C and actual O0/O1/O2/O3 objects for all three. The focused
+`application-tooling` workflow runs the SDK and inspection checks on both native
+Linux architectures and the browser on AMD64. Execution of these new checks is
+pending; they are not compiler-cost or service-throughput measurements.
 
 Use the existing [SDK tests](../../sdk/python/tests/test_tools.py),
 [terminal checks](../../sdk/python/tests/test_repl_terminal.py) and
