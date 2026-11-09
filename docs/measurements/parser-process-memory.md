@@ -34,7 +34,10 @@ is retained as an unresolved counter observation, never described as a process
 using no memory. Phase snapshots remain separate observations, not replacements
 for that counter. These snapshots also do not
 establish a per-process committed-memory value; do not relabel RSS or writable
-mapping size as committed bytes.
+mapping size as committed bytes. In fwp's runtime, `fwp_heap.committed` means
+writable heap chunks, a different scope from Linux's system-wide commit accounting.
+[The terminology guide](../terminology.md#writable-memory-is-not-necessarily-resident-memory)
+explains the distinction and the temporary old/new storage a resize may hide.
 
 ## Checkpoints and controls
 
