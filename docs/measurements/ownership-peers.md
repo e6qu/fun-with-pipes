@@ -158,8 +158,10 @@ Compare two scopes separately:
 
 - **Reference operations:** create weak metadata, upgrade while live, acquire a
   strong owner for the call, release the last owner, and reject an expired upgrade.
-- **Callback service:** add registration, queue handling, cancellation and cleanup.
-  Report this service work rather than attributing all elapsed time to weak references.
+- **[Callback service](weak-callback-service.md):** deliver owned 16-integer
+  payloads through pending/receiving queues, with success, cancellation, expiration
+  and handled-error cases. Check receiver counts/checksums independently. Report
+  complete service work rather than attributing all elapsed time to weak references.
 
 fwp upgrades run on its serialized scheduler without ticking or suspending. They
 are not an OS-thread sharing API. Use Rust `Rc`/`Weak` for that serial contract;

@@ -1,6 +1,8 @@
 # fwp allocations during weak-reference operations
 
-**Prepared; native results pending.** This diagnostic measures the actual fwp
+**Native checks queued; no GCC count result yet.**
+Source `54b818abc`, tag `roadmap/weak-operation-census-2026-11-09`,
+[run 42651550496](https://github.com/e6qu/fun-with-pipes/actions/runs/42651550496). This diagnostic measures the actual fwp
 operations from the [phase comparison](weak-operation-phases.md), separately from
 [ordinary timings](weak-operation-time.md) and [native C/Rust/Swift allocation
 profiles](weak-operation-storage.md).

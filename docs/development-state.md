@@ -92,9 +92,19 @@ ordinary observations and eight controls are required on each host at O1/O2.
 Three reader tests pass. A guarded Apple Clang O2 check on retained source
 `8848e837c` observes 1,024 16-byte `Some` cells for 64×16 live lookups, none for
 expired lookups, and rejects actual extra allocation/omitted free. It is not a
-rebuilt-compiler or GCC pass; native execution is not yet dispatched. This fills the
+rebuilt-compiler or GCC pass. Native source `54b818abc` is frozen as
+`roadmap/weak-operation-census-2026-11-09`: run `42651550496`, AMD64 job
+`129278956168`, ARM64 job `129278955989`, both queued. Docs `42651562531` /
+`129278986150` is queued. This fills the
 parent comparison's result-cell attribution requirement without changing the
 queued timing source or claiming native backing bytes/ARC counts.
+
+[The callback-service specification](measurements/weak-callback-service.md) now
+fixes two queue sizes, 16-integer payloads, four success/cancellation/expiration/
+handled-error cases and independent receiving counts/checksums. Implement its
+ordinary fwp/C/Rust/Swift programs and missing-delivery/release controls next;
+freeze final repetitions only after those checks pass. It is not yet code or a
+measured service-throughput result.
 
 ## Other evidence and unresolved measurements
 
@@ -107,7 +117,8 @@ queued timing source or claiming native backing bytes/ARC counts.
 - [Ownership scope](measurements/ownership-peers.md): native requested bytes,
   fwp managed bytes, mappings and RSS remain distinct. Maximum stack use and ARC
   operation counts are unmeasured. Parser allocator-internal peaks and committed
-  memory remain unresolved. These are not completed by endpoint snapshots.
+  memory remain unresolved; [the next observer steps](measurements/parser-internal-memory.md)
+  require matching libc/source identity and actual path/accounting controls. These are not completed by endpoint snapshots.
 
 ## Delivery and local checks
 
@@ -123,7 +134,7 @@ Free space recovered to about 145 GiB. Focused checks use the unchanged
   macOS. Both Linux batches execute that actual checkpoint test.
 - Weak phase/profile/reuse readers: 3/4/3 pass.
 - Repair Python syntax checks and Rust formatting: pass. Documentation audit:
-  416 link sets, 106 immutable preparation pairs and five roadmap steps pass.
+  417 link sets, 106 immutable preparation pairs and five roadmap steps pass.
 - Apple Clang O2 source diagnostic: original generated entry frees the caller's
   32-byte input early; removing only duplicate entry cleanup preserves it until
   caller release. This is not a rebuilt-compiler or Linux GCC pass.

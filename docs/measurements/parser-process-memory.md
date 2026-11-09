@@ -116,3 +116,7 @@ range before parsing. Ninety-six native C/Rust argument controls cover all three
 numeric fields in ordinary and storage-observer builds. This repair changes no
 valid benchmark input. Command timeouts now retain partial stdout/stderr as well
 as the error, so a failed child cannot disappear from the command record.
+
+[Remaining implementation steps](parser-internal-memory.md) define allocator
+identity, source-boundary calibration and commit-accounting controls. These are
+unfinished work; the verified endpoint observations do not replace them.
