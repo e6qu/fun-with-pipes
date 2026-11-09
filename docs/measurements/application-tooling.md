@@ -39,6 +39,15 @@ For each application, deliver a short walkthrough and executable checks:
    at optimization levels O0/O1/O2/O3 with an explicit compiler/target. Report toolchain identity. These
    are inspection outputs, not an execution-time or whole-stack measurement.
 
+The [walkthroughs](../application-workflows.md) and
+[application tests](../../sdk/python/tests/test_applications.py) now cover the
+three calculations through raw/optimized interpretation, native O1/O2, the REPL,
+notebook input edits/errors and debugger stops. These new execution checks are
+prepared but have not yet run on native CI. The browser checks now also exercise
+all three applications, stale/error states, explicit effects and source-only
+save/reopen; browser execution is pending. Retained application disassembly still
+needs its application-specific checks.
+
 Use the existing [SDK tests](../../sdk/python/tests/test_tools.py),
 [terminal checks](../../sdk/python/tests/test_repl_terminal.py) and
 [browser checks](../../sdk/python/browser/check_notebook.py). Add application

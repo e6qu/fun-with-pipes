@@ -4,6 +4,8 @@ A notebook keeps code cells, results and explanations together. fwp's local
 notebook uses the same checked interpreter sessions as the [REPL](repl.md).
 It borrows the useful notebook habits of visible dependencies, source-only files
 and clear stale results. It is a local browser application, not a Jupyter kernel.
+For complete calculations, follow the [word-count, numerical and callback
+workflows](application-workflows.md).
 
 ## Start a notebook
 
