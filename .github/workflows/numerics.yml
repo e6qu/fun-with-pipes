@@ -69,6 +69,9 @@ on:
 jobs:
   application_tooling:
     if: inputs.suite == 'application-tooling'
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/application-tooling.yml
     with:
       evidence_run: ${{ inputs.evidence_run }}
