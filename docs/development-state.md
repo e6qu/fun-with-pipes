@@ -1,26 +1,28 @@
 # Current work
 
-**Next:** collect and audit the frozen parser process-memory batch on native
-ARM64/AMD64, while the final Swift cancellation checks finish. Keep both in PR
-#273. The parser collector is prepared, not yet verified: ordinary RSS uses one
-parse per process; separate stopped children expose five named phases. Actual
-missing-touch/unmap controls and wrong-result checks must pass before acceptance.
-Allocator-internal peaks and committed memory remain unresolved. Native run
-`42620659615` (AMD64 job `129171638984`, ARM64 job `129171639027`) and docs
-`42620663788` (job `129171645313`) are queued at frozen source `054a00782`, tag
-`roadmap/parser-process-memory-2026-11-09`. The replacement preparation fixes C's
-acceptance of partial/negative/overflowed numeric arguments and adds 96 native
-argument checks. It also journals partial output on command timeout. Freeze it as
-`roadmap/parser-process-memory-arguments-2026-11-09` and supersede the untouched
-queued parser run; retain the original tag. No memory result is claimed.
+**Next:** finish the weak-operation phase batch and verify it alongside the
+queued parser-memory repair. Keep both in PR #273. The weak batch covers actual
+current fwp owned entries and separate native C/Rust/Swift modules, with live/
+expired results, backwards-clock and omitted-release controls. No new peer
+performance result is claimed. The new batch also runs the minimal Swift
+cancellation repair and original-assertion diagnosis; supersede its earlier
+untouched queued job rather than duplicate it.
 
-Swift final checks `42615022531` and docs `42615026734`, source `e7d312488`, are
-queued. Both earlier original-check diagnoses (`42610103348`, `2c1d74410`) locate
-the failure at original line 146: expected destruction after clearing the owner.
-Extending through cancellation alone passes with unchanged assertions on both
-architectures, with and without debug information; lookup-only changes fail.
-The current fixture matches that passing source hash. The queued follow-up
-preserves the original filename and repeats all C/Rust/Swift lifetime checks.
+Parser run `42622044846` (AMD64 `129176409450`, ARM64 `129176409457`) and docs
+`42622048974` (`129176415917`) are queued at `295ab7757`, tag
+`roadmap/parser-process-memory-arguments-2026-11-09`. It fixes partial, negative
+and overflowed C measurement arguments; 96 native controls cover all numeric
+fields. Command timeouts preserve partial output. Parser process-memory results
+remain unmeasured; allocator-internal peaks and committed memory are unresolved.
+Earlier parser/docs runs `42620659615`/`42620663788` and Swift docs `42615026734`
+were cancelled while queued, before tests. Their immutable source tags remain.
+
+Swift run `42615022531`, source `e7d312488`, is still queued. The earlier
+original-check diagnoses (`42610103348`, `2c1d74410`) isolate original line 146:
+expected destruction after clearing the owner. Extending through cancellation
+alone passes unchanged assertions on both architectures, with and without debug
+information; lookup-only changes fail. The follow-up keeps the original filename
+and all original assertions. No final batch pass is claimed yet.
 
 Buffer timing `42602375928` passes both sessions/audits on both hosts; noisy
 comparisons remain inconclusive. Docs `42606196247` at `2cb8e313d` pass.

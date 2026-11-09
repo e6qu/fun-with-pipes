@@ -149,6 +149,10 @@ A weak registration lets a callback find a target without owning it. For example
 register a listener, call it while its owner exists, remove that owner, then verify
 that a later lookup reports expiration instead of using freed storage.
 
+The [operation-phase preparation](weak-operation-phases.md) defines six actual
+phase boundaries, native representations and the required fault controls. It is
+not yet verified and claims no new timing result.
+
 Compare two scopes separately:
 
 - **Reference operations:** create weak metadata, upgrade while live, acquire a

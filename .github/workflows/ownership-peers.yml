@@ -65,7 +65,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Build the current compiler
-        if: contains(fromJSON('["swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
+        if: contains(fromJSON('["weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
         shell: bash
         run: |
           set -o pipefail
@@ -98,15 +98,25 @@ jobs:
           --languages c rs swift fwp --compiler target/debug/fwp --swiftc swiftc
           --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
           --output ownership-peer-checks
+      - name: Weak phase result-reader controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-phases' }}
+        run: python3 scripts/test-weak-operation-phases.py
+      - name: Separate weak-operation phases and native fault controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-phases' }}
+        run: >-
+          python3 scripts/check-weak-operation-phases.py --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-operation-phases
       - name: Original Swift weak lifetime diagnosis
-        if: ${{ !cancelled() && inputs.suite == 'weak-swift-diagnosis' }}
+        if: ${{ !cancelled() && contains(fromJSON('["weak-operation-phases","weak-swift-diagnosis"]'), inputs.suite) }}
         run: >-
           python3 scripts/diagnose-swift-weak-lifetimes.py --swiftc swiftc
           --source "$GITHUB_SHA" --original c9bf8dfac232d6441044622c04ec1d59d5fa111f
           --arch "${{ matrix.arch }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
           --output weak-swift-diagnosis
       - name: Weak registration cancellation and callback-error cleanup
-        if: ${{ !cancelled() && contains(fromJSON('["ownership-peer-checks","weak-peer-checks","weak-swift-diagnosis"]'), inputs.suite) }}
+        if: ${{ !cancelled() && contains(fromJSON('["weak-operation-phases","ownership-peer-checks","weak-peer-checks","weak-swift-diagnosis"]'), inputs.suite) }}
         run: >-
           python3 scripts/check-weak-registration-peers.py --cc gcc --rustc rustc --swiftc swiftc
           --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
@@ -216,7 +226,7 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
@@ -229,6 +239,7 @@ jobs:
             parser-peer-checks/
             weak-peer-checks/
             weak-swift-diagnosis/
+            weak-operation-phases/
             swift-setup/
             swift-peer-evidence/
             swift-allocation-evidence/

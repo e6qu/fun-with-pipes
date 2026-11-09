@@ -1,0 +1,38 @@
+# Current fwp weak references observe channels, not arbitrary shared boxes.
+# The comparison creates an empty capacity-one channel and never sends a value.
+export reference-make : I64 -> Channel[I64] ! {Async}
+reference-make = channel.make
+export reference-downgrade : Channel[I64] -> WeakChannel[I64] ! {Async}
+reference-downgrade = channel.downgrade
+export reference-lookup : WeakChannel[I64] -> Bool ! {Async}
+reference-lookup = channel.upgrade | option.is-some
+export reference-release-owner : Channel[I64] -> ()
+reference-release-owner = const ()
+export reference-release-weak : WeakChannel[I64] -> ()
+reference-release-weak = const ()
+
+# Keep actual owned entries for the separately compiled native caller. This
+# record is not constructed by the experiment, and adds no measured wrapper.
+ReferenceFunctions = {
+    factory: I64 -> Channel[I64] ! {Async},
+    downgrade: Channel[I64] -> WeakChannel[I64] ! {Async},
+    lookup: WeakChannel[I64] -> Bool ! {Async},
+    release-owner: Channel[I64] -> (),
+    release-weak: WeakChannel[I64] -> (),
+}
+export reference-functions : () -> ReferenceFunctions
+reference-functions = make {
+    factory = const reference-make,
+    downgrade = const reference-downgrade,
+    lookup = const reference-lookup,
+    release-owner = const reference-release-owner,
+    release-weak = const reference-release-weak,
+}
+
+# The original function frame keeps the supplied owner alive through lookup.
+alive : Channel[I64] -> Bool ! {Async}
+alive = reference-downgrade | reference-lookup
+expired : () -> WeakChannel[I64] ! {Async}
+expired = const 1 | reference-make | reference-downgrade
+export reference-check : () -> (Bool, Bool) ! {Async}
+reference-check = both (const 1 | reference-make | alive) (expired | reference-lookup)
