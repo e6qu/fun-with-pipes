@@ -111,9 +111,13 @@ build/download/provider caches, not infrastructure state or active workloads.
 
 Combined head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`: production
 `42583726102` and docs `42583726111` queued when last checked. The review branch
-now adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite; it
-is not verified yet. Keep this separate from the already verified cancellation
-fixtures and preserve both original records.
+adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite at
+`9a7f1baaf`: focused run `42584848642`, docs `42584852665`; both queued when checked.
+Keep these unverified additions separate from the verified cancellation fixtures.
+The next prepared batch adds four-language returned-buffer factories, unique/shared
+owners, raw/optimized sum checks and actual wrong-scan/omitted-release controls.
+It has no timing result. Local checks remain prohibited by the 15 GiB disk reserve;
+use the new `returned-buffer-checks` runner suite and preserve failed observations.
 
 Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
 docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed

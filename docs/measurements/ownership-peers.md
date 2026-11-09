@@ -50,6 +50,52 @@ Check unique and aliased arrays separately, including validity of the surviving
 owner after the other is released. Swift out-of-memory behavior is not promised
 to match C/Rust's diagnostic exit code.
 
+### Returned-buffer preparation
+
+The new `returned-buffer-checks` suite is under native verification. It builds
+factory and caller separately without LTO at C/Rust O1/O2 and Swift Onone/O.
+fwp uses the current compiler's O2-generated C, compiled by the same GCC as C.
+The factory returns integers `0` through `length - 1`; the caller sums them.
+For length 4, the sequence is:
+
+| Unique owner | Two owners |
+|---|---|
+| Construct `[0, 1, 2, 3]` | Construct `[0, 1, 2, 3]`, then create another owner |
+| Read sum `6` | Read sum `6` through the first owner |
+| Release | Release the first owner |
+| Checksum `6` | Read sum `6` through the surviving owner, then release it; checksum `12` |
+
+This differs from the complete-operation `unique` example above, which reads
+length/first-element rather than summing all elements. Do not combine their ratios.
+
+| Peer | Unique representation | Shared representation |
+|---|---|---|
+| C | Pointer/length and `malloc` storage | Counter and elements in one allocation; pointer/length/counter handle |
+| Rust | Native `Vec<i64>` | Native `Rc<Vec<i64>>`; vector storage and Rc control allocation are distinct |
+| Swift | Native `Array<Int64>` | Another native Array owner, without mutating either value |
+| fwp | Actual emitted counted `Array[I64]` returned across the boundary | Another owner of that array |
+
+The [fwp fixture](../../tests/fixtures/returned_buffer_peer.fwp) retains its actual
+owned function entries. Its C adapter retains the caller's array before passing
+an owner to the consuming scan entry. That entry-boundary cost belongs in the
+measurement. Rust and Swift readers borrow their native arrays. The adapter does
+not replace fwp's fold with a C loop or add a different allocation representation.
+Swift explicitly consumes each array at the separately compiled release call.
+
+Checks cover seven lengths (including negative/empty inputs), one/three repetitions,
+malformed arguments, both owner modes and surviving-owner reads. The harness rejects
+lengths above 262,144 and repetitions outside 1–64 before allocation; these bounds
+are experimental settings, not language limits. Raw/optimized fwp interpretation
+checks the same sum. Actual incorrect scan implementations must return the result
+diagnostic. Separate C/fwp diagnostic builds check release and require a deliberately
+omitted release to fail. C's logical buffer ledger and fwp's managed live-byte
+baseline do not measure allocator reservation, physical RAM or Swift/Rust release.
+
+The [checker](../../scripts/check-returned-buffer-peers.py) retains original and
+prepared source, separate objects/modules, binaries, commands and hashes. It
+collects no timing samples. Next, verify native storage/release and freeze the
+construction/read/release timing protocol, including phase duration controls.
+
 ## Returned functions
 
 Reuse the two existing operations: capture `a`, then compute `a + x` or

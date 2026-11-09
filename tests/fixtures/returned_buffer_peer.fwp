@@ -1,0 +1,20 @@
+# Separate native caller owns the returned array until buffer-release.
+export buffer-make : I64 -> Array[I64]
+buffer-make = flip array.generate id
+
+# This exported entry consumes its argument. The borrowing C adapter retains
+# the caller's owner before entering it; include that real cost in comparisons.
+export buffer-scan : Array[I64] -> I64
+buffer-scan = array.fold add 0
+
+export buffer-release : Array[I64] -> ()
+buffer-release = const ()
+
+# Retain ordinary owned entries for the external caller. This record is not
+# constructed in the experiment: its generated entries are called directly.
+BufferFunctions = { factory: I64 -> Array[I64], scan: Array[I64] -> I64, release: Array[I64] -> () }
+export buffer-functions : () -> BufferFunctions
+buffer-functions = make { factory = const buffer-make, scan = const buffer-scan, release = const buffer-release }
+
+export buffer-check : I64 -> I64
+buffer-check = buffer-make | buffer-scan
