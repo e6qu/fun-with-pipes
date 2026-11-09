@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish the service timing sessions and run the prepared actual C/Rust
-parser allocator observer; then cover fwp region events and unobserved allocator
+**Next:** verify the repaired C/Rust parser allocation observer, retain the completed
+service timing results, then cover fwp region events and unobserved allocator
 paths. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
@@ -21,7 +21,7 @@ verification. Preserve unrelated root-worktree changes and inactive handoffs.
 | 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and actual process accounting | Service timing; parser internal peaks |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, cleanup, allocations and paired timing; parser entry repair and process accounting | Retain service timing tables; parser internal peaks |
 | 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Retain original noisy/unmet timing results. Fewer operations or smaller images do
@@ -31,10 +31,19 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 
 - **Service timing repair:** source `069e76ed8`, run `42675215554`, AMD64
   `129354672051`, ARM64 `129354672223`. Both pass all 28 builds, 178 result/fault
-  checks, 64 invalid arguments and two interpreter modes; paired timing sessions
-  are running. Docs `42675219991` / `129354681805` passes. No timing conclusion yet.
+  checks, 64 invalid arguments and two interpreter modes. Both paired timing
+  sessions, raw-evidence audits and six corruption controls per host now pass.
+  Artifacts: AMD64 `13700674134`, ARM64 `13700694287`.
+  Docs `42675219991` / `129354681805` passes. Full service gaps remain substantial;
+  reports are downloaded, and concise tables still need retention. No samples rerun.
   [First failures and combined descriptor/link repair](measurements/weak-callback-time-2026-11-09/README.md)
   retain all native logs and journals; no measurement ran before those repairs.
+- **Parser allocation observer:** source `19b8b48fe`, run `42679061783`; AMD64
+  `129368372898`, ARM64 `129368372298`. Both pass five builds and eight ordinary
+  results; all 12 diagnostic executions fail. Repair all three observer causes:
+  tail-call return tracking, C expressions in Rust frames and late auto-load
+  settings. [Complete retained failures](measurements/parser-native-allocator-2026-11-09/README.md).
+  Docs `42679066951` / `129368381461` passes. Repaired native execution is pending.
 - **Parser accounting:** source `6d1608c4f`, run `42673573956`; docs `42673580483`.
   Attempts 1 and 2 failed before jobs with GitHub internal errors. Attempt 2 IDs:
   `b32b4d94-27e5-4122-8539-4301d00c7a35` / `7f804619-adc9-4c50-b9fa-12ed4c5199e6`.
@@ -97,7 +106,7 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   both service and process clocks retain separate 2% copy controls. The collector
   also records RSS, build costs and native images; six changed-evidence controls
   must fail. Both native caller-verification groups now pass; timing and its
-  reconstruction/corruption controls remain in progress.
+  reconstruction/corruption controls now pass on both hosts.
 - Guarded local C/Rust/Swift O2 callers pass 48 result cases and actual missing
   delivery/backward-clock controls. The first Swift link found that the local
   clock object targeted macOS 15 while Swift targeted 14; explicitly compiling
@@ -115,7 +124,7 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   O2 ordinary/observed C/Rust parser pairs, four real omitted-tree-release controls,
   matched libc/Rust debug source, bounded raw events and exact vector-ledger
   reconciliation. Five local reader tests pass, including duplicate nested returns,
-  mapped/retry models and missing/reordered events. Native execution is pending;
+  mapped/retry models and missing/reordered events. Native repair is pending;
   synthetic paths are not native verification. fwp region events remain separate.
 - The handoff rewrite briefly removed the status column required by its checker;
   the column is restored. The audit now passes 426 doc link sets, 106 immutable

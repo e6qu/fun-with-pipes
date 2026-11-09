@@ -137,7 +137,7 @@ def main():
                         report['ordinary'].append(dict(case=name, language=language, command=row['index']))
                     else:
                         observation_path = folder / (name + '-' + language + '-' + mode + '.json')
-                        row = run([args.gdb, '--batch', '--nx', '-ex', 'set auto-load off',
+                        row = run([args.gdb, '--batch', '--nx', '-iex', 'set auto-load off',
                             '-ex', 'directory ' + str(calibration / 'glibc-source'),
                             '-ex', f'set substitute-path /rustc/{revision}/library {rust_source}',
                             '-x', observer, '--args', *command], env | {'FWP_PARSER_ALLOCATOR_EVENTS': str(observation_path)})

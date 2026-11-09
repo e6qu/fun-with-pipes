@@ -1,6 +1,6 @@
 # Actual parser allocator events
 
-**Prepared observer; native verification pending.** This connects the
+**Native observer repair pending verification.** This connects the
 [installed-libc calibration](parser-allocator-calibration-2026-11-09/README.md)
 to the real C/Rust parser vectors. It does not change the allocator or measure
 diagnostic execution time as performance.
@@ -21,6 +21,10 @@ diagnostic execution time as performance.
   write allocator data, dereference old storage after release or infer allocation
   from instruction patterns. Missing debug values/symbols or unexpected threads
   fail explicitly. Bound the trace to 4,096 events.
+- Observe returns at the real caller's resume address and verify its stack and
+  thread. Read pointer results from the target ABI's return register. Tail calls
+  can share that return: close their nested observations in reverse entry order,
+  counting each returned chunk once. No allocator data or results are changed.
 
 ## Three different storage numbers
 
@@ -53,6 +57,14 @@ still pass, but the allocation reader must report live parser storage. Reader
 controls also reject missing/reordered internal events, wrong vector work and
 duplicate counting. Synthetic mapped/retry cases verify reader logic only;
 classify native occurrences from events, and do not call unobserved paths tested.
+
+The first run at `19b8b48fe` ([42679061783](https://github.com/e6qu/fun-with-pipes/actions/runs/42679061783))
+passed five builds and eight ordinary results per host, but all 12 diagnostic
+executions failed. The observer lost returns through libc tail calls. Its Rust
+setup also evaluated a C type expression in a Rust frame and disabled auto-loading
+after the executable had already been read. The repair uses caller-address return
+breakpoints, debug type fields for layout and GDB's early `-iex` setting.
+[Complete first-failure records](parser-native-allocator-2026-11-09/README.md).
 
 Freeze an immutable source tag before collection. Preserve original/prepared
 sources, native images, complete command journals, exact libc/source identities,

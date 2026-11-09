@@ -21,6 +21,8 @@ STOPPED = []
 EXIT_CODE = None
 HEADER_BYTES = None
 CHUNK_TYPE = None
+RETURNS = []
+RETURN_REGISTER = None
 
 
 def save():
@@ -66,19 +68,24 @@ def record(kind, **values):
                                  thread=list(gdb.selected_thread().ptid), **values))
 
 
-class Returned(gdb.FinishBreakpoint):
+class Returned(gdb.Breakpoint):
     def __init__(self, frame, function, root, pointer_kind):
-        super().__init__(frame, internal=True)
+        caller = frame.older()
+        while caller is not None and caller.type() in (gdb.INLINE_FRAME, gdb.TAILCALL_FRAME):
+            caller = caller.older()
+        if caller is None or caller.type() != gdb.NORMAL_FRAME:
+            raise RuntimeError('missing real allocator caller: ' + function)
+        self.address = caller.pc()
+        self.stack = int(caller.read_register('sp'))
+        super().__init__('*' + hex(self.address), internal=True)
         self.function = function
         self.root = root
         self.pointer_kind = pointer_kind
-
-    def out_of_scope(self):
-        REPORT['errors'].append('unexpected unwind at ' + self.function)
+        RETURNS.append(self)
 
 
 def observe():
-    global PHASE, OWNER_THREAD, OPERATION, SERIAL, STOPPED, HEADER_BYTES, CHUNK_TYPE
+    global PHASE, OWNER_THREAD, OPERATION, SERIAL, STOPPED, HEADER_BYTES, CHUNK_TYPE, RETURN_REGISTER
     gdb.events.stop.connect(stopped)
     gdb.events.exited.connect(exited)
     for command in ('set pagination off', 'set confirm off', 'set auto-load off',
@@ -91,10 +98,14 @@ def observe():
             REPORT['objects'].append(dict(path=str(path), buildId=obj.build_id,
                 debugOwner=obj.owner.filename if obj.owner else None,
                 sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
-    assert int(gdb.parse_and_eval('sizeof(void *)')) == 8
     CHUNK_TYPE = gdb.lookup_type('struct malloc_chunk')
-    HEADER_BYTES = int(gdb.parse_and_eval('(size_t)&((struct malloc_chunk *)0)->fd'))
-    assert HEADER_BYTES == 2 * int(gdb.parse_and_eval('sizeof(size_t)')) == 16
+    assert CHUNK_TYPE.pointer().sizeof == 8
+    fields = {field.name: field for field in CHUNK_TYPE.fields()}
+    HEADER_BYTES = fields['fd'].bitpos // 8
+    assert HEADER_BYTES == 2 * fields['mchunk_size'].type.sizeof == 16
+    architecture = gdb.newest_frame().architecture().name()
+    RETURN_REGISTER = {'i386:x86-64': 'rax', 'aarch64': 'x0'}[architecture]
+    REPORT['architecture'] = architecture
     REPORT['chunkHeaderBytes'] = HEADER_BYTES
     names = ('parser_memory_checkpoint', '__libc_malloc', '__libc_realloc', '__libc_free',
              '_int_malloc', '_int_realloc', '_int_free', 'mremap_chunk', 'munmap_chunk')
@@ -107,32 +118,49 @@ def observe():
         gdb.execute('continue')
         if EXIT_CODE is not None:
             break
-        if len(STOPPED) != 1:
+        if not STOPPED:
             raise RuntimeError('ambiguous or unexpected allocator stop')
-        point = STOPPED[0]
         frame = gdb.newest_frame()
-        if isinstance(point, Returned):
-            if OPERATION is None:
-                raise RuntimeError('allocator return without its operation')
-            if point.pointer_kind == 'void':
-                pointer, layout = None, None
-            else:
-                value = point.return_value
-                if value is None or value.is_optimized_out:
-                    raise RuntimeError('unavailable allocator return: ' + point.function)
-                pointer = int(value)
-                layout = chunk(pointer) if point.pointer_kind == 'chunk' else allocation(pointer)
-            record('api-return' if point.root else 'internal-return',
-                   function=point.function, pointer=pointer, chunk=layout)
-            if point.root:
-                OPERATION = None
+        returning = [point for point in STOPPED if isinstance(point, Returned)]
+        if returning:
+            # Tail calls can share a real caller. Observe its actual return once,
+            # then close the nested calls in reverse entry order. FinishBreakpoint
+            # instead treats some tail-eliminated libc frames as unwound.
+            if len(returning) != len(STOPPED) or any(point not in RETURNS for point in returning):
+                raise RuntimeError('mixed allocator entry/return stop')
+            returning.sort(key=RETURNS.index, reverse=True)
+            for point in returning:
+                if point is not RETURNS[-1] or frame.pc() != point.address or int(frame.read_register('sp')) != point.stack:
+                    raise RuntimeError('allocator return caller/order mismatch')
+                if list(gdb.selected_thread().ptid) != OWNER_THREAD:
+                    raise RuntimeError('allocator return on a different thread')
+                if OPERATION is None:
+                    raise RuntimeError('allocator return without its operation')
+                if point.pointer_kind == 'void':
+                    pointer, layout = None, None
+                else:
+                    value = frame.read_register(RETURN_REGISTER)
+                    if value.is_optimized_out:
+                        raise RuntimeError('unavailable allocator return: ' + point.function)
+                    pointer = int(value)
+                    layout = chunk(pointer) if point.pointer_kind == 'chunk' else allocation(pointer)
+                record('api-return' if point.root else 'internal-return',
+                       function=point.function, pointer=pointer, chunk=layout,
+                       returnAddress=point.address, callerStack=point.stack)
+                RETURNS.pop()
+                point.delete()
+                if point.root:
+                    OPERATION = None
             save()
             continue
+        if len(STOPPED) != 1:
+            raise RuntimeError('ambiguous allocator entry')
+        point = STOPPED[0]
         name = points[point]
         if name == 'parser_memory_checkpoint':
             phase = argument(frame, 'phase')
             assert phase == (0 if PHASE is None else PHASE + 1) and phase <= 4
-            assert OPERATION is None
+            assert OPERATION is None and not RETURNS
             if OWNER_THREAD is None:
                 OWNER_THREAD = list(gdb.selected_thread().ptid)
             assert list(gdb.selected_thread().ptid) == OWNER_THREAD
@@ -180,7 +208,7 @@ def observe():
             Returned(frame, name, root, pointer_kind)
         save()
     REPORT['exitCode'] = EXIT_CODE
-    if EXIT_CODE != 0 or PHASE != 4 or OPERATION is not None or REPORT['errors']:
+    if EXIT_CODE != 0 or PHASE != 4 or OPERATION is not None or RETURNS or REPORT['errors']:
         raise RuntimeError('incomplete native parser allocator execution')
 
 
