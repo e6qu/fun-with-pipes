@@ -13,7 +13,7 @@ import subprocess
 import traceback
 
 from parser_memory_source import MEASURE, ROOT, fwp, native
-from parser_process_memory import checkpoint_process, mappings, summary, validate_mapping_control
+from parser_process_memory import accounting, checkpoint_process, mappings, summary, validate_mapping_control
 from process_wait import run_capture
 
 CASES = (('small', 5, False), ('medium', 9, False), ('large', 13, False), ('left', 64, True))
@@ -374,6 +374,10 @@ def audit(args):
             path = folder / part['file']
             assert digest(path) == part['sha256']
             assert summary(mappings(path.read_text())) == part['metrics']
+            assert accounting(mappings(path.read_text())) == part['accounting']
+            policy = folder / part['kernelAccountingFile']
+            assert policy.name == f'phase-{part["phase"]}.accounting.json'
+            assert digest(policy) == part['kernelAccountingSha256']
 
     for name, expected_error in CONTROLS:
         control = report['controls'][name]

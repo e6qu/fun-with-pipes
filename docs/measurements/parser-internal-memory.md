@@ -87,3 +87,27 @@ Next steps:
 This continues the [process-memory protocol](parser-process-memory.md) and
 [ownership milestone](ownership-peers.md#parser-workspace), without replacing
 already retained observations or repeating unchanged timing controls.
+
+### Prepared mapping-accounting calibration
+
+The `parser-mapping-accounting` suite builds only a small native C control at
+GCC O1/O2. It records five stopped-process snapshots: before reservation, after a
+16 MiB inaccessible reservation, after enabling writes, after touching every page,
+and after unmapping. Both ordinary mappings and explicit `MAP_NORESERVE` mappings
+run with the host's existing policy. Actual omitted-touch and omitted-unmap
+variants must fail the corresponding observation checks.
+
+Each snapshot preserves `VmFlags`, the kernel version and all three overcommit
+settings. The report separates:
+
+| Quantity | Meaning |
+|---|---|
+| Accountable mapping extent | Sum of mapping sizes carrying the kernel's `ac` flag |
+| No-reservation mapping extent | Sum carrying `nr`; mode 2 ignores the requested no-reservation flag |
+| Resident pages | Actual `Rss` from the stopped process's mappings |
+| `CommitLimit`, `Committed_AS` | System-wide values sampled separately; other processes can change them |
+
+The first two quantities are **not guaranteed RAM**, and system-wide differences
+cannot be assigned to this parser on a shared runner. Reader controls reject
+misclassified flags even when sizes and RSS agree. Native verification and
+applying this observer to the parser checkpoints remain pending.

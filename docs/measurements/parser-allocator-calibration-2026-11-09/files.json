@@ -43,5 +43,45 @@
     "bytes": 442738,
     "sha256": "a0838a2ce945c9383b192f4958169dc32093d942b39f4449b0b344639dffc3df",
     "compressedSha256": "6c6266f56f86cb8da91348a47f3592a1ad7aae9bc6b40b1a3d53e824c69ab1de"
+  },
+  "source-amd-report.json.gz": {
+    "bytes": 14034,
+    "sha256": "72042fbc1e28d58905eb42603c6dc7ac756c1b72b201eefe0c89b57e7b4af7cf",
+    "compressedSha256": "4f0b03554d272cad6e6813f7790da0b2b9a5f618a7424ca1ad1486198f4e9e29"
+  },
+  "source-amd-commands.jsonl.gz": {
+    "bytes": 7348,
+    "sha256": "1d0df1f5462fd1260a6e2b916fd7c0ba4d595ed6356fed054d694e0a40744409",
+    "compressedSha256": "9cdc2306de83a96c6d36ff73c66a2fb1e4ac8ecc8d14fa3572f5f871c19df899"
+  },
+  "source-amd-observation.json.gz": {
+    "bytes": 5673,
+    "sha256": "4fc36518c6104323840a26341c62befbb6b5e8456245f6c480d7b5c412c6f78b",
+    "compressedSha256": "9f95ad3bb33128c9eb2acc46596258f0b35114940c33a025be65da7f40e56f91"
+  },
+  "source-amd-job.log.gz": {
+    "bytes": 235599,
+    "sha256": "d239434fe1c3476168a374324701f52eb2ed5b6cd654075a17ebc31c5bb0ec0c",
+    "compressedSha256": "b3a9d28d4bbf7ad3b2d57de4c6e3c321bcf9f9da676e1aaa99919a21175fe82c"
+  },
+  "source-arm-report.json.gz": {
+    "bytes": 15321,
+    "sha256": "9f177124c92f54290791c7a7e0bf1a357d7a20bc9611d8d21d864abfc3ed5243",
+    "compressedSha256": "532db32d03ad76582779718aa7d1c1b6d5094d1d9d7071d3951af915092675a2"
+  },
+  "source-arm-commands.jsonl.gz": {
+    "bytes": 7990,
+    "sha256": "74d83e7dacce40715364ce482e5592286f6db2c9212f558d22814a489807dfaf",
+    "compressedSha256": "8533ccd08cf15a12591dc24c90dd9173119a312874c7d1c3cdb13ad7c90586b2"
+  },
+  "source-arm-observation.json.gz": {
+    "bytes": 5685,
+    "sha256": "b7ef50cac35c898f58c237009131cc1698f7c7eade843edf4686240e1cacb3e5",
+    "compressedSha256": "ee4b4934ca39b8de899bc0b03295022f3cd3ede7f6b43af7dcc8b0c3c567238d"
+  },
+  "source-arm-job.log.gz": {
+    "bytes": 236253,
+    "sha256": "cb77f74dceec3fe1c46a23a71b044a4c2b7c3be39b08a6e56fd0878b2f66e770",
+    "compressedSha256": "7942e53345f8d76b46f8a4229d413c5054a92fce23b5fd0398812bce09f808e0"
   }
 }

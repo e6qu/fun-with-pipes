@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from parser_process_memory import checkpoint_process, mappings, summary
+from parser_process_memory import accounting, checkpoint_process, mappings, summary
 
 SPEC = importlib.util.spec_from_file_location('parser_memory_collector', Path(__file__).with_name('measure-parser-process-memory.py'))
 COLLECTOR = importlib.util.module_from_spec(SPEC)
@@ -40,8 +40,15 @@ class MappingReader(unittest.TestCase):
         self.assertEqual(summary(mappings(SNAPSHOT)), dict(mappedKiB=12, residentKiB=4,
             proportionalKiB=4, privateKiB=4, anonymousKiB=4, swapKiB=0, noAccessKiB=8))
 
+    def test_accounting_is_separate_from_residency(self):
+        self.assertEqual(accounting(mappings(SNAPSHOT)), dict(accountableMappingKiB=4, noReserveMappingKiB=0))
+        no_reserve = SNAPSHOT.replace('me ac sd', 'me nr sd')
+        self.assertEqual(accounting(mappings(no_reserve)), dict(accountableMappingKiB=0, noReserveMappingKiB=4))
+
     def test_malformed_or_incomplete_snapshot(self):
-        for source in ('', SNAPSHOT.replace('Rss: 4 kB', 'Rss: 4 MB'),
+        for source in ('', SNAPSHOT.replace('VmFlags: mr mw me sd\n', ''),
+                       SNAPSHOT.replace('VmFlags: mr mw me sd', 'VmFlags: mr mw me sd\nVmFlags: mr'),
+                       SNAPSHOT.replace('me ac sd', 'me ac ac sd'), SNAPSHOT.replace('Rss: 4 kB', 'Rss: 4 MB'),
                        SNAPSHOT.replace('Size: 4 kB', 'Size: 5 kB'),
                        SNAPSHOT.replace('Swap: 0 kB\n', '', 1),
                        SNAPSHOT.replace('Rss: 4 kB', 'Rss: 4 kB\nRss: 4 kB'),

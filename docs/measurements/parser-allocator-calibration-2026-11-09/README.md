@@ -32,8 +32,14 @@ passes, including deliberate failed/hung runner controls.
 The audit found **five GDB source-display warnings per host**: debug arguments were
 available, but `./malloc/malloc.c` was not on GDB's source path. The prepared repair
 extracts that source member, adds its directory and rejects debugger stderr.
-Its native verification remains pending. The original warnings are retained;
-passing exit codes do not mean a warning-free run.
+The source-path change at `c0ac432fc` fixes those warnings but
+[run 42664669989](https://github.com/e6qu/fun-with-pipes/actions/runs/42664669989)
+fails on both hosts under the stricter stderr check: writing the extracted source
+assigned a new timestamp, so GDB reports that it is newer than the executable.
+All native executions exit zero and all allocator events remain recorded. The
+next repair preserves the source archive member's timestamp. Both failed jobs
+(`129325026050` AMD64, `129325025900` ARM64), reports and command journals are
+retained. Passing exit codes do not mean a warning-free run.
 
 [files.json](files.json) hashes compressed and original reports, events, command
 journals and complete job logs. Parser observations, mapped/retry paths and commit

@@ -1,0 +1,49 @@
+name: Native parser mapping accounting controls
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  accounting:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Mapping reader, kernel flags and child cleanup controls
+        run: |
+          python3 scripts/test-parser-process-memory.py
+          python3 scripts/test-parser-mapping-accounting.py
+      - name: Observe reservation, writable mappings, resident pages and release
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/check-parser-mapping-accounting.py
+          --source "$GITHUB_SHA" --tag "$SOURCE_TAG" --cc gcc
+          --arch "${{ matrix.arch }}" --c-arch "${{ matrix.c_arch }}"
+          --output parser-mapping-accounting
+      - name: Retain actual mappings, policy, system quantities and failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-mapping-accounting-${{ matrix.arch }}
+          path: parser-mapping-accounting/
+          if-no-files-found: error

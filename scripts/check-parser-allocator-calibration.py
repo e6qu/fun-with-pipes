@@ -79,7 +79,10 @@ def main():
         report['glibcSource'].update(mallocMember=member.name, mallocSha256=hashlib.sha256(malloc_source).hexdigest())
         source_root = folder / 'glibc-source'
         (source_root / 'malloc').mkdir(parents=True)
-        (source_root / 'malloc/malloc.c').write_bytes(malloc_source)
+        source_path = source_root / 'malloc/malloc.c'
+        source_path.write_bytes(malloc_source)
+        os.utime(source_path, (member.mtime, member.mtime))
+        report['glibcSource']['mallocArchiveMtime'] = member.mtime
         fixture = folder / 'calibration.c'
         shutil.copyfile(ROOT / 'tests/fixtures/parser_allocator_calibration.c', fixture)
         shutil.copyfile(ROOT / 'scripts/parser_allocator_gdb.py', folder / 'observer.py')

@@ -10,6 +10,7 @@ Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
 `ownership-buffer-review`. PR branch: `ownership-peer-comparisons`, currently
 `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`. Integrate the complete preparation
 batch into #273 before its final production matrix. There is no separate prep PR.
+Current published preparation: `c0ac432fc`, tag `roadmap/weak-service-profiles-2026-11-09`.
 Preserve unrelated root-worktree changes and modified inactive handoffs.
 
 ## Roadmap status
@@ -154,8 +155,12 @@ passes at `0f8c2669b`: run `42661050319`, AMD64 `129312418213`, ARM64
 `129312418586`, docs `42661056292` / `129312429448`. All four real resize
 controls and two reader tests pass; downloaded observations reconstruct exactly.
 Command-journal audit found five GDB missing-source display warnings per host.
-The prepared repair extracts the hashed allocator source, sets GDB's source
-search path and rejects stderr. Preserve the original warnings. Parser peaks,
+Source-path repair `c0ac432fc` (run `42664669989`) fails both native jobs
+(`129325026050` AMD64, `129325025900` ARM64): the source is found, but extraction
+assigned a new timestamp and GDB reports it newer than the executable. Every
+native command still exits zero; both full journals/logs were audited. The next
+repair preserves the archive member's timestamp and keeps strict stderr rejection.
+Original warnings and failures remain retained. Parser peaks,
 mapped/retry paths and committed memory remain unmeasured.
 
 The service now separates native modules from output formatting and selects
@@ -164,8 +169,20 @@ pass for 11 ordinary/fault module builds and five profile-caller builds (40 case
 results, 30 invalid arguments). Three allocation-reader tests pass. The prepared
 native profile suite verifies 16 diagnostic O1/O2 or Onone/O builds, then 80
 allocation profiles, including actual C omitted-release controls. It does not
-rebuild fwp or repeat the unchanged physical-ownership regression. Linux profiles
-and new module boundaries remain unverified until the focused jobs pass.
+rebuild fwp or repeat the unchanged physical-ownership regression. Service-profile run `42664664795` passes (AMD64 `129325013027`, ARM64
+`129325013096`); docs `42664675441` / `129325039434` passes. All 16 diagnostic
+builds and 80 profiles per host pass, including actual omitted releases. Downloaded
+reports retain no failures. Complete raw journals exceed the local 2 MiB member
+limit; a prepared runner-side audit reconstructs both full archives and scans every
+command diagnostic. Do not raise the local limit. Full native logs include the
+optional g++ manual-page notice and libtool's expected install-time relinking.
+
+The mapping-accounting calibration is prepared locally: 16 MiB reservation,
+writable, touched and released mappings, explicit no-reservation policy, O1/O2
+and actual omitted-touch/unmap controls. It records complete flags, current host
+policy and separate system-wide commit quantities. Two reader tests and 10
+mapping/cleanup tests pass locally (one Linux-only test skipped on macOS).
+Native verification and application to actual parser checkpoints remain pending.
 
 ## Delivery and local checks
 

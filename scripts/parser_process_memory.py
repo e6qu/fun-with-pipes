@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import re
 import select
 import signal
@@ -28,12 +29,18 @@ def mappings(text):
             start, end = int(header[1], 16), int(header[2], 16)
             if start >= end or (rows and start < rows[-1]['end']):
                 raise ValueError('overlapping or empty memory mapping')
-            current = dict(start=start, end=end, permissions=header[3], name=header[4] or '', fields={})
+            current = dict(start=start, end=end, permissions=header[3], name=header[4] or '', fields={}, flags=None)
             rows.append(current)
             continue
         key, separator, value = line.partition(':')
         if not separator or current is None or not re.fullmatch(r'[A-Za-z_]+', key):
             raise ValueError('mapping field without a valid header')
+        if key == 'VmFlags':
+            flags = value.split()
+            if current['flags'] is not None or len(set(flags)) != len(flags) or not all(re.fullmatch(r'[a-z]{2}', flag) for flag in flags):
+                raise ValueError('malformed or duplicate mapping flags')
+            current['flags'] = flags
+            continue
         if key not in FIELDS:
             continue
         match = re.fullmatch(r'\s*([0-9]+) kB', value)
@@ -43,6 +50,8 @@ def mappings(text):
     if not rows:
         raise ValueError('empty memory mapping snapshot')
     for row in rows:
+        if row['flags'] is None:
+            raise ValueError('missing memory mapping flags')
         if set(row['fields']) != set(FIELDS):
             raise ValueError('missing memory mapping fields')
         if row['fields']['Size'] * 1024 != row['end'] - row['start']:
@@ -56,6 +65,31 @@ def summary(rows):
                 proportionalKiB=totals['Pss'], privateKiB=totals['Private_Clean'] + totals['Private_Dirty'],
                 anonymousKiB=totals['Anonymous'], swapKiB=totals['Swap'],
                 noAccessKiB=sum(row['fields']['Size'] for row in rows if row['permissions'][:3] == '---'))
+
+
+def accounting(rows):
+    """Mapping extents marked by the kernel; not guaranteed or resident RAM."""
+    return dict(accountableMappingKiB=sum(row['fields']['Size'] for row in rows if 'ac' in row['flags']),
+                noReserveMappingKiB=sum(row['fields']['Size'] for row in rows if 'nr' in row['flags']))
+
+
+def kernel_accounting():
+    fields = {}
+    for line in Path('/proc/meminfo').read_text().splitlines():
+        key, _, value = line.partition(':')
+        if key in ('CommitLimit', 'Committed_AS'):
+            match = re.fullmatch(r'\s*([0-9]+) kB', value)
+            if not match or key + 'KiB' in fields:
+                raise ValueError('invalid system commit accounting')
+            fields[key + 'KiB'] = int(match[1])
+    if set(fields) != {'CommitLimitKiB', 'Committed_ASKiB'}:
+        raise ValueError('missing system commit accounting')
+    policy = {key: int(Path('/proc/sys/vm/' + key).read_text())
+              for key in ('overcommit_memory', 'overcommit_ratio', 'overcommit_kbytes')}
+    if policy['overcommit_memory'] not in (0, 1, 2):
+        raise ValueError('unknown overcommit policy')
+    return dict(kernel=platform.release(), policy=policy, system=fields,
+                scope='System-wide commit quantities; not a per-process reservation or guaranteed RAM')
 
 
 def read_exact(stream, count, deadline):
@@ -109,8 +143,14 @@ def checkpoint_process(command, environment, folder, phases, timeout):
                 path.write_text(raw)
                 if len(raw) > 4 * 1024 * 1024:
                     raise ValueError('memory snapshot exceeds the fixed reader limit')
+                memory = mappings(raw)
                 records.append(dict(phase=phase, file=path.name, sha256=hashlib.sha256(raw.encode()).hexdigest(),
-                                    metrics=summary(mappings(raw))))
+                                    metrics=summary(memory), accounting=accounting(memory)))
+                policy = kernel_accounting()
+                policy_path = folder / f'phase-{phase}.accounting.json'
+                policy_path.write_text(json.dumps(policy, indent=2) + '\n')
+                records[-1]['kernelAccountingFile'] = policy_path.name
+                records[-1]['kernelAccountingSha256'] = hashlib.sha256(policy_path.read_bytes()).hexdigest()
                 process.stdin.write(b'\n')
                 process.stdin.flush()
                 os.kill(process.pid, signal.SIGCONT)
