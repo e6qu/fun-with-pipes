@@ -53,6 +53,10 @@ ARM64/AMD64, GCC/Rust O2 and Swift O, with debug information for attribution.
 Factories and callers compile separately without LTO. Record explicit target
 flags, compiler versions, CPU, source revision and native ELF hashes. Use
 `suite=weak-operation-profiles` in the numerical workflow.
+The source is frozen as `roadmap/weak-operation-storage-2026-11-09`
+(`2470f2a94`) before collection. [Native run](https://github.com/e6qu/fun-with-pipes/actions/runs/42635657945)
+and [documentation controls](https://github.com/e6qu/fun-with-pipes/actions/runs/42635673348)
+are queued; neither establishes a passing observation yet.
 
 - Three binaries, eight ordinary result checks per binary.
 - Two independent profiles of each population/stage: **48 profiles per host**.

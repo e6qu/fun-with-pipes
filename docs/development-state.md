@@ -31,6 +31,8 @@ do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
 | Parser memory and argument repair | `8848e837c`, `roadmap/parser-process-memory-combined-2026-11-09` | Run `42631160983`: AMD64 `129207526319`, ARM64 `129207526124` | Queued |
 | Weak phases, minimal Swift repair and original-assertion diagnosis | `8848e837c`, `roadmap/weak-operation-combined-2026-11-09` | Run `42631166444`: AMD64 `129207545716`, ARM64 `129207545782` | Queued |
 | Documentation and reader controls | `8848e837c` | Run `42631171172`, job `129207557246` | Queued |
+| Native weak-storage prefixes | `2470f2a94`, `roadmap/weak-operation-storage-2026-11-09` | Run `42635657945`: AMD64 `129223014018`, ARM64 `129223014753` | Queued |
+| Storage documentation and reader controls | `2470f2a94` | Run `42635673348`, job `129223066100` | Queued |
 
 - [Parser batch](measurements/parser-process-memory.md): one parse per process,
   three ordinary RSS observations and two five-checkpoint sequences per case and
@@ -61,11 +63,11 @@ totals. It also explicitly matches the production C driver's `-ffp-contract=off`
 setting. The six-phase workloads use integer operations. Both changes are covered
 by the consolidated verification; no passing result is claimed yet.
 
-Prepared next in the same PR: [native weak storage](measurements/weak-operation-storage.md).
+Prepared in the same PR: [native weak storage](measurements/weak-operation-storage.md).
 The collector uses the existing C/Rust/Swift operation modules, four explicit
 lifetime prefixes, actual omitted owners and raw-stack reconstruction. Expected:
 three binaries, 24 ordinary results and 48 profiles per host. Native execution is
-pending. Keep the currently queued source unchanged; this addition does not
+queued at `2470f2a94`. Keep the earlier queued sources unchanged; this addition does not
 establish a new timing, storage or ARC result.
 
 The queue has no explanatory annotations or assigned runners. These workflows
