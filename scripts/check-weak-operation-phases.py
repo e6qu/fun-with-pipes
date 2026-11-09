@@ -25,7 +25,7 @@ INVALID = (([], 'expected population lookups batches'), (['1', '1'], 'expected p
 
 def decode_output(text, population, lookups, batches):
     row = json.loads(text)
-    assert set(row) == {'live', 'expired', *PHASES}
+    assert isinstance(row, dict) and set(row) == {'live', 'expired', *PHASES}
     assert all(type(value) is int and value >= 0 for value in row.values())
     assert text == json.dumps(row, separators=(',', ':')) + '\n'
     assert row['live'] == population * lookups * batches and row['expired'] == 0

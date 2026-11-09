@@ -28,9 +28,27 @@ def digest(path):
 
 
 def result_value(row, language, expected, nodes, diagnostic):
+    if language not in LANGUAGES:
+        raise ValueError('unknown parser result language')
     if row['status'] != 0 or row['stderr']:
         raise ValueError('parser process failed: ' + str(row))
     value = json.loads(row['stdout'])
+    fields = {'result', 'rounds'}
+    if language == 'fwp':
+        if diagnostic:
+            fields.add('observedNodes')
+    else:
+        fields.update(('nodes', 'tokenizeNs', 'constructNs', 'walkAndReleaseNs', 'releaseNs',
+                       'totalNs', 'nodeCapacityBytes', 'tokenCapacityBytes', 'allocations', 'nodeSize'))
+    if not isinstance(value, dict) or set(value) != fields or any(type(item) is not int for item in value.values()):
+        raise ValueError('malformed parser result fields')
+    if row['stdout'] != json.dumps(value, separators=(',', ':')) + '\n':
+        raise ValueError('duplicated parser result fields or unexpected output format')
+    if any(item < 0 for key, item in value.items() if key != 'result'):
+        raise ValueError('negative parser work or memory observation')
+    if language != 'fwp' and (value['totalNs'] != value['tokenizeNs'] + value['constructNs'] + value['walkAndReleaseNs']
+                              or value['walkAndReleaseNs'] < value['releaseNs']):
+        raise ValueError('inconsistent parser phase durations')
     if value['result'] != expected or value['rounds'] != 1:
         raise ValueError('parser result or work count changed')
     if language != 'fwp' and value['nodes'] != nodes:

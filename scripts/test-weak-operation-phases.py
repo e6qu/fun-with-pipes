@@ -35,7 +35,8 @@ class WeakResults(unittest.TestCase):
             del row[field]
             variants.append(json.dumps(row, separators=(',', ':')) + '\n')
         valid = json.dumps(self.row(), separators=(',', ':')) + '\n'
-        variants += [valid.replace('"live":1024', '"live":0,"live":1024'), valid + '\n']
+        variants += [valid.replace('"live":1024', '"live":0,"live":1024'), valid + '\n',
+                     json.dumps(list(self.row())) + '\n', 'null\n']
         for value in variants:
             with self.subTest(value=value), self.assertRaises(AssertionError):
                 CHECKS.decode_output(value, 64, 16, 1)

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Check mapping units/structure and cleanup of failed checkpoint children."""
+import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
@@ -7,6 +9,10 @@ import tempfile
 import unittest
 
 from parser_process_memory import checkpoint_process, mappings, summary
+
+SPEC = importlib.util.spec_from_file_location('parser_memory_collector', Path(__file__).with_name('measure-parser-process-memory.py'))
+COLLECTOR = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(COLLECTOR)
 
 SNAPSHOT = '''00001000-00002000 rw-p 00000000 00:00 0 [anon:sample]
 Size: 4 kB
@@ -66,6 +72,35 @@ class MappingReader(unittest.TestCase):
 
     def test_missing_next_checkpoint_times_out_and_reaps_child(self):
         self.check_child('os.write(1, b"0\\n")\nos.kill(os.getpid(), signal.SIGSTOP)\nos.read(0, 1)\ntime.sleep(10)\n', TimeoutError)
+
+
+class ParserResults(unittest.TestCase):
+    def test_exact_integer_result(self):
+        row = dict(status=0, stderr='', stdout='{"result":1,"rounds":1,"observedNodes":1}\n')
+        COLLECTOR.result_value(row, 'fwp', 1, 1, True)
+
+    def test_bad_counts_and_duplicate_keys_are_rejected(self):
+        outputs = ('{"result":true,"rounds":1,"observedNodes":1}\n',
+                   '{"result":1,"rounds":1,"observedNodes":true}\n',
+                   '{"result":0,"result":1,"rounds":1,"observedNodes":1}\n',
+                   '{"result":1,"rounds":1,"observedNodes":2}\n',
+                   '{"result":1,"rounds":1}\n', 'null\n',
+                   '["result","rounds","observedNodes"]\n')
+        for output in outputs:
+            with self.subTest(output=output), self.assertRaises(ValueError):
+                COLLECTOR.result_value(dict(status=0, stderr='', stdout=output), 'fwp', 1, 1, True)
+
+    def test_native_duration_totals_must_agree(self):
+        value = dict(rounds=1, result=-1, nodes=1, tokenizeNs=10, constructNs=20,
+                     walkAndReleaseNs=30, releaseNs=5, totalNs=60,
+                     nodeCapacityBytes=192, tokenCapacityBytes=128, allocations=2, nodeSize=24)
+        def check(record):
+            COLLECTOR.result_value(dict(status=0, stderr='', stdout=json.dumps(record, separators=(',', ':')) + '\n'),
+                                   'c', -1, 1, False)
+        check(value)
+        for changes in ({'totalNs': 61}, {'releaseNs': 31}, {'nodeCapacityBytes': -1}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                check(value | changes)
 
 
 if __name__ == '__main__':

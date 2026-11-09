@@ -53,6 +53,11 @@ Superseded while still queued, before tests: `42615022531`, `42615026734`,
 Cancellation is not a pass. The earlier assertion-wrapper-only Swift pass is
 not accepted as a repair; original failures and source comparisons are retained.
 
+The report-reader follow-up now rejects booleans masquerading as integer counts,
+duplicate JSON fields, malformed objects, negative counters and inconsistent
+parser phase totals. Its new reader controls need the next docs audit. Native
+programs and frozen measurement inputs are unchanged.
+
 ## Verified comparison evidence
 
 | Evidence | Source | Native runs |
@@ -86,7 +91,7 @@ fails. Its original invalid workflow expression and all 27 passing status/input
 controls remain in that receipt. Docs `42606196247` passes 410 link sets and 106
 preparation pairs after restoring the handoff's required Status column.
 
-About 13 GiB is free, below the required 64 GiB. Keep tests/builds/profiles on
+About 12 GiB is free, below the required 64 GiB. Keep tests/builds/profiles on
 GitHub; do not bypass the guard. Active target data is empty. Inspected caches
 cannot restore the reserve. Use bounded report reads and runner-side large
 archive audits. Ownership and parser jobs use reusable workflows; keep the
