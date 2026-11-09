@@ -1,0 +1,47 @@
+{
+  "first-amd-report.json.gz": {
+    "bytes": 64535,
+    "sha256": "179d0cffe41fef92ff58bf4951814c335fbc686a940bcf898d4270bb07fda960",
+    "compressedSha256": "7dbceb4136b4c5c8d3d369d61213a8af521c7d8975aebf0f1312f6fc1bc2d95b"
+  },
+  "first-amd-commands.jsonl.gz": {
+    "bytes": 82314,
+    "sha256": "3b87933bc3c5fca477d5a67af67060e9c8a180365b032a25427bc3802172459f",
+    "compressedSha256": "eefd992e51a5bade7adde5a32607897e20d322a91667e59f186aac0b126ae9e8"
+  },
+  "first-amd-generated.c.gz": {
+    "bytes": 820047,
+    "sha256": "19ddd9f176bba781171b5b5c1193571324f8a356a5abd2e78ae52b7db56755ff",
+    "compressedSha256": "998ffc9be882a2ddd47b0fd8abc133efced75f2d58bdd589e4a9a7c8af540318"
+  },
+  "first-amd-job.log.gz": {
+    "bytes": 283971,
+    "sha256": "4b8ffb56ae7a47608a7efc8f6d5453541c12c97a3d1fac3e824d119f18f4d681",
+    "compressedSha256": "3ec79aa90ae0ea37e6b63f917019bf7fdb3bfb1427fa9e18557f97b49a69088e"
+  },
+  "first-arm-report.json.gz": {
+    "bytes": 73039,
+    "sha256": "4081d2e47a0c3dccffd3cb610318da0f08d408d6a116842ab8420b83ba17b603",
+    "compressedSha256": "82b3f6187a0512ddabc69b327cec6f194f10f75d680d0d72f56c0cd8a3be4f35"
+  },
+  "first-arm-commands.jsonl.gz": {
+    "bytes": 73801,
+    "sha256": "d7b127b88eb0cf97730221b7f31c59a8dacb286dfb085c8a48f49c12c17b7e4a",
+    "compressedSha256": "348b4a72c20d16723f5f2f723f2030f0ad7aca6083054611407f4a1446a6fff7"
+  },
+  "first-arm-generated.c.gz": {
+    "bytes": 820047,
+    "sha256": "19ddd9f176bba781171b5b5c1193571324f8a356a5abd2e78ae52b7db56755ff",
+    "compressedSha256": "998ffc9be882a2ddd47b0fd8abc133efced75f2d58bdd589e4a9a7c8af540318"
+  },
+  "first-arm-job.log.gz": {
+    "bytes": 321723,
+    "sha256": "f83d88cc0981b1c07283e1dc24210855bc49a0f16c301359546e09a16af09665",
+    "compressedSha256": "2eb4c71997a4f0f138e17ac3d2d011f1861068f61f2f1d34190f71d32e4ada79"
+  },
+  "first-docs-job.log.gz": {
+    "bytes": 444779,
+    "sha256": "20d337fab83af582f758d3fabfa7f6c01ed80dbd3c66585c50852463f6e4f8a8",
+    "compressedSha256": "522cc0c7b8d1a0b9c0a2d4d5030702dd960f7f26d7153388fca93b6495deacf2"
+  }
+}

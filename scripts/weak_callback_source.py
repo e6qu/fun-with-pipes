@@ -21,8 +21,9 @@ def boundary(source):
     if len(descriptors) != 1:
         raise ValueError('missing or ambiguous service result descriptor')
     descriptor, names = descriptors[0]
-    if not re.search(r'static const fwp_desc d' + descriptor + r' = \{K_RECORD, [^,]+, 10, d'
-                     + descriptor + r'_n, d' + descriptor + r'_f, \.width = 0\};', source):
+    if not re.search(r'static const fwp_desc d' + descriptor + r' = \{K_RECORD, "ServiceResult", 10, d'
+                     + descriptor + r'_n, d' + descriptor + r'_f, \.width = 0, \.order = d'
+                     + descriptor + r'_o, \.dup = fwp_rc_dup, \.drop = fwp_drop\d+\};', source):
         raise ValueError('service result is not an ordinary record')
     types = re.findall(r'static const fwp_desc \*const d' + descriptor + r'_f\[\] = \{([^}]+)\};', source)
     if len(types) != 1:
@@ -30,7 +31,8 @@ def boundary(source):
     types = re.findall(r'&d(\d+)', types[0])
     if len(types) != 10 or len(set(types)) != 1:
         raise ValueError('service result is not ten uniform integers')
-    if not re.search(r'static const fwp_desc d' + types[0] + r' = \{K_I64, "I64", \.width = 0\};', source):
+    if not re.search(r'static const fwp_desc d' + types[0]
+                     + r' = \{K_I64, "I64", \.width = 0, \.dup = NULL, \.drop = NULL\};', source):
         raise ValueError('service result contains non-I64 fields')
     source = replace_once(source, 'static void *fwp_main_thread(void *arg) {',
                           'int service_observe(int, char **);\nstatic void *fwp_main_thread(void *arg) {')

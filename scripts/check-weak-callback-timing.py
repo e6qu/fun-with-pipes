@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('cc', 'rustc', 'swiftc', 'source', 'arch', 'c-arch', 'rust-cpu', 'target'):
+    for name in ('cc', 'ar', 'rustc', 'swiftc', 'source', 'arch', 'c-arch', 'rust-cpu', 'target'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -73,7 +73,7 @@ def main():
         return row
 
     save()
-    for tool in ('cc', 'rustc', 'swiftc'):
+    for tool in ('cc', 'ar', 'rustc', 'swiftc'):
         report['versions'][tool] = run([getattr(args, tool), '--version'], (0, None, ''), env)['stdout']
     fixtures = ROOT / 'tests/fixtures'
     clock = folder / 'clock.o'

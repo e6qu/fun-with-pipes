@@ -7,8 +7,8 @@ batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4
 incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; service timing source `0fa6d394b`, tag
-`roadmap/weak-callback-time-2026-11-09`. PR branch:
+`ownership-buffer-review`; parser accounting source `6d1608c4f`, tag
+`roadmap/parser-process-memory-accounting-2026-11-09`. PR branch:
 `ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
 Integrate the complete preparation batch into this PR before final production
 verification. Preserve unrelated root-worktree changes and inactive handoffs.
@@ -31,8 +31,17 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 - **Service timing:** source `0fa6d394b`, run `42672736829`; docs `42672743140`.
   Attempt 1 of both failed before creating jobs with GitHub internal server
   errors (`27d9f1a8-da4c-4db1-968e-dffff64b5229` and
-  `836e820e-5b51-437a-8447-c0aa52e6909d`). Exact-source attempt 2 was requested;
-  no measurement from attempt 1 exists. No timing conclusion yet.
+  `836e820e-5b51-437a-8447-c0aa52e6909d`). Attempt 2 completed both native jobs:
+  AMD64 `129350479470` and ARM64 `129350479632` fail the fwp descriptor reader;
+  ARM64 also fails four Rust clock links. All other completed checks pass. Docs
+  `129350483940` passes. No timing sample was collected. The combined repair
+  matches actual emitted ownership metadata and uses Rust's static clock library
+  linking, preserving stack protection. [Complete first evidence](measurements/weak-callback-time-2026-11-09/README.md).
+- **Parser accounting:** source `6d1608c4f`, run `42673573956`; docs `42673580483`.
+  Attempts 1 and 2 failed before jobs with GitHub internal errors. Attempt 2 IDs:
+  `b32b4d94-27e5-4122-8539-4301d00c7a35` / `7f804619-adc9-4c50-b9fa-12ed4c5199e6`.
+  Attempt 3 is running: ARM64 `129352636403`, AMD64 `129352636561`;
+  docs `129352646215` is queued. No parser result yet.
 - **Service native profiles:** source `c0ac432fc`, run `42664664795`, AMD64
   `129325013027`, ARM64 `129325013096`: 16 diagnostic builds and 80 profiles per
   host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
@@ -85,13 +94,17 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   collection. A C-only pilot fixes each work count before two balanced sessions;
   both service and process clocks retain separate 2% copy controls. The collector
   also records RSS, build costs and native images; six changed-evidence controls
-  must fail. Linux execution of this new batch remains pending.
+  must fail. The first Linux batch exposed the two harness defects above;
+  the combined repair still requires native verification.
 - Guarded local C/Rust/Swift O2 callers pass 48 result cases and actual missing
   delivery/backward-clock controls. The first Swift link found that the local
   clock object targeted macOS 15 while Swift targeted 14; explicitly compiling
   the clock for 14 repairs it. Only affected Swift builds were repeated. Four
   timing-reader tests and two descriptor-boundary tests pass. No local fwp build
   or benchmark was run.
+- The repaired boundary accepts both actual native emitted sources; focused Rust
+  archive-link result/fault checks pass locally. Both complete failed native
+  journals were audited before publication; no other failure was found.
 - Parser accounting validation now rejects invalid kernel/system records and
   policy changes during a process. Seven archive corruptions include policies
   whose hashes and journals were updated consistently. Local reader checks pass

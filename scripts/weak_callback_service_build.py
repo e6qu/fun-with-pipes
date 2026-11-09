@@ -37,8 +37,12 @@ def build_native(args, folder, language, source, variant, level, mode, debug, cl
         library = part / 'libweak_callback_service.rlib'
         run([args.rustc, *flags, '--crate-type', 'rlib', '--crate-name', 'weak_callback_service',
              factory, '-o', library], (0, '', ''), env)
+        native_clock = []
+        if clock is not None:
+            run([args.ar, 'crs', part / 'libservice_clock.a', clock], (0, '', ''), env)
+            native_clock = ['-L', 'native=' + str(part), '-l', 'static=service_clock']
         command = [args.rustc, *flags, client, '--extern', f'weak_callback_service={library}',
-                   *([] if clock is None else ['-C', 'link-arg=' + str(clock)]), '-o', binary]
+                   *native_clock, '-o', binary]
     else:
         flags = ['-swift-version', '6', '-target', args.target, '-warnings-as-errors',
                  *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization']),

@@ -76,7 +76,7 @@ def collect(args):
                   compilerSha256=digest(args.compiler), host=platform.uname()._asdict(),
                   cpu=run(['lscpu'], (0, None, ''), env)['stdout'],
                   versions={name: run([getattr(args, name), '--version'], (0, None, ''), env)['stdout']
-                            for name in ('cc', 'rustc', 'swiftc', 'time', 'objdump', 'readelf')},
+                            for name in ('cc', 'ar', 'rustc', 'swiftc', 'time', 'objdump', 'readelf')},
                   settings={key: str(value) for key, value in vars(args).items()},
                   protocol=dict(cases=CASES, pilotBatches=BATCHES, pilotNs=PILOT_NS, rounds=ROUNDS,
                                 minimumDurationNs=MINIMUM_NS, copyLimit=COPY_LIMIT, labels=LABELS),
@@ -293,7 +293,7 @@ def audit(args):
                                 [report['settings']['time'], '-f', '%M', '-o', str(root / row['file'])])
                     assert row['peakRssKiB'] == int((folder / row['file']).read_text()) > 0
     assert seen == sorted(set(seen)), 'reused or reordered observations'
-    assert len(report['compile']) == 12
+    assert len(report['compile']) == 13
     for row in report['compile']:
         assert row['file'] in manifest
         seconds, rss = (folder / row['file']).read_text().split()
@@ -307,7 +307,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
     collector = commands.add_parser('collect')
-    for name in ('source', 'tag', 'arch', 'cc', 'rustc', 'swiftc', 'c-arch', 'rust-cpu', 'target', 'time', 'objdump', 'readelf'):
+    for name in ('source', 'tag', 'arch', 'cc', 'ar', 'rustc', 'swiftc', 'c-arch', 'rust-cpu', 'target', 'time', 'objdump', 'readelf'):
         collector.add_argument('--' + name, required=True)
     collector.add_argument('--compiler', type=Path, required=True)
     collector.add_argument('--output', type=Path, required=True)

@@ -4,8 +4,9 @@ This is milestone 4 of the [roadmap](../../PLAN.md). It prepares comparisons,
 not another compiler optimization. [The first native checks](ownership-peer-checks-2026-11-08/README.md)
 cover Swift buffer results and C/Rust parser storage/frames. Returned-buffer
 [phase timings and RSS](returned-buffer-time-2026-11-09/README.md) now include both
-sessions on both hosts; failed copy controls remain inconclusive. Weak-operation
-and service timings remain unmeasured. Freeze each protocol before collection.
+sessions on both hosts; failed copy controls remain inconclusive.
+[Weak-operation timings](weak-operation-time-2026-11-09/README.md) are recorded;
+complete service timing remains open. Freeze each protocol before collection.
 
 ## Questions and programs
 
@@ -118,7 +119,7 @@ escaping functions, C/Rust inline captures and fwp's actual emitted representati
   alone cannot count retains and releases.
 - Keep checked-overflow, direct-call, ordinary release and omitted-release controls.
 
-The next scalar allocation profile uses the existing separately compiled Swift
+The scalar allocation profile uses the existing separately compiled Swift
 factory and caller at `-O`, with debug information for stack attribution. Keep
 4,096 closures, 256 batches and 16 calls each, for both `a + x` and `2 * (a + x)`.
 Print only the checksum; keep the caller's existing clocks but never interpret
@@ -152,7 +153,9 @@ that a later lookup reports expiration instead of using freed storage.
 The [operation-phase preparation](weak-operation-phases.md) defines six actual
 phase boundaries, native representations and the required fault controls.
 [Native storage preparation](weak-operation-storage.md) follows the same targets
-through strong-owner and weak-owner release. [Both now pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md); [weak timing](weak-operation-time.md) is prepared; service costs remain open.
+through strong-owner and weak-owner release. [Both pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md).
+[Weak timings](weak-operation-time-2026-11-09/README.md) now expose substantial
+C/Rust lookup gaps and mixed Swift results; service timings remain open.
 
 Compare two scopes separately:
 
@@ -180,11 +183,11 @@ The current fwp runtime also constructs an owned `Some` result for a successful
 upgrade. Count and measure that result's storage separately from weak metadata
 and the retained target. Its presence in source is a candidate cost to investigate,
 not proof that every optimized caller performs a heap allocation. The
-[managed-allocation census](weak-operation-census.md) now prepares separate phase
-and result-cell counts with actual allocation/free controls; native results are
-pending.
+[native census](weak-operation-census-2026-11-09/README.md) verifies one temporary
+16-byte result cell per successful lookup in this caller and none for expired
+lookups. Metadata and target storage are counted separately.
 
-The new C/Rust/Swift correctness fixtures exercise cancellation before entry,
+The initial C/Rust/Swift correctness fixtures exercise cancellation before entry,
 cancellation inside an active callback, nested acquisition, expiration and 64
 subsequent target creations. They are not timing peers yet, do not force address
 reuse, and do not measure native allocation or ARC counts. C failure controls
@@ -198,6 +201,13 @@ lookup. C returns an error with explicit cleanup; Rust propagates `Result` with
 on that actual error path must fail. This tests ordinary callback errors, not
 Rust panics or Swift fatal traps. It does not establish
 queued-service cleanup or new timing results.
+
+The larger [four-language service](weak-callback-service-2026-11-09/README.md)
+now verifies independently received payloads and fwp physical release.
+[C/Rust/Swift service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
+and their complete command audit pass on both hosts. The separate
+[timing batch](weak-callback-time-2026-11-09/README.md) must pass its native caller
+checks before collecting measurements.
 
 The verified two-message queue gives each message an owned payload and a weak
 target link. It checks two paths:

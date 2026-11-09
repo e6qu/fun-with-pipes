@@ -73,7 +73,7 @@ jobs:
           python3 scripts/test-weak-callback-source.py
           python3 scripts/test-weak-callback-timing.py
           python3 scripts/check-measurement-clocks.py --cc gcc
-          python3 scripts/check-weak-callback-timing.py --cc gcc --rustc rustc --swiftc swiftc \
+          python3 scripts/check-weak-callback-timing.py --cc gcc --ar ar --rustc rustc --swiftc swiftc \
             --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
             --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
             --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-service-time-checks
@@ -83,7 +83,7 @@ jobs:
         run: >-
           python3 scripts/measure-weak-callback-service.py collect
           --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
-          --arch "${{ matrix.arch }}" --cc gcc --rustc rustc --swiftc swiftc
+          --arch "${{ matrix.arch }}" --cc gcc --ar ar --rustc rustc --swiftc swiftc
           --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
           --target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
           --objdump llvm-objdump --readelf readelf --output weak-service-time-evidence

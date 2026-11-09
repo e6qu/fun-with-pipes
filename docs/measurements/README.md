@@ -24,11 +24,18 @@ copy controls fail. [Full platform delivery passes](structured-callback-delivery
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
 [Weak phases, storage and actual target reuse now pass](weak-operation-verification-2026-11-09/README.md)
-on Linux ARM64/AMD64. [Weak timing collection](weak-operation-time.md) is queued; the
-[fwp allocation census](weak-operation-census.md) is prepared.
+on Linux ARM64/AMD64. [Weak timings](weak-operation-time-2026-11-09/README.md)
+show substantial C/Rust lookup gaps and mixed Swift results. The
+[fwp census](weak-operation-census-2026-11-09/README.md) verifies a temporary
+16-byte result allocation per successful lookup in this caller.
+[Queued-service results and cleanup](weak-callback-service-2026-11-09/README.md)
+and [native service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
+pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) remains open.
 [Parser process memory](parser-process-memory.md) exposed
-[an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and the memory observations now pass on both Linux hosts. Weak timings/service costs and parser internal
-allocator peaks remain open.
+[an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
+the memory observations pass on both Linux hosts. Allocator resize and mapping
+accounting controls also pass; their application to parser internal peaks and
+kernel accounting remains in progress.
 
 ## Latest deliveries
 

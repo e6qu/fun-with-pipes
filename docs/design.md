@@ -95,7 +95,8 @@ it has none. Resource-local indices are remapped after removing its anchor.
 Unknown or captured function arguments and oversized workers remain unchanged.
 Only original workers are visited; copies do not recursively expand the pass.
 The [active proof and measurement contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks)
-records candidate verification; implementation is not yet delivery acceptance.
+records its original acceptance limits. [PR #272 passes all delivery gates](measurements/structured-callback-delivery-2026-11-09/README.md);
+the original noisy timing targets remain open.
 
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or

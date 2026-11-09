@@ -9,10 +9,11 @@ from weak_callback_source import boundary
 def emitted(names):
     fields = ', '.join('"' + name + '"' for name in names)
     types = ', '.join(['&d2'] * len(names))
-    return f'''static const fwp_desc d2 = {{K_I64, "I64", .width = 0}};
+    return f'''static const fwp_desc d2 = {{K_I64, "I64", .width = 0, .dup = NULL, .drop = NULL}};
 static const char *const d1_n[] = {{{fields}}};
 static const fwp_desc *const d1_f[] = {{{types}}};
-static const fwp_desc d1 = {{K_RECORD, 0, 10, d1_n, d1_f, .width = 0}};
+static const int d1_o[] = {{5, 4, 0, 1, 3, 2, 8, 6, 9, 7}};
+static const fwp_desc d1 = {{K_RECORD, "ServiceResult", 10, d1_n, d1_f, .width = 0, .order = d1_o, .dup = fwp_rc_dup, .drop = fwp_drop23}};
 static V fwp_owned_entry8(V *a) {{ return 0; }}
 {{1, e8, "service", &fwp_owned_info8}}
 static void *fwp_main_thread(void *arg) {{
@@ -38,6 +39,10 @@ class Boundary(unittest.TestCase):
         source = emitted(sorted(expected(64, 0)))
         for changed in (source.replace('K_I64', 'K_STR'), source.replace('K_RECORD', 'K_ARRAY'), source.replace('"service"', '"different"'),
                         source.replace('"received_sum"', '"unknown"'), source.replace('&d2,', '&d3,', 1),
+                        source.replace('.dup = NULL', '.dup = fwp_rc_dup'),
+                        source.replace('.drop = NULL', '.drop = fwp_drop23'),
+                        source.replace('"ServiceResult"', '"OtherRecord"'),
+                        source.replace('.width = 0, .order', '.width = 1, .order'),
                         source + emitted(sorted(expected(64, 0)))):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 boundary(changed)
