@@ -42,6 +42,9 @@ events](parser-heap-events-2026-11-09/README.md) now pass. The largest fwp charg
 peak occurs during tokenization; evaluation allocates nothing. [Arena retry
 and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
 
+[Milestone 5 preparation](application-tooling.md) specifies the three application
+workflows and missing compiler/load measurements. It contains no new results.
+
 ## Latest deliveries
 
 Merged #272 delivers known array callback specialization and structured-gradient
