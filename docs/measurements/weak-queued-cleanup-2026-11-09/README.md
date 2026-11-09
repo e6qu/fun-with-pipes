@@ -95,3 +95,7 @@ Source anchors: `roadmap/weak-queued-diagnostics-2026-11-09`,
 [diagnostic collector](../../../scripts/diagnose-swift-weak-lifetimes.py) uses
 [Swift source backtraces](https://github.com/swiftlang/swift/blob/main/docs/Backtracing.rst),
 with the [explicit lifetime API](https://developer.apple.com/documentation/swift/withextendedlifetime(_:_:)-4mmpv).
+
+The final minimal fixture and original-filename diagnosis now pass in the
+[combined native batch](../weak-operation-verification-2026-11-09/README.md).
+Original and lookup-only traps remain expected diagnostic observations.

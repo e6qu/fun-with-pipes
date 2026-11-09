@@ -4,6 +4,11 @@
 
 int parser_memory_main(int argc, char **argv) {
     if (argc != 5) return 90;
+    for (int field = 2; field < 5; field++) {
+        const char *digits = argv[field];
+        if (*digits == '+' || (field == 3 && *digits == '-')) digits++;
+        if (*digits < '0' || *digits > '9') return 90;
+    }
     char *end;
     errno = 0;
     unsigned long long rounds = strtoull(argv[2], &end, 10);
@@ -30,11 +35,16 @@ int parser_memory_main(int argc, char **argv) {
     V argument = input;
     V result = fwp_owned_entry@entry@(&argument);
     @released@
-    if ((int64_t)result != expected || fwp_heap.live != input_live || fwp_cleanups) return 93;
+    if (fwp_heap.live != input_live || fwp_cleanups) {
+        fprintf(stderr, "parser entry cleanup failed: live=%zu expected=%zu cleanup=%d\n",
+                fwp_heap.live, input_live, fwp_cleanups != NULL);
+        return 94;
+    }
     @nodes@
-    if (!fwp_rc_release_last(input)) return 94;
+    if (!fwp_rc_release_last(input)) return 95;
     fwp_rc_free_obj(input);
-    if (fwp_heap.live != baseline) return 94;
+    if (fwp_heap.live != baseline) return 95;
+    if ((int64_t)result != expected) return 93;
     @output@
     return 0;
 }

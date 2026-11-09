@@ -1480,11 +1480,30 @@ fn wasi_parser_regions_release_blocks_and_keep_links_out_of_count_tables() {
         "wasm32-wasi",
     );
     assert!(code.contains("fwp_region region = {0};"));
-    let measured = parser_region_probe::instrument(&code, "calculate", fwp::cgen::Target::Wasi);
+    let measured = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Wasi,
+        parser_region_probe::Entry::Direct,
+    );
+    let owned = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Wasi,
+        parser_region_probe::Entry::Owned,
+    );
+    let extra_drop = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Wasi,
+        parser_region_probe::Entry::ExtraOwnedDrop,
+    );
     let mut failures = Vec::new();
     for opt in ["-O1", "-O2"] {
         for (name, candidate, expected) in [
             ("ordinary", measured.clone(), 0),
+            ("owned-entry", owned.clone(), 0),
+            ("extra-entry-drop", extra_drop.clone(), 249),
             (
                 "extra-count",
                 measured.replace("/* extra-link-count */", "fwp_rc_dup(PTR(node));"),

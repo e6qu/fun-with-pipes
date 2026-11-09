@@ -95,10 +95,29 @@ fn generated_parser_links_avoid_counts_and_release_each_failed_allocation() {
             .arg(&cfile),
     );
     let code = std::fs::read_to_string(cfile).unwrap();
-    let measured = parser_region_probe::instrument(&code, "calculate", fwp::cgen::Target::Native);
+    let measured = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Native,
+        parser_region_probe::Entry::Direct,
+    );
+    let owned = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Native,
+        parser_region_probe::Entry::Owned,
+    );
+    let extra_drop = parser_region_probe::instrument(
+        &code,
+        "calculate",
+        fwp::cgen::Target::Native,
+        parser_region_probe::Entry::ExtraOwnedDrop,
+    );
     for opt in ["-O1", "-O2"] {
         for (name, code, status) in [
             ("ordinary", measured.clone(), 0),
+            ("owned-entry", owned.clone(), 0),
+            ("extra-entry-drop", extra_drop.clone(), 249),
             (
                 "extra-count",
                 measured.replace("/* extra-link-count */", "fwp_rc_dup(PTR(node));"),

@@ -1,6 +1,7 @@
-# Weak-reference operations: phase preparation
+# Weak-reference operations: phase checks
 
-**Prepared, not verified; no timing result.** This is part of the
+**Verified on Linux ARM64/AMD64; no timing result.**
+[Results, sources and complete logs](weak-operation-verification-2026-11-09/README.md). This is part of the
 [ownership comparison](ownership-peers.md#weak-registrations). It measures a
 successful or expired lookup separately from queue handling and callbacks.
 For example, create one target, keep a weak reference, look it up 16 times, drop
@@ -73,13 +74,12 @@ On each native Linux ARM64/AMD64 host:
 - Repeat the existing queued cancellation/error checks and original-assertion
   Swift diagnosis in the same batch; retain every failed independent group.
 
-The expected batch has 36 separate-module builds, 252 native checks and two
-interpreter checks. Native Rust/Swift allocation release still needs the verified
-allocator observer; a successful expired lookup test proves no such byte count.
+Each host passes 36 separate-module builds, 252 native checks and two
+interpreter checks. An expired lookup alone proves no allocation-byte count.
 ARC-operation counts remain unmeasured. The separate
 [native storage preparation](weak-operation-storage.md) uses the same operation
 modules and explicit lifetime prefixes to distinguish target release from
-backing-storage release. It is not yet a verified storage result.
+backing-storage release. Both hosts pass that separate experiment.
 
 ## Before timing
 

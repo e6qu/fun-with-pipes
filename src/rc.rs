@@ -109,9 +109,11 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
         | Body::ScalarBufferMap { .. }
         | Body::ScalarBufferZip { .. }
         | Body::RangeZip { .. }
-        | Body::PackedRecordRangeZip { .. } => false,
+        | Body::PackedRecordRangeZip { .. }
+        | Body::RegionCtor(_)
+        | Body::ForeignC { .. }
+        | Body::Remote(_) => false,
         Body::Prim(s) => prim_consumes(s, j),
-        _ => false,
     }
 }
 

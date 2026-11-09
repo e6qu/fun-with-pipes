@@ -74,7 +74,7 @@ def fwp(source, diagnostic):
         source = once(source, '    return PTR(node);', '    parser_memory_nodes++;\n    return PTR(node);')
         main = main.replace('@ready@', 'parser_memory_nodes = 0;\n    parser_memory_checkpoint(0);')
         main = main.replace('@released@', 'parser_memory_checkpoint(4);')
-        main = main.replace('@nodes@', 'if (parser_memory_nodes != nodes) return 93;')
+        main = main.replace('@nodes@', 'if (parser_memory_nodes != nodes) return 96;')
         main = main.replace('@output@', 'printf("{\\"result\\":%" PRId64 ",\\"rounds\\":1,\\"observedNodes\\":%zu}\\n", (int64_t)result, parser_memory_nodes);')
     else:
         main = main.replace('@ready@', '').replace('@released@', '').replace('@nodes@', '')

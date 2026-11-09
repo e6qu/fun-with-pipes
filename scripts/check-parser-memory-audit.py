@@ -30,7 +30,8 @@ def main():
     results = []
     args.output.mkdir(parents=True, exist_ok=False)
     for name, filename in [('source-boundary', 'c-diagnostic.c'), ('checkpoint-sequence', journal_name),
-                           ('missing-control', 'report.json'), ('rss-value', 'report.json')]:
+                           ('missing-control', 'report.json'), ('rss-value', 'report.json'),
+                           ('argument-oracle', 'report.json')]:
         path = folder / filename
         original = path.read_bytes()
         try:
@@ -43,6 +44,8 @@ def main():
                     value['checkpointMessagesHex'][1] = '300a'
                 elif name == 'missing-control':
                     value['controls']['omit-touch']['expectedError'] = None
+                elif name == 'argument-oracle':
+                    value['argumentControls'][0]['value'] = '1'
                 else:
                     value['cases']['small']['peers']['c']['memory'][0]['peakRssKiB'] += 1
                 changed = (json.dumps(value, indent=2) + '\n').encode()
@@ -59,10 +62,10 @@ def main():
         finally:
             path.write_bytes(original)
             manifest_path.write_bytes(manifest_bytes)
-    assert len(results) == 4
+    assert len(results) == 5
     for result in results:
         assert result['status'] == 1 and 'AssertionError' in result['stderr'] and not result['stdout'], result
-    print('Four evidence corruptions rejected despite matching manifest hashes; originals restored')
+    print('Five evidence corruptions rejected despite matching manifest hashes; originals restored')
 
 
 if __name__ == '__main__':

@@ -11414,12 +11414,11 @@ static const fwp_exec_spec exec_spec{i} = {{
                 } else {
                     let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) {dup}(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
                 }
-                if !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
-                    let consumed =
-                        matches!(&f.body, Body::Prim(sym) if crate::rc::prim_consumes(sym, j));
-                    if !consumed {
-                        let _ = writeln!(cleanup, "    {drop}(a[{j}]);");
-                    }
+                // The entry owns these arguments, but a consuming worker
+                // already releases or transfers them. Use the same contract
+                // as direct calls, including native region/array workers.
+                if !crate::rc::consumes_arg(prog, id, j) {
+                    let _ = writeln!(cleanup, "    {drop}(a[{j}]);");
                 }
             }
             for (j, ty) in f.ty.params(usize::MAX).0.iter().enumerate() {

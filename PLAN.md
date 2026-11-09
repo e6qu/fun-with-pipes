@@ -77,9 +77,10 @@ Milestone 4 now fills four concrete comparison gaps:
    do not equate native allocation bytes with fwp payload-only counters.
 3. **Weak registrations:** cancellation, active-call ownership, expiration and
    [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
-   Complete queued cleanup/controlled reuse, then measure weak operations and
-   callback-service work separately, including value and backing-storage release.
-4. **Parser workspace:** complete allocator-internal transient peaks and
+   [Queued cleanup, actual reuse and native backing-storage release now pass](docs/measurements/weak-operation-verification-2026-11-09/README.md).
+   Next measure weak operations and callback-service work separately.
+4. **Parser workspace:** verify the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
+   exposed by the first RSS batch. Complete allocator-internal transient peaks and
    reserved/committed/RSS observations. Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 

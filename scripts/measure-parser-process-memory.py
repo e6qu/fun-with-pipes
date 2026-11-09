@@ -18,6 +18,12 @@ from process_wait import run_capture
 
 CASES = (('small', 5, False), ('medium', 9, False), ('large', 13, False), ('left', 64, True))
 LANGUAGES = ('c', 'rs', 'fwp')
+# Each field has eight malformed or out-of-range values, checked before I/O.
+INVALID_ARGUMENTS = {
+    2: ('', ' 1', '1junk', '-1', '-18446744073709551615', '0', '2', '18446744073709551616'),
+    3: ('', ' 3', '3junk', '+', '-', '3 ', '9223372036854775808', '-9223372036854775809'),
+    4: ('', ' 3', '3junk', '-1', '-18446744073709551615', '0', '65537', '18446744073709551616'),
+}
 CONTROLS = (('ordinary', None), ('omit-touch', 'touch-control-missing'), ('omit-unmap', 'unmap-control-missing'))
 FIXTURES = ('parser_memory_checkpoint.c', 'parser_memory_control.c', 'parser_memory_fwp.c',
             'parser_arena_peer.c', 'parser_arena_peer.rs', 'parser_workspace.fwp')
@@ -76,7 +82,7 @@ def collect(args):
     report = dict(source=args.source, tag=args.tag, root=str(out), compilerPath=str(args.compiler.resolve()),
                   architecture=args.arch, host=platform.uname()._asdict(),
                   compilerSha256=digest(args.compiler), settings={k: str(v) for k, v in vars(args).items()},
-                  versions={}, compile=[], images={}, controls={}, cases={}, failures=[],
+                  versions={}, compile=[], images={}, controls={}, argumentControls=[], cases={}, failures=[],
                   scope='One parse per process. Ordinary RSS and separate diagnostic mappings; no timing or committed-byte claim.')
     commands = []
 
@@ -223,6 +229,21 @@ def collect(args):
                 binaries[label] = binary
             except Exception as error:
                 failure('build-' + label, error)
+    (out / 'argument-input.txt').write_text('+ 1 2')
+    for diagnostic in (False, True):
+        label = 'fwp-' + ('diagnostic' if diagnostic else 'ordinary')
+        for field, invalid_values in INVALID_ARGUMENTS.items():
+            for invalid in invalid_values:
+                try:
+                    command = [binaries[label], out / 'argument-input.txt', '1', '3', '3']
+                    command[field] = invalid
+                    row = run(command, environment)
+                    assert (row['status'], row['stdout'], row['stderr']) == (90, '', ''), row
+                    report['argumentControls'].append(dict(command=row['index'], diagnostic=diagnostic,
+                                                          field=field, value=invalid))
+                except Exception as error:
+                    failure(f'argument-{label}-{field}-{invalid!r}', error)
+                save()
     for name, depth, left in CASES:
         text, nodes, expected = MEASURE.input_case(depth, left)
         path = out / (name + '.txt')
@@ -284,7 +305,7 @@ def collect(args):
     manifest = {str(path.relative_to(out)): digest(path) for path in sorted(out.rglob('*')) if path.is_file()}
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     assert not report['failures'], report['failures']
-    print('36 ordinary RSS runs, 24 parser checkpoint sequences, 24 wrong-result controls and 8 interpreter checks complete')
+    print('36 ordinary RSS runs, 24 parser checkpoint sequences, 24 wrong-result controls, 48 invalid arguments and 8 interpreter checks complete')
 
 
 def audit(args):
@@ -366,6 +387,19 @@ def audit(args):
         except ValueError as failure:
             error = str(failure)
         assert error == expected_error, (error, control)
+    assert (out / 'argument-input.txt').read_text() == '+ 1 2'
+    expected_arguments = {(diagnostic, field, value) for diagnostic in (False, True)
+                          for field, values in INVALID_ARGUMENTS.items() for value in values}
+    assert len(report['argumentControls']) == len(expected_arguments) == 48
+    assert {(part['diagnostic'], part['field'], part['value']) for part in report['argumentControls']} == expected_arguments
+    for part in report['argumentControls']:
+        row = observation(part['command'])
+        label = 'fwp-' + ('diagnostic' if part['diagnostic'] else 'ordinary')
+        command = [str(root / report['images'][label]['path']), str(root / 'argument-input.txt'), '1', '3', '3']
+        command[part['field']] = part['value']
+        assert row['command'] == command and row['fwpNoOpt'] is None
+        assert (row['status'], row['stdout'], row['stderr']) == (90, '', '')
+        permitted_failures.add(part['command'])
     assert set(report['cases']) == {case[0] for case in CASES}
     for name, depth, left in CASES:
         case = report['cases'][name]
@@ -412,7 +446,7 @@ def audit(args):
     for row in commands:
         if row['index'] not in permitted_failures:
             assert row['status'] == 0 and not row['stderr'], row
-    assert len(permitted_failures) == 24 and len(observed_commands) == 95
+    assert len(permitted_failures) == 72 and len(observed_commands) == 143
     print('Native mapping controls, all parser results/snapshots, ordinary RSS and retained image/command identities agree')
 
 

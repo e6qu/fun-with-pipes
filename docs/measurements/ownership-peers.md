@@ -152,8 +152,7 @@ that a later lookup reports expiration instead of using freed storage.
 The [operation-phase preparation](weak-operation-phases.md) defines six actual
 phase boundaries, native representations and the required fault controls.
 [Native storage preparation](weak-operation-storage.md) follows the same targets
-through strong-owner and weak-owner release. Neither is verified yet; no new
-timing or storage result is claimed.
+through strong-owner and weak-owner release. [Both now pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md); weak timing and service costs remain open.
 
 Compare two scopes separately:
 
@@ -210,15 +209,16 @@ remaining-queue cleanup. Each must return the lifetime-check diagnostic. The
 checker continues through independent build groups and retains every failure.
 The [queued-callback report](weak-queued-cleanup-2026-11-09/README.md) retains the
 original optimized Swift failures and isolates a sufficient cancellation-lifetime
-repair with the original assertions. Final checks with that minimal repair are
-queued. Payload representations differ (C/Swift heap objects, Rust inline values),
+repair with the original assertions. Final checks with that minimal repair pass
+on both architectures. Payload representations differ (C/Swift heap objects, Rust inline values),
 so destructor counts are correctness checks, not an allocation or callback-service
 performance comparison.
 
 The [address-reuse preparation](weak-operation-storage.md#actual-address-reuse)
 now records actual addresses in C/Rust/Swift and rejects a link rebound to a
 replacement. C/Swift must observe target reuse; Rust must retain the original
-backing allocation while its weak owner exists. Native verification is pending.
+backing allocation while its weak owner exists. Both native hosts pass: C/Swift
+reuse all 1,024 addresses per build; Rust reuses none while its backing is retained.
 
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation

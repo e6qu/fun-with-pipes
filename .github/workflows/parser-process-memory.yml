@@ -67,6 +67,19 @@ jobs:
       - name: Mapping reader and child cleanup controls
         id: reader
         run: python3 scripts/test-parser-process-memory.py
+      - name: Native parser owned entries, aliases and failure cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        shell: bash
+        env:
+          FWP_ARC_ARTIFACTS: parser-owned-entry-probes
+        run: |
+          python3 scripts/run-native-tests.py --targets parser_workspace \
+            --idle-timeout 600 --logs parser-owned-entry-logs
+      - name: Frozen primitive contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json \
+            --output parser-memory-setup/primitive-inventory.json
       - name: Preserve allocation-transition and frame checks
         if: ${{ !cancelled() }}
         run: >-
@@ -106,4 +119,6 @@ jobs:
             parser-memory-storage/
             parser-memory-evidence/
             parser-memory-audit-controls/
+            parser-owned-entry-probes/
+            parser-owned-entry-logs/
           if-no-files-found: error

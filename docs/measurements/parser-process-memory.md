@@ -90,7 +90,7 @@ that milestone's unfinished requirements.
 
 [The collector](../../scripts/measure-parser-process-memory.py) records 36 ordinary
 RSS processes, 24 five-phase parser observations, 24 deliberately wrong-result
-controls and eight raw/optimized interpreter checks on each host. Three native
+controls, 48 fwp invalid-argument checks and eight raw/optimized interpreter checks on each host. Three native
 mapping controls run before any parser observation. Reader tests cover malformed
 units/maps, premature exit, wrong checkpoint order, timeout and child reaping.
 
@@ -98,15 +98,16 @@ units/maps, premature exit, wrong checkpoint order, timeout and child reaping.
 only at verified current-code boundaries. Source changes fail those checks rather
 than silently selecting a different function. The audit reconstructs prepared
 source and inputs, checks actual ELF architectures, and independently reads every
-raw mapping, result, process journal and build/RSS counter. Four actual evidence
+raw mapping, result, process journal and build/RSS counter. Five actual evidence
 corruptions must be rejected even after their manifest hashes are updated.
 
 [The native workflow](../../.github/workflows/parser-process-memory.yml) also
 preserves the allocation-transition, invalid-input, omitted-release and frame
-checks. The source is frozen as `roadmap/parser-process-memory-combined-2026-11-09` before collection. Implementation
-is prepared; native results remain pending. The original preparation tag remains
-immutable. Earlier queued runs were superseded before collecting measurements. The combined
-source also checks exact JSON field types/keys and native phase totals.
+checks. The first combined batch failed all fwp observations on both native
+hosts: the generated entry dropped an already consumed input. [The failure and
+repair](parser-entry-cleanup-2026-11-09/README.md) retain both original reports,
+explain the shared ownership-contract fix, and distinguish result errors from
+cleanup failures. Native verification of the repaired compiler is pending.
 
 Review also found that the C peer accepted numeric prefixes such as `1junk`,
 negative counts and range overflow. It now checks the complete argument and its

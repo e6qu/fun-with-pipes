@@ -23,11 +23,11 @@ computation in both ARM64 sessions. AMD64 timing acceptance remains open because
 copy controls fail. [Full platform delivery passes](structured-callback-delivery-2026-11-09/README.md).
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
-[Parser process memory](parser-process-memory.md) and
-[weak-reference phases](weak-operation-phases.md) are prepared and queued for
-native verification. The [native weak-storage collector](weak-operation-storage.md)
-is also prepared, separating target release from the storage retained by weak
-references. These preparations claim no new memory or timing result.
+[Weak phases, storage and actual target reuse now pass](weak-operation-verification-2026-11-09/README.md)
+on Linux ARM64/AMD64. [Parser process memory](parser-process-memory.md) exposed
+[an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair is
+pending native verification. Weak timings/service costs and parser internal
+allocator peaks remain open.
 
 ## Latest deliveries
 

@@ -1,6 +1,6 @@
 # Weak references: target and backing storage
 
-**Prepared, not yet measured.** This fills the native C/Rust/Swift storage gap in
+**Verified on Linux ARM64 and AMD64.** [Results and source identities](weak-operation-verification-2026-11-09/README.md). This fills the native C/Rust/Swift storage gap in
 the [ownership comparison](ownership-peers.md#weak-registrations). It uses the
 same separately compiled operations as the [six-phase caller](weak-operation-phases.md).
 These are diagnostic processes; their elapsed time is not a performance result.
@@ -56,7 +56,7 @@ flags, compiler versions, CPU, source revision and native ELF hashes. Use
 The source is frozen as `roadmap/weak-operation-storage-2026-11-09`
 (`2470f2a94`) before collection. [Native run](https://github.com/e6qu/fun-with-pipes/actions/runs/42635657945)
 and [documentation controls](https://github.com/e6qu/fun-with-pipes/actions/runs/42635673348)
-are queued; neither establishes a passing observation yet.
+pass; raw-stack reconstruction and release controls pass on both hosts.
 
 - Three binaries, eight ordinary result checks per binary.
 - Two independent profiles of each population/stage: **48 profiles per host**.
@@ -104,9 +104,10 @@ demonstrating that the observer rejects a link which refers to the new target.
 `suite=weak-operation-reuse` builds ordinary/fault callers at C/Rust O1/O2 and
 Swift Onone/O: **12 builds and 18 result/fault/argument checks per host**. Reports
 retain exact reuse counts, source/binary identities and every failure. Three
-local reader tests pass; native execution is pending. The existing
+local reader tests and both native jobs pass. The existing
 [fwp runtime control](../../tests/fixtures/weak_channel_lifetimes.c) already
 requires actual channel-address reuse; this addition fills the native peer gap.
 Source `63accd105` is frozen as `roadmap/weak-operation-reuse-2026-11-09`;
 [the native run](https://github.com/e6qu/fun-with-pipes/actions/runs/42639145010)
-is queued.
+passes on both architectures; C/Swift observe 1,024 reused addresses per build,
+while Rust observes zero while the old backing allocation remains alive.
