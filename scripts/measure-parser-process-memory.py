@@ -73,8 +73,16 @@ def collect(args):
         return row
 
     def run(command, env):
-        result = run_capture(list(map(str, command)), timeout=90, env=env, cwd=ROOT,
-                             input_data=None, input_stream=None, text=True, encoding='utf-8', check=False)
+        try:
+            result = run_capture(list(map(str, command)), timeout=90, env=env, cwd=ROOT,
+                                 input_data=None, input_stream=None, text=True, encoding='utf-8', check=False)
+        except subprocess.TimeoutExpired as error:
+            stdout, stderr = error.stdout or b'', error.stderr or b''
+            record(dict(command=list(map(str, command)), status=None, timedOut=True,
+                        stdout=stdout.decode('utf-8', errors='replace') if isinstance(stdout, bytes) else stdout,
+                        stderr=stderr.decode('utf-8', errors='replace') if isinstance(stderr, bytes) else stderr,
+                        fwpNoOpt=env.get('FWP_NO_OPT')))
+            raise
         return record(dict(command=list(map(str, command)), status=result.returncode,
                            stdout=result.stdout, stderr=result.stderr, fwpNoOpt=env.get('FWP_NO_OPT')))
 

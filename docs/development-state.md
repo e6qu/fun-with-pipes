@@ -5,7 +5,14 @@ ARM64/AMD64, while the final Swift cancellation checks finish. Keep both in PR
 #273. The parser collector is prepared, not yet verified: ordinary RSS uses one
 parse per process; separate stopped children expose five named phases. Actual
 missing-touch/unmap controls and wrong-result checks must pass before acceptance.
-Allocator-internal peaks and committed memory remain unresolved.
+Allocator-internal peaks and committed memory remain unresolved. Native run
+`42620659615` (AMD64 job `129171638984`, ARM64 job `129171639027`) and docs
+`42620663788` (job `129171645313`) are queued at frozen source `054a00782`, tag
+`roadmap/parser-process-memory-2026-11-09`. The replacement preparation fixes C's
+acceptance of partial/negative/overflowed numeric arguments and adds 96 native
+argument checks. It also journals partial output on command timeout. Freeze it as
+`roadmap/parser-process-memory-arguments-2026-11-09` and supersede the untouched
+queued parser run; retain the original tag. No memory result is claimed.
 
 Swift final checks `42615022531` and docs `42615026734`, source `e7d312488`, are
 queued. Both earlier original-check diagnoses (`42610103348`, `2c1d74410`) locate

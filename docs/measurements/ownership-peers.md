@@ -2,8 +2,10 @@
 
 This is milestone 4 of the [roadmap](../../PLAN.md). It prepares comparisons,
 not another compiler optimization. [The first native checks](ownership-peer-checks-2026-11-08/README.md)
-cover Swift buffer results and C/Rust parser storage/frames. Peer timings remain
-unmeasured. Freeze the complete protocol and source before collecting them.
+cover Swift buffer results and C/Rust parser storage/frames. Returned-buffer
+[phase timings and RSS](returned-buffer-time-2026-11-09/README.md) now include both
+sessions on both hosts; failed copy controls remain inconclusive. Weak-operation
+and service timings remain unmeasured. Freeze each protocol before collection.
 
 ## Questions and programs
 
@@ -43,7 +45,7 @@ checker now prepares C/Rust/Swift with one separately compiled C barrier and
 retains original and prepared source hashes. Actual wrong-barrier builds must
 fail the result oracle. The checker also prepares fwp with that C harness and checks its raw and
 optimized interpreter results. [Both native architectures now verify the four-language boundary](four-language-buffers-2026-11-09/README.md).
-Timing and returned-buffer phases remain to be measured. Harness argument checks do not
+The returned-buffer phase experiment below now has results. Harness argument checks do not
 establish equivalent native out-of-memory behavior.
 Do not derive Swift allocation counts from `Array.count` or presumed capacity.
 Check unique and aliased arrays separately, including validity of the surviving
@@ -200,9 +202,12 @@ iterator on `Result` propagation; Swift consumes entries and clears the remainin
 queue with `defer`. C fault builds omit acquired-owner, weak-link, payload or
 remaining-queue cleanup. Each must return the lifetime-check diagnostic. The
 checker continues through independent build groups and retains every failure.
-This preparation is not yet verified. Payload representations differ (C/Swift
-heap objects, Rust inline values), so destructor counts here are correctness
-checks, not an allocation or callback-service performance comparison.
+The [queued-callback report](weak-queued-cleanup-2026-11-09/README.md) retains the
+original optimized Swift failures and isolates a sufficient cancellation-lifetime
+repair with the original assertions. Final checks with that minimal repair are
+queued. Payload representations differ (C/Swift heap objects, Rust inline values),
+so destructor counts are correctness checks, not an allocation or callback-service
+performance comparison.
 
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation

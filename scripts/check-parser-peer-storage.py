@@ -209,6 +209,34 @@ def main():
                     assert (output['result'], output['nodes']) == (expected, nodes)
                 controls[f'{language}-{variant}'] = len(commands) - 1
         report['controls'][name] = controls
+    # Reject malformed measurement arguments before entering the measured parser.
+    # In particular, strtoull/strtoll must not silently accept a numeric prefix.
+    argument_input = out / 'argument-control.txt'
+    argument_input.write_text('0')
+    report['argumentControls'] = []
+    argument_failures = []
+    for field in range(3):
+        invalid = ['', 'junk', '1junk', ' 1', '1 ', '18446744073709551616']
+        invalid += ['0', '-1'] if field != 1 else ['9223372036854775808', '-9223372036854775809']
+        for value in invalid:
+            arguments = ['1', '0', '1']
+            arguments[field] = value
+            for language in ('c', 'rs'):
+                for variant in ('ordinary', 'profile'):
+                    row = run([out / f'parser_{language}_{variant}.exe', argument_input, *arguments])
+                    check = dict(field=field, value=value, language=language, variant=variant, command=len(commands) - 1)
+                    report['argumentControls'].append(check)
+                    valid = row['status'] == (90 if language == 'c' else 101) and not row['stdout']
+                    if language == 'c':
+                        valid = valid and not row['stderr']
+                    else:
+                        diagnostic = 'assertion failed: rounds > 0' if value == '0' else 'ParseIntError'
+                        valid = valid and diagnostic in row['stderr']
+                    if not valid:
+                        argument_failures.append(check | {'observation': row})
+    (out / 'argument-controls.json').write_text(json.dumps(dict(
+        checks=report['argumentControls'], failures=argument_failures), indent=2) + '\n')
+    report['argumentFailures'] = argument_failures
     # Reproduce the first observer's scope error: an outer owner can be freed
     # while measurement is active, especially during an error unwind.
     observer = (ROOT / 'tests/fixtures/parser_arena_storage.rs').read_text()
@@ -307,7 +335,8 @@ fn main() {
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     manifest = {str(path.relative_to(out)): digest(path) for path in sorted(out.rglob('*')) if path.is_file()}
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    print('Four parser shapes: ordinary outputs, storage/release, 32 damaged records and Rust frame identity checked')
+    assert len(report['argumentControls']) == 96 and not argument_failures, argument_failures
+    print('Four parser shapes: ordinary outputs, storage/release, 96 invalid arguments, 32 damaged records and Rust frame identity checked')
 
 
 if __name__ == '__main__':
