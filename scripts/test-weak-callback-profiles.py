@@ -5,7 +5,7 @@ import json
 import unittest
 
 from weak_callback_service import expected
-from weak_callback_profiles import allocation_kind, check_costs, decode_case
+from weak_callback_profiles import allocation_kind, check_costs, decode_case, decode_profiler_status
 
 
 class Records(unittest.TestCase):
@@ -24,6 +24,15 @@ class Records(unittest.TestCase):
         self.assertEqual(allocation_kind('_RNvCsabcd_21weak_callback_service11service_run;malloc', 'rs'), 'service')
         self.assertEqual(allocation_kind('$s19WeakCallbackService10serviceRunyAA5StatsVSi_SitF;swift_allocObject', 'swift'), 'service')
         self.assertEqual(allocation_kind('$s19WeakCallbackService10serviceRunyAA5StatsVSi_SitF;swift_getGenericMetadata;malloc', 'swift'), 'type-metadata')
+
+    def test_profiler_statistics_are_validated(self):
+        text = 'heaptrack stats:\n\tallocations:          \t70\n\tleaked allocations:   \t1\n\ttemporary allocations:\t0\n'
+        self.assertEqual(decode_profiler_status(text, 70), dict(allocations=70,
+            unreleasedAllocationCount=1, temporaryAllocationCount=0))
+        for changed in (text + 'warning: unwinding incomplete\n', text.replace('70', '69'),
+                        text.replace('\t1\n', '\t71\n'), text.replace('\t0\n', '\t71\n')):
+            with self.subTest(changed=changed), self.assertRaises(AssertionError):
+                decode_profiler_status(changed, 70)
 
     def test_release(self):
         ordinary = dict(service=dict(allocations=68, peak=9776, leaked=0),

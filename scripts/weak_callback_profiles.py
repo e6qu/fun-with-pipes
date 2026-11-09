@@ -57,3 +57,15 @@ def check_costs(costs, language, population, variant):
         assert language == 'c'
         assert variant in ('omitted-payload-release', 'omitted-registration-release')
         assert service['leaked'] == (population * 128 if variant == 'omitted-payload-release' else 16), costs
+
+
+def decode_profiler_status(text, allocation_count):
+    assert type(allocation_count) is int and allocation_count > 0
+    match = re.fullmatch(r'heaptrack stats:\n\s*allocations:\s*([0-9]+)\n'
+                         r'\s*leaked allocations:\s*([0-9]+)\n'
+                         r'\s*temporary allocations:\s*([0-9]+)\n', text)
+    assert match, 'unexpected profiler stderr: ' + text
+    allocations, leaked, temporary = map(int, match.groups())
+    assert allocations == allocation_count and allocations > 0
+    assert 0 <= leaked <= allocations and 0 <= temporary <= allocations
+    return dict(allocations=allocations, unreleasedAllocationCount=leaked, temporaryAllocationCount=temporary)

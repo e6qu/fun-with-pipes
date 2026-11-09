@@ -121,7 +121,8 @@ caller before the first timing run.
 
 ## Native allocation observation
 
-The prepared `weak-callback-profiles` suite builds the C, Rust and Swift service
+The [native profile suite passes on both architectures](weak-callback-profiles-2026-11-09/README.md).
+`weak-callback-profiles` builds the C, Rust and Swift service
 in a separate module from its caller. Result formatting happens after service
 cleanup. Explicit diagnostic builds retain release counters/assertions; plain
 builds omit those observers. Neither build changes the ordinary queue or payload
@@ -148,3 +149,6 @@ The native profile protocol is fixed before collection:
 This is native allocator evidence, not ARC operation counts, managed fwp bytes,
 RSS or elapsed-time evidence. A stack's bytes at the process peak are not its own
 independent maximum. Service timing remains a separate next step.
+
+The next [service timing protocol](weak-callback-time.md) keeps complete service
+work, process overhead and allocation observations separate.

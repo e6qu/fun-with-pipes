@@ -14,7 +14,7 @@ import traceback
 from process_wait import run_capture
 from weak_callback_service import CASES, decode_missing_delivery, decode_output, variants
 from weak_callback_service_build import build_native
-from weak_callback_profiles import COSTS, GROUPS, LANGUAGES, allocation_kind, check_costs, decode_case
+from weak_callback_profiles import COSTS, GROUPS, LANGUAGES, allocation_kind, check_costs, decode_case, decode_profiler_status
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('allocation_profiles', ROOT / 'scripts/profile-swift-allocations.py')
@@ -144,7 +144,9 @@ def collect(args):
                           '--flamegraph-cost-type', cost, '--print-flamegraph', output / (cost + '.stacks')],
                          (0, None, None), profile_env)
             (output / (cost + '.txt')).write_text(result['stdout'])
-        return row, PROFILES.summarize(output)
+        totals = PROFILES.summarize(output)
+        decode_profiler_status(row['stderr'], totals['totals']['allocations'])
+        return row, totals
 
     report = dict(source=args.source, architecture=args.arch, host=platform.uname()._asdict(),
                   settings={key: str(value) for key, value in vars(args).items()},

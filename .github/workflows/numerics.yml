@@ -94,7 +94,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: weak-callback-profile-audit
-          path: weak-callback-profile-audit/report.json
+          path: |
+            weak-callback-profile-audit/report.json
+            weak-callback-profile-audit/*.gz
           if-no-files-found: error
   parser_mapping_accounting:
     if: inputs.suite == 'parser-mapping-accounting'

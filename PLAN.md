@@ -82,11 +82,14 @@ Milestone 4 now fills four concrete comparison gaps:
    now show substantial C/Rust lookup gaps and mixed Swift comparisons; the
    [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
    temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
-   and fwp physical release pass. Complete native service allocation observations and timings
-   before attributing whole-service cost to weak references.
+   and fwp physical release pass. [Native service allocations](docs/measurements/weak-callback-profiles-2026-11-09/README.md)
+   now pass; complete the journal audit and service timing before attributing
+   whole-service cost to weak references.
 4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
-   and RSS/checkpoint observations now pass on both Linux hosts. Complete allocator-internal transient peaks and
-   reserved/committed/RSS observations. Preserve the new C/Rust allocation-event
+   and RSS/checkpoint observations pass on both Linux hosts. [Resize calibration](docs/measurements/parser-allocator-calibration-2026-11-09/README.md)
+   and [mapping accounting controls](docs/measurements/parser-mapping-accounting-2026-11-09/README.md)
+   also pass. Connect them to actual parser allocations and checkpoints before
+   claiming internal transient peaks or process accounting. Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 
 [The scope](docs/measurements/ownership-peers.md) defines matched work, representation

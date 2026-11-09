@@ -1,214 +1,92 @@
 # Current work
 
-**Next:** verify native service allocation profiles and the parser debugger
-source-path repair, then connect resize events to parser storage. Continue service
-timing collection in this same batch. Keep it in
-[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is incomplete;
-do not merge an interim green head.
+**Next:** publish and verify the service archive-audit repair, then implement the
+[frozen service timing protocol](measurements/weak-callback-time.md). Keep this
+batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
+incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`. PR branch: `ownership-peer-comparisons`, currently
-`b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`. Integrate the complete preparation
-batch into #273 before its final production matrix. There is no separate prep PR.
-Current published preparation: `c0ac432fc`, tag `roadmap/weak-service-profiles-2026-11-09`.
-Preserve unrelated root-worktree changes and modified inactive handoffs.
+`ownership-buffer-review`; published source `3c214f136`, tag
+`roadmap/parser-accounting-controls-2026-11-09`. PR branch:
+`ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
+Integrate the complete preparation batch into this PR before final production
+verification. Preserve unrelated root-worktree changes and inactive handoffs.
 
 ## Roadmap status
 
-| Step | Status | Delivered | Remaining |
-|---|---|---|---|
-| 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
-| 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
-| 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases/storage/reuse/census/timings; service correctness and fwp physical cleanup | Parser internal memory boundaries; native service allocations and service timings |
-| 5 | Pending | Existing tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
+| Step | Delivered | Remaining |
+|---|---|---|
+| 1 | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
+| 2 | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
+| 3 | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
+| 4 | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and memory controls | Service timing; parser internal peaks and applying accounting observations |
+| 5 | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
-Keep original failed/noisy timing controls. Fewer operations or smaller images
-do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
+Retain original noisy/unmet timing results. Fewer operations or smaller images do
+not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 
-## Verified compiler repair
+## Current verified results and failures
 
-[The first parser-memory run](measurements/parser-entry-cleanup-2026-11-09/README.md)
-failed all 20 fwp observations per host. The consuming region worker released its
-input, then the generated owning entry released it again. C/Rust observations,
-eight interpreter results and native storage/frame controls passed.
+- **Service native profiles:** source `c0ac432fc`, run `42664664795`, AMD64
+  `129325013027`, ARM64 `129325013096`: 16 diagnostic builds and 80 profiles per
+  host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
+  service storage is released; actual omitted payload/weak releases retain exactly
+  the expected bytes. [Results and limits](measurements/weak-callback-profiles-2026-11-09/README.md).
+- **Service archive audit:** run `42666652513` / `129332006025` reconstructs both
+  complete archives, then fails because its diagnostic rule rejects heaptrack's
+  normal stderr statistics. The prepared repair parses the exact three-counter
+  block, checks allocation totals against raw stacks and rejects unexpected text.
+  Four reader tests and all 164 real status blocks pass locally. Re-run only this
+  audit, not the successful profiles. The repaired runner also preserves compact
+  raw journals/stacks. Original failure reports/logs are retained.
+- **Allocator calibration:** source `3c214f136`, run `42666642464`, AMD64
+  `129331964348`, ARM64 `129331964527`: four real resize controls pass with empty
+  debugger stderr. Source-path/timestamp issues are repaired, not suppressed.
+  [Original warnings, failed repair and final evidence](measurements/parser-allocator-calibration-2026-11-09/README.md).
+- **Mapping accounting:** same source, run `42666647306`, AMD64 `129331981618`,
+  ARM64 `129331981260`: O1/O2 ordinary/no-reservation mappings and eight actual
+  omitted-touch/unmap controls pass per host. Both retain mode-0 host policy.
+  Accountable extents and resident pages are distinct; system-wide commit counters
+  are not a process guarantee. [All raw snapshots and controls](measurements/parser-mapping-accounting-2026-11-09/README.md).
+- **Docs for `3c214f136`:** run `42666658591` / `129332015531` passes. Complete
+  allocator/accounting logs contain no warnings/errors. Native service logs have
+  the optional g++ manual-page notice and normal libtool install-time relinking.
 
-The repair uses `rc::consumes_arg` for owning-entry cleanup, sharing the direct-call
-contract across all body variants. Native/WASI regressions now exercise direct
-and owning entries, surviving aliases, allocation failures and parse errors at
-O1/O2; an actual extra-drop fault restores the bug. The measurement harness now
-separates cleanup, alias, node-count and result errors. Its original wrong-result
-controls could mask cleanup failure and are not accepted as result evidence.
+## Compiler repair and earlier evidence
 
-The focused workflow adds `parser_workspace` and the frozen primitive inventory.
-It keeps all RSS/checkpoint and storage/frame checks, adds 48 invalid fwp arguments
-and requires five evidence corruptions to fail. Repair source `ee30d13b0` is frozen as
-`roadmap/parser-process-memory-owned-entry-2026-11-09`: run `42645911091`,
-AMD64 job `129258996498`, ARM64 job `129258997285`, both pass. Docs
-`42645917282` / `129259006921` also passes. The six parser tests, full memory
-observations and all corruption controls pass on both hosts; other production
-platforms still need the final matrix. Full compiler/production validation remains on GitHub.
+The parser's consuming region worker and owning function entry both released its
+input. The entry now shares `rc::consumes_arg` with direct calls. Source
+`ee30d13b0`, run `42645911091`, passes both Linux hosts, all six parser tests,
+primitive inventory and memory/corruption controls. Native/WASI regressions cover
+aliases, parse errors, allocation failure and actual extra-drop faults; remaining
+platforms still require final gates. [Repair](measurements/parser-entry-cleanup-2026-11-09/README.md).
 
-## Reviewed CI
+The fwp service physical ledger passes at `cf6a0a12e`, run `42658708144`: eight
+raw/optimized dynamic/static O1/O2 builds release all allocations; actual omitted
+weak release fails with status 205. [Evidence](measurements/weak-callback-service-2026-11-09/README.md).
 
-| Batch | Frozen source | Run / AMD64 job / ARM64 job | Status |
-|---|---|---|---|
-| Original parser memory | `8848e837c` | `42631160983` / `129207526319` / `129207526124` | Failed; root cause above, original records retained |
-| Repaired parser memory | `ee30d13b0` | `42645911091` / `129258996498` / `129258997285` | Passed |
-| Weak phases, minimal Swift repair and diagnosis | `8848e837c` | `42631166444` / `129207545716` / `129207545782` | Passed |
-| Native weak-storage prefixes | `2470f2a94` | `42635657945` / `129223014018` / `129223014753` | Passed |
-| Actual target reuse | `63accd105` | `42639145010` / `129235261160` / `129235261107` | Passed |
-| Documentation/readers | `8848e837c`, `2470f2a94` | `42631171172` / `129207557246`; `42635673348` / `129223066100` | Passed |
+[Weak timings](measurements/weak-operation-time-2026-11-09/README.md) show substantial
+C/Rust lookup gaps and mixed Swift results. The [census](measurements/weak-operation-census-2026-11-09/README.md)
+finds a temporary 16-byte `Some` allocation per successful fwp lookup and none for
+expired lookup; this does not explain all measured gaps.
+[Buffer timing](measurements/returned-buffer-time-2026-11-09/README.md) retains both
+sessions and every original noise failure. ARC operation counts and maximum dynamic
+stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
 
-[Weak results and full logs](measurements/weak-operation-verification-2026-11-09/README.md)
-retain sources, artifacts and per-host counts. C/Rust/Swift request 16/24/24 target
-bytes, respectively; C/Swift request separate 16/32-byte weak storage. Rust retains
-its backing allocation after target destruction. All release it after the final
-weak owner. C/Swift reuse all 1,024 target addresses in each ordinary reuse build;
-Rust observes zero reuse while its weak owner retains the backing. No ARC count
-or weak timing result is claimed.
+## Prepared work and delivery checks
 
-Earlier superseded queued runs executed no tests. Immutable tags remain; do not
-restart unchanged jobs or infer a billing problem from queue delays. Setup's
-optional manual-page and libtool relink notices are retained. Documentation's
-intentional failed/hung runner controls pass their parent tests.
-
-## Weak operation and service results
-
-[Weak timing](measurements/weak-operation-time.md) uses four population/lookup
-cases, the existing separate modules, a C-only capped duration pilot, two sessions,
-16 balanced rounds of identical executable pairs, per-phase 5 ms/2% controls,
-RSS and compiler/image costs. Six altered-evidence controls check reconstruction.
-The same-source phase correctness batch must pass before collecting timings.
-Source `031e6f794` is frozen as `roadmap/weak-operation-time-2026-11-09`.
-Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both pass.
-Docs `42647826087` / `129265780239` passes. The shared strict phase
-reader moved from the checker to `weak_operation_phases.py`, without changing its
-result contract. Three timing-reader and three existing result-reader tests pass.
-
-[Both-session results, memory/build costs and full logs](measurements/weak-operation-time-2026-11-09/README.md)
-show large C/Rust lookup gaps. Largest-case complete-process fwp/C ratios are
-35.47–35.50 on ARM64 and 24.20–24.27 on AMD64. AMD64 fwp/Swift is 0.547–0.549;
-ARM64's largest Swift process comparison is noisy. Successful result cells do
-not explain expired-lookup overhead: entry/ownership handling also needs study.
-All 1,024 samples per host reconstruct; all six evidence corruptions fail.
-These are measured APIs, not pure ARC cost or general language parity.
-
-A related [managed-allocation census](measurements/weak-operation-census.md) is
-prepared: six phases plus successful `Some` result-cell attribution, known real
-17/33-byte allocations, an extra-allocation control and an omitted free. Eight
-ordinary observations and eight controls are required on each host at O1/O2.
-Three reader tests pass. A guarded Apple Clang O2 check on retained source
-`8848e837c` observes 1,024 16-byte `Some` cells for 64×16 live lookups, none for
-expired lookups, and rejects actual extra allocation/omitted free. It is not a
-rebuilt-compiler or GCC pass. Native source `54b818abc` is frozen as
-`roadmap/weak-operation-census-2026-11-09`: run `42651550496`, AMD64 job
-`129278956168`, ARM64 job `129278955989`, both pass. Docs `42651562531` /
-`129278986150` passes. [Native results and full logs](measurements/weak-operation-census-2026-11-09/README.md)
-confirm one 16-byte managed result cell per successful lookup at O1/O2, none for
-expired lookups and zero final live bytes; eight observations/eight controls per
-host pass. This fills the
-parent comparison's result-cell attribution requirement without changing the
-frozen timing source or claiming native backing bytes/ARC counts.
-
-[The callback service](measurements/weak-callback-service.md) now has ordinary
-fwp/C/Rust/Swift programs for two queue sizes, 16-integer payloads and four
-success/cancellation/expiration/handled-error cases. Missing-delivery variants
-must fail the independent receiver oracle; C also rejects actual omitted payload
-and registration releases. Guarded Apple Clang/Rust/Swift O2 checks pass for all
-eight native variants. A needless Foundation import exposed a local SDK mismatch;
-using the platform C module removes that dependency and both Swift variants pass.
-The SDK itself was not modified. Three reader tests pass. Source `afafdef5b`, tag
-`roadmap/weak-callback-service-2026-11-09`, passes run `42655781850`: ARM64
-`129293781908`, AMD64 `129293782208`. Each host passes 20 native ordinary/fault
-builds and four raw/optimized interpreter executions. Docs `42655786989` /
-`129293786506` passes. A prepared `channel_queue_ownership` regression adds the
-physical allocation ledger, dynamic/static O1/O2 checks and actual omitted weak
-release. Its first source `79c5c5318`, run `42657535238`, failed before execution
-on both hosts: the test incorrectly referenced the absent `serde_json` dependency.
-Both complete logs show the same three compile errors and no runtime result.
-The repair uses existing `fwp::json::Json`, validates integer fields and rejects
-duplicate keys; no dependency is added. Repair `cf6a0a12e`, tag
-`roadmap/weak-callback-ownership-json-2026-11-09`, passes run `42658708144`
-(AMD64 `129304147132`, ARM64 `129304147207`), plus docs `42658713471` /
-`129304137560`. Both channel tests pass; eight service ledger builds release all
-managed allocations and both omitted-weak builds fail with status 205.
-All-peer native allocation observers, then frozen timing collection,
-remain required; these checks are not a service-throughput result.
-
-## Other evidence and unresolved measurements
-
-- [Buffer phases/native storage](measurements/returned-buffer-phases-2026-11-09/README.md):
-  source `ec9313228`, runs `42600727564` and `42600729662`, both hosts pass.
-- [Buffer timings/RSS](measurements/returned-buffer-time-2026-11-09/README.md):
-  source `b37b15ac2`, run `42602375928`, both sessions and audits pass. Qualified
-  ARM64 results show slower large-buffer reads despite some lower process times;
-  empty-array churn is costly. Many AMD64 copy controls fail and remain inconclusive.
-- [Ownership scope](measurements/ownership-peers.md): native requested bytes,
-  fwp managed bytes, mappings and RSS remain distinct. Maximum stack use and ARC
-  operation counts are unmeasured. Parser allocator-internal peaks and committed
-  memory remain unresolved; [the next observer steps](measurements/parser-internal-memory.md)
-  require matching libc/source identity and actual path/accounting controls. These are not completed by endpoint snapshots.
-
-[Allocator event calibration](measurements/parser-allocator-calibration-2026-11-09/README.md)
-passes at `0f8c2669b`: run `42661050319`, AMD64 `129312418213`, ARM64
-`129312418586`, docs `42661056292` / `129312429448`. All four real resize
-controls and two reader tests pass; downloaded observations reconstruct exactly.
-Command-journal audit found five GDB missing-source display warnings per host.
-Source-path repair `c0ac432fc` (run `42664669989`) fails both native jobs
-(`129325026050` AMD64, `129325025900` ARM64): the source is found, but extraction
-assigned a new timestamp and GDB reports it newer than the executable. Every
-native command still exits zero; both full journals/logs were audited. The next
-repair preserves the archive member's timestamp and keeps strict stderr rejection.
-Original warnings and failures remain retained. Parser peaks,
-mapped/retry paths and committed memory remain unmeasured.
-
-The service now separates native modules from output formatting and selects
-plain/diagnostic observers explicitly. Guarded Apple Clang/Rust/Swift O2 checks
-pass for 11 ordinary/fault module builds and five profile-caller builds (40 case
-results, 30 invalid arguments). Three allocation-reader tests pass. The prepared
-native profile suite verifies 16 diagnostic O1/O2 or Onone/O builds, then 80
-allocation profiles, including actual C omitted-release controls. It does not
-rebuild fwp or repeat the unchanged physical-ownership regression. Service-profile run `42664664795` passes (AMD64 `129325013027`, ARM64
-`129325013096`); docs `42664675441` / `129325039434` passes. All 16 diagnostic
-builds and 80 profiles per host pass, including actual omitted releases. Downloaded
-reports retain no failures. Complete raw journals exceed the local 2 MiB member
-limit; a prepared runner-side audit reconstructs both full archives and scans every
-command diagnostic. Do not raise the local limit. Full native logs include the
-optional g++ manual-page notice and libtool's expected install-time relinking.
-
-The mapping-accounting calibration is prepared locally: 16 MiB reservation,
-writable, touched and released mappings, explicit no-reservation policy, O1/O2
-and actual omitted-touch/unmap controls. It records complete flags, current host
-policy and separate system-wide commit quantities. Two reader tests and 10
-mapping/cleanup tests pass locally (one Linux-only test skipped on macOS).
-Native verification and application to actual parser checkpoints remain pending.
-
-## Delivery and local checks
-
-[Earlier head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
-passes nine production jobs (`42578853160`), docs (`129032587978`) and full-log audit
-(`42590693699`/`129071304611`). These do not verify later heads. Final integration
-requires all nine jobs, docs and full-log audit at the exact commit.
-
-Free space recovered to about 145 GiB. Focused checks use the unchanged
-`python3 scripts/local-guard.py` limits; full builds/profiles stay on GitHub.
-
-- Parser reader: eight pass, one explicitly Linux-only `/proc` test skipped on
-  macOS. Both Linux batches execute that actual checkpoint test.
-- Weak phase/profile/reuse readers: 3/4/3 pass.
-- Repair Python syntax checks and Rust formatting: pass. Documentation audit:
-  421 link sets, 106 immutable preparation pairs and five roadmap steps pass before
-  the latest result receipt. New service reader/syntax checks and Rust formatting pass.
-- Apple Clang O2 source diagnostic: original generated entry frees the caller's
-  32-byte input early; removing only duplicate entry cleanup preserves it until
-  caller release. This is not a rebuilt-compiler or Linux GCC pass.
-- Retained selected reports and complete job logs with compressed/raw hashes.
-
-The guard needed process-monitoring access because sandboxed `ps` was unavailable;
-no limit was raised or bypassed. Keep bounded artifact reads and runner-side
-large audits. The numerical dispatcher must remain below GitHub's 512,000-byte limit.
-
-User-merged #272 is `32d643d0a3e29c25a55d9b05c5492c0ab73e7c20`, tree-equal to
-verified `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`, with a compliant one-line
-message. [Delivery receipt](measurements/structured-callback-delivery-2026-11-09/README.md).
+- Service timing protocol separates service calls from process time. The prepared
+  fwp/C entry adapter derives result offsets from emitted descriptors, rejects
+  non-I64 fields, and includes ordinary tuple/result allocation and cleanup.
+  Reader tests pass; actual generated/native adapter verification remains pending.
+- Parser: connect verified allocator events to actual C/Rust/fwp allocations,
+  cover mapped/retry paths, avoid double-counting resize overlap, and apply mapping
+  accounting to actual checkpoints. Calibration alone is not a parser peak.
+- Local focused checks use `python3 scripts/local-guard.py` unchanged. Disk free
+  space is about 142 GiB. Full builds, profiles and suites stay on GitHub.
+- Complete parser-control artifacts are under 128 KiB compressed each; all raw
+  snapshots, manifests and native headers reconstruct locally. Service journals
+  exceed the 2 MiB member limit and are processed on runners. Do not raise limits.
+- Final integration requires nine exact-head production jobs, docs and full-log
+  audit. [Earlier passing head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
+  does not verify later changes. The numerical dispatcher must stay below 512,000 bytes.

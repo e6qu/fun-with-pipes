@@ -37,10 +37,27 @@ The source-path change at `c0ac432fc` fixes those warnings but
 fails on both hosts under the stricter stderr check: writing the extracted source
 assigned a new timestamp, so GDB reports that it is newer than the executable.
 All native executions exit zero and all allocator events remain recorded. The
-next repair preserves the source archive member's timestamp. Both failed jobs
+verified repair below preserves the source archive member's timestamp. Both failed jobs
 (`129325026050` AMD64, `129325025900` ARM64), reports and command journals are
 retained. Passing exit codes do not mean a warning-free run.
 
 [files.json](files.json) hashes compressed and original reports, events, command
 journals and complete job logs. Parser observations, mapped/retry paths and commit
 accounting remain open; these calibration results do not complete milestone 4.
+
+
+## Source lookup repair verified
+
+Source `3c214f136`, tag `roadmap/parser-accounting-controls-2026-11-09`, preserves
+the allocator source member's archive timestamp. Both jobs now pass with **empty
+debugger stderr**, the same four real resize controls and matching libc/debug
+identities:
+
+- [AMD64 129331964348](https://github.com/e6qu/fun-with-pipes/actions/runs/42666642464/job/129331964348), artifact `13696068556`.
+- [ARM64 129331964527](https://github.com/e6qu/fun-with-pipes/actions/runs/42666642464/job/129331964527), artifact `13697426399`.
+
+All downloaded commands exit zero without stderr; raw events reconstruct the
+reported calibration. Complete native logs contain no warnings/errors.
+[Documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/42666658591)
+passes. Repair reports, events and full logs join the original observations in
+[files.json](files.json); neither earlier warning record was removed.

@@ -1,6 +1,6 @@
 # Parser memory: remaining observer work
 
-**[Allocator event calibration passes on both Linux hosts](parser-allocator-calibration-2026-11-09/README.md); source-display repair and parser observations remain open.** [Ordinary RSS and stopped-process mapping
+**[Allocator event calibration passes on both Linux hosts](parser-allocator-calibration-2026-11-09/README.md); the source-display repair also passes. Parser observations remain open.** [Ordinary RSS and stopped-process mapping
 snapshots now pass](parser-entry-cleanup-2026-11-09/README.md). They leave two
 different questions open: temporary storage inside a resize, and the meaning of
 commit accounting for this process. Neither is answered by final vector capacity.
@@ -33,12 +33,11 @@ Implementation steps:
    omitted/misclassified-event controls. Diagnostic elapsed time is not a timing
    result. fwp's separately allocated region blocks need their own event mapping.
 
-Start by checking whether matching debug information exposes the required live
-variables and boundaries. If optimized code hides them, record that limitation;
-do not invent addresses or substitute a wrapper's post-return estimate. Any source
-instrumentation must preserve the allocator algorithm and include an ordinary
-comparison build. The first deliverable is a passing calibration, before parser
-peak figures are accepted.
+The calibration now establishes the required live debug variables and boundaries.
+For parser and additional allocator paths, missing/optimized-out values must still
+fail explicitly; do not invent addresses or substitute a wrapper's post-return
+estimate. Any source instrumentation must preserve the allocator algorithm and
+include an ordinary comparison build.
 
 The first [native calibration](../../scripts/check-parser-allocator-calibration.py)
 now exercises 64→72-byte in-place growth, 128→8,192-byte moving growth,
@@ -88,7 +87,7 @@ This continues the [process-memory protocol](parser-process-memory.md) and
 [ownership milestone](ownership-peers.md#parser-workspace), without replacing
 already retained observations or repeating unchanged timing controls.
 
-### Prepared mapping-accounting calibration
+### Verified mapping-accounting calibration
 
 The `parser-mapping-accounting` suite builds only a small native C control at
 GCC O1/O2. It records five stopped-process snapshots: before reservation, after a
@@ -109,5 +108,5 @@ settings. The report separates:
 
 The first two quantities are **not guaranteed RAM**, and system-wide differences
 cannot be assigned to this parser on a shared runner. Reader controls reject
-misclassified flags even when sizes and RSS agree. Native verification and
-applying this observer to the parser checkpoints remain pending.
+misclassified flags even when sizes and RSS agree. [Native controls pass on both hosts](parser-mapping-accounting-2026-11-09/README.md)
+at O1/O2. Applying the observer to actual parser checkpoints remains pending.

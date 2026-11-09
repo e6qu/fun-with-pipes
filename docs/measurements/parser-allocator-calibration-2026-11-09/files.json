@@ -83,5 +83,50 @@
     "bytes": 236253,
     "sha256": "cb77f74dceec3fe1c46a23a71b044a4c2b7c3be39b08a6e56fd0878b2f66e770",
     "compressedSha256": "7942e53345f8d76b46f8a4229d413c5054a92fce23b5fd0398812bce09f808e0"
+  },
+  "repair-amd-report.json.gz": {
+    "bytes": 2337,
+    "sha256": "8928fc34b809ae7143961cc4fb7b7ffac190f0c76602c4b47d21eaecfa8d2905",
+    "compressedSha256": "909371fe80c786603f64303f956115271c454f50078441bc5490f4b6d12f25b5"
+  },
+  "repair-amd-commands.jsonl.gz": {
+    "bytes": 7621,
+    "sha256": "faa072917dd736f41f7ee6f900e590b88161a84a4b7da223763c85e71bab7e18",
+    "compressedSha256": "ba52f3e835d88910c0dcca97a30da80b10f4a97bd7e40d2483b3458e1d8c133e"
+  },
+  "repair-amd-observation.json.gz": {
+    "bytes": 5673,
+    "sha256": "bd65f0cffe66111956939dcb01c393f1d1fb6e54c8b150e551c7c28be7ff126f",
+    "compressedSha256": "076e90879162ba2e7b1b857189bab6a4284c55b305fde5b1e7901dfd710cb370"
+  },
+  "repair-amd-job.log.gz": {
+    "bytes": 223275,
+    "sha256": "1d283e2d01fdefcbd739fbc33bb9bb17e49a40cf805ce8e3a98b848b14d63994",
+    "compressedSha256": "e8609fcdea27cfc3b8520e9ae3e1deb98f4a4d38593214fd35aa2d620056b500"
+  },
+  "repair-arm-report.json.gz": {
+    "bytes": 2342,
+    "sha256": "8f3dbf444e0f613e9f8537d5980ae8c72f03563e85d904f6a8d3624efd632991",
+    "compressedSha256": "21383a38df51ec942835798c532bbe071885a18fc3c7040c57a6004772f84d26"
+  },
+  "repair-arm-commands.jsonl.gz": {
+    "bytes": 8263,
+    "sha256": "f4f616e98023ba504adc48136b6700d3480b210678dab692050908169dee2a54",
+    "compressedSha256": "0bd007a873840e084247878e3261dc95b1dab6461582fa816cfef02b5fb639be"
+  },
+  "repair-arm-observation.json.gz": {
+    "bytes": 5685,
+    "sha256": "04249d51ac6b6d5a189e246f5954bd849d594ed66a73bd803f854df7770548c6",
+    "compressedSha256": "fea7a4a43535d8f578fab805988436cca8a1db110ba6f6e33a5e0472aa8e6a01"
+  },
+  "repair-arm-job.log.gz": {
+    "bytes": 222408,
+    "sha256": "bba8afd986de75dc975320c29b6f5565d4dc265f08989a12c29ae8784980aafc",
+    "compressedSha256": "dfbc053839ad24e23d6a0eb1b4e98d7a2334839cb98e61836a41af40506ecf0c"
+  },
+  "repair-docs-job.log.gz": {
+    "bytes": 443696,
+    "sha256": "77eea0fc88731572e42e324d1c0299a45fe82652dec2a5850ccde0ad7a5d0a09",
+    "compressedSha256": "f98efb22ca5df38bb7cdd48d63b2d800b463e94a9518d9f4e1e2da9d0b2a6b82"
   }
 }
