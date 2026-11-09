@@ -1,6 +1,15 @@
 // Native weak references and a serial registration; no ARC count claims.
 import Glibc
 
+func require(_ condition: Bool, _ line: Int) {
+    if condition { return }
+    let bytes = Array("lifetime check failed at Swift line \(line)\n".utf8)
+    bytes.withUnsafeBytes { data in
+        _ = write(STDERR_FILENO, data.baseAddress, data.count)
+    }
+    exit(79)
+}
+
 final class Counts {
     var calls = 0
     var destroyed = 0
@@ -28,14 +37,14 @@ func dispatch(_ registration: inout Registration, _ outside: inout Target?, _ co
     // Keep the acquired owner through the entire callback, including reentry.
     return withExtendedLifetime(active) {
         counts.calls += 1
-        precondition(active.identity == 7)
+        require(active.identity == 7, #line)
         registration.cancelled = true
         outside = nil
-        precondition(counts.destroyed == 0)
-        precondition(!dispatch(&registration, &outside, counts))
+        require(counts.destroyed == 0, #line)
+        require(!dispatch(&registration, &outside, counts), #line)
         guard let nested = registration.target else { preconditionFailure("lost active owner") }
-        precondition(nested.identity == 7)
-        precondition(counts.destroyed == 0)
+        require(nested.identity == 7, #line)
+        require(counts.destroyed == 0, #line)
         return true
     }
 }
@@ -43,38 +52,38 @@ func dispatch(_ registration: inout Registration, _ outside: inout Target?, _ co
 func run() {
     let counts = Counts()
     var registration = Registration(target: nil, cancelled: true)
-    precondition(registration.target == nil)
+    require(registration.target == nil, #line)
     var owner: Target? = Target(7, counts)
     registration.target = owner
-    precondition(!dispatch(&registration, &owner, counts))
-    precondition(counts.calls == 0 && counts.destroyed == 0)
+    require(!dispatch(&registration, &owner, counts), #line)
+    require(counts.calls == 0 && counts.destroyed == 0, #line)
     registration.cancelled = false
-    precondition(dispatch(&registration, &owner, counts))
-    precondition(owner == nil && counts.calls == 1 && counts.destroyed == 1)
-    precondition(!dispatch(&registration, &owner, counts))
+    require(dispatch(&registration, &owner, counts), #line)
+    require(owner == nil && counts.calls == 1 && counts.destroyed == 1, #line)
+    require(!dispatch(&registration, &owner, counts), #line)
     registration.cancelled = false
-    precondition(!dispatch(&registration, &owner, counts))
+    require(!dispatch(&registration, &owner, counts), #line)
     for identity in 0..<64 {
         let replacement = Target(identity, counts)
         withExtendedLifetime(replacement) {
-            precondition(registration.target == nil)
+            require(registration.target == nil, #line)
         }
     }
-    precondition(counts.destroyed == 65)
+    require(counts.destroyed == 65, #line)
     owner = Target(9, counts)
     registration.target = owner
     do {
         _ = try dispatchError(&registration, &owner, counts)
         preconditionFailure("callback error was lost")
     } catch CallbackError.failed {
-        precondition(owner == nil && counts.calls == 2 && counts.destroyed == 66)
+        require(owner == nil && counts.calls == 2 && counts.destroyed == 66, #line)
     } catch {
         preconditionFailure("unexpected callback error")
     }
-    precondition(registration.target == nil)
+    require(registration.target == nil, #line)
     do {
         let entered = try dispatchError(&registration, &owner, counts)
-        precondition(!entered && counts.calls == 2)
+        require(!entered && counts.calls == 2, #line)
     } catch {
         preconditionFailure("expired callback was entered")
     }
@@ -85,10 +94,10 @@ func run() {
 enum CallbackError: Error { case failed }
 
 func callbackError(_ acquired: Target, _ outside: inout Target?, _ counts: Counts) throws {
-    precondition(acquired.identity == 9)
+    require(acquired.identity == 9, #line)
     counts.calls += 1
     outside = nil
-    precondition(counts.destroyed == 65 && acquired.identity == 9)
+    require(counts.destroyed == 65 && acquired.identity == 9, #line)
     throw CallbackError.failed
 }
 
@@ -116,9 +125,9 @@ func queuedDispatch(_ entry: consuming Pending, _ outside: inout Target?, _ coun
     guard let held = entry.target else { return }
     try withExtendedLifetime(held) {
         counts.calls += 1
-        precondition(held.identity == 17 && entry.payload.value == 11)
+        require(held.identity == 17 && entry.payload.value == 11, #line)
         outside = nil
-        precondition(counts.destroyed == 0 && held.identity == 17)
+        require(counts.destroyed == 0 && held.identity == 17, #line)
         throw CallbackError.failed
     }
 }
@@ -141,20 +150,20 @@ func queuedChecks() {
                                  Pending(target: owner, payload: Payload(counts))]
         if cancelled {
             queue[0] = nil
-            precondition(counts.disposed == 1 && counts.destroyed == 0)
+            require(counts.disposed == 1 && counts.destroyed == 0, #line)
             owner = nil
-            precondition(counts.destroyed == 1)
+            require(counts.destroyed == 1, #line)
         }
         do {
             try drainQueue(&queue, &owner, counts)
-            precondition(cancelled && counts.calls == 0)
+            require(cancelled && counts.calls == 0, #line)
         } catch CallbackError.failed {
-            precondition(!cancelled && counts.calls == 1)
+            require(!cancelled && counts.calls == 1, #line)
         } catch {
             preconditionFailure("unexpected queued callback error")
         }
-        precondition(queue.isEmpty && owner == nil)
-        precondition(counts.destroyed == 1 && counts.disposed == 2)
+        require(queue.isEmpty && owner == nil, #line)
+        require(counts.destroyed == 1 && counts.disposed == 2, #line)
     }
 }
 

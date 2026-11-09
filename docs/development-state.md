@@ -1,11 +1,12 @@
 # Current work
 
-**Next:** monitor returned-buffer timing run `42602375928` at
-`b37b15ac2d636187b97ccd00192e50638bd788d0`, retained as
-`roadmap/returned-buffer-time-2026-11-09`. Docs run `42602380180` checks the same
-source. Review both native hosts and all raw observations; do not
-retry unchanged noisy timings. Native correctness/storage prerequisites now pass.
-Keep the work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
+**Next:** identify the exact optimized Swift queued-cleanup failure with
+line-numbered lifetime checks. First run `42603913802` fails only Swift `-O`
+on both architectures; C/Rust, Swift `-Onone` and all 16 C fault builds pass.
+Do not infer a compiler bug from the trap. Buffer timing run `42602375928`
+at `b37b15ac2d636187b97ccd00192e50638bd788d0` passes both sessions and audits
+on both hosts; retain and interpret all results without unchanged reruns.
+Keep work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
 Milestone 4 is not complete; do not merge it yet.
 
 Worktree: `.worktrees/recording-capacity-gate`. Active preparation branch:
@@ -78,8 +79,10 @@ While those jobs run, the next weak-registration preparation adds queued-message
 cancellation/expiration and callback-error cleanup in C/Rust/Swift. Four new C
 faults omit acquired ownership, queued weak metadata, payload release or cleanup
 of unprocessed messages. The checker now retains independent group failures.
-This work is unverified; run `weak-peer-checks` after publication. It measures no
-allocation/timing costs and does not establish forced address reuse.
+Source `c9bf8dfac`, retained as `roadmap/weak-queued-cleanup-2026-11-09`, is testing
+in `42603913802`; both optimized Swift cases fail with an anonymous trap.
+All other native/fault builds pass. Docs repair `42603916827` passes. This measures no allocation/timing costs and does not establish forced
+address reuse.
 
 Docs `42602380180` at timing source `b37b15ac2` failed because the shortened
 handoff omitted its required milestone-status column. That column is restored
