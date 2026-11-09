@@ -52,5 +52,5 @@ parser allocation must be physically released; the caller's input remains alive.
 
 Run `suite=parser-heap-events` with an explicit immutable `parser_memory_tag`.
 Builds and native executions run on Linux ARM64/AMD64 runners. This adds evidence
-to [milestone 4](../../PLAN.md#current-work-ownership-comparisons); final native
+to [milestone 4](../../PLAN.md#milestones); final native
 production gates still cover all supported systems.

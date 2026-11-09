@@ -2,9 +2,15 @@ name: Application tooling checks
 
 on:
   workflow_call:
+    inputs:
+      evidence_run:
+        description: Previous application run to inspect, or empty for a first run
+        required: true
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   applications:
@@ -21,6 +27,9 @@ jobs:
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
       FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
       PYTHONPATH: sdk/python
       FWP_OBJDUMP: llvm-objdump
@@ -31,6 +40,46 @@ jobs:
         with:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Read previous application diagnostics on the runner
+        if: inputs.evidence_run != '' && runner.arch == 'ARM64'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import io
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+          run = os.environ['EVIDENCE_RUN']
+          assert run.isdecimal()
+          def api(path):
+              return subprocess.check_output(['gh', 'api', '--allow-escape-sequences', 'repos/e6qu/fun-with-pipes/' + path])
+          artifacts = json.loads(api(f'actions/runs/{run}/artifacts?per_page=100'))
+          assert artifacts['total_count'] == len(artifacts['artifacts'])
+          records = []
+          for artifact in artifacts['artifacts']:
+              if not artifact['name'].startswith('application-tooling-'):
+                  continue
+              data = api(f"actions/artifacts/{artifact['id']}/zip")
+              assert artifact['digest'] == 'sha256:' + hashlib.sha256(data).hexdigest()
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  assert archive.testzip() is None
+                  for name in archive.namelist():
+                      if not name.endswith('/report.json'):
+                          continue
+                      report = json.loads(archive.read(name))
+                      for variant in report['variants']:
+                          row = {'artifact': artifact['id'], 'source': artifact['workflow_run']['head_sha'],
+                                 'report': name, 'level': variant['optimization'], 'stderr': variant['compiler_stderr']}
+                          records.append(row)
+                          print(json.dumps(row), flush=True)
+          assert records, 'no application reports found'
+          Path('previous-application-diagnostics.json').write_text(json.dumps(records, indent=2) + '\n')
+          PY
       - name: Native compiler and inspection dependencies
         run: sudo apt-get update && sudo apt-get install -y llvm libssl-dev
       - name: Build production compiler
@@ -45,6 +94,11 @@ jobs:
         run: |
           set -o pipefail
           python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -p test_applications.py -v 2>&1 | tee application-tests.log
+      - name: Integer formatting boundaries and existing output contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --test integer_output 2>&1 | tee application-integers.log
       - name: Retain C and actual native instructions at four levels
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
@@ -75,6 +129,8 @@ jobs:
             application-source.txt
             application-toolchain.txt
             application-tests.log
+            application-integers.log
+            previous-application-diagnostics.json
             application-code.log
             application-code/
             application-browser.log

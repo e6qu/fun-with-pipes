@@ -20,6 +20,99 @@ fn run(command: &mut Command, input: &[u8]) -> Output {
 }
 
 #[test]
+fn wide_integer_formatting_preserves_decimal_boundaries_and_buffer_limits() {
+    let dir = fwp::cgen::TempDir::new("wide-format-bounds").unwrap();
+    let runtime = include_str!("../runtime/fwp_rt_ops.c");
+    let begin = runtime.find("static void fwp_fmt_u128(").unwrap();
+    let end = runtime.find("/* Balanced ternary digits,").unwrap();
+    let mut program = String::from(
+        "#include <stdint.h>\n#include <stdio.h>\n#include <string.h>\n\
+         typedef __uint128_t u128;\ntypedef __int128_t i128;\n",
+    );
+    program.push_str(&runtime[begin..end]);
+    program.push_str(
+        "\nint main(void) {\n\
+         struct { unsigned char before[16]; char text[41]; unsigned char after[16]; } b;\n\
+         struct { unsigned char before[16]; char text[64]; unsigned char after[16]; } d;\n",
+    );
+    fn literal(x: u128) -> String {
+        format!("(((u128){}ULL << 64) | {}ULL)", x >> 64, x as u64)
+    }
+    let mut values = vec![0, 1, u128::MAX, i128::MAX as u128, 1_u128 << 127];
+    for exponent in 1..=38 {
+        let boundary = 10_u128.pow(exponent);
+        values.extend([boundary - 1, boundary, boundary + 1]);
+    }
+    for value in values {
+        let expression = literal(value);
+        program.push_str(&format!(
+            "memset(&b, 0x5a, sizeof b); {{ volatile u128 x = {expression}; fwp_fmt_u128(b.text, x); }}\n\
+             if (memcmp(b.text, \"{value}\", sizeof \"{value}\")) return 1;\n\
+             for (unsigned i = 0; i < 16; ++i) if (b.before[i] != 0x5a || b.after[i] != 0x5a) return 2;\n"
+        ));
+        if value > 1_u128 << 127 {
+            continue;
+        }
+        if value <= i128::MAX as u128 {
+            program.push_str(&format!(
+                "memset(&b, 0x5a, sizeof b); {{ volatile i128 x = (i128){expression}; fwp_fmt_i128(b.text, x); }}\n\
+                 if (memcmp(b.text, \"{value}\", sizeof \"{value}\")) return 5;\n\
+                 for (unsigned i = 0; i < 16; ++i) if (b.before[i] != 0x5a || b.after[i] != 0x5a) return 6;\n"
+            ));
+        }
+        let signed = if value == 1_u128 << 127 {
+            i128::MIN
+        } else {
+            -(value as i128)
+        };
+        let signed_expression = if signed == i128::MIN {
+            "(-((i128)1 << 126) - ((i128)1 << 126))".to_string()
+        } else {
+            format!("-(i128){expression}")
+        };
+        let duration = [
+            ("h", 3_600_000_000_000_i128),
+            ("min", 60_000_000_000),
+            ("s", 1_000_000_000),
+            ("ms", 1_000_000),
+            ("us", 1_000),
+        ]
+        .into_iter()
+        .find(|(_, divisor)| signed != 0 && signed % divisor == 0)
+        .map_or_else(
+            || format!("{signed}ns"),
+            |(unit, divisor)| format!("{}{unit}", signed / divisor),
+        );
+        program.push_str(&format!(
+            "memset(&b, 0x5a, sizeof b); memset(&d, 0x5a, sizeof d);\n\
+             {{ volatile i128 x = {signed_expression}; fwp_fmt_i128(b.text, x); fwp_fmt_duration(d.text, x); }}\n\
+             if (memcmp(b.text, \"{signed}\", sizeof \"{signed}\") || memcmp(d.text, \"{duration}\", sizeof \"{duration}\")) return 3;\n\
+             for (unsigned i = 0; i < 16; ++i) if (b.before[i] != 0x5a || b.after[i] != 0x5a || d.before[i] != 0x5a || d.after[i] != 0x5a) return 4;\n"
+        ));
+    }
+    program.push_str("return 0;\n}\n");
+    let source = dir.join("bounds.c");
+    std::fs::write(&source, program).unwrap();
+    let compiler = std::env::var("CC").expect("production compiler must be explicit");
+    for level in ["-O0", "-O1", "-O2", "-O3"] {
+        let binary = dir.join("bounds.exe");
+        let build = checked(
+            Command::new(&compiler)
+                .args([level, "-std=gnu11", "-Wall", "-Wextra", "-Werror"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&binary),
+        );
+        assert!(build.stderr.is_empty(), "{level}: {build:?}");
+        let result = checked(&mut Command::new(binary));
+        assert!(
+            result.stdout.is_empty() && result.stderr.is_empty(),
+            "{level}: {result:?}"
+        );
+    }
+}
+
+#[test]
 fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
     let dir = fwp::cgen::TempDir::new("integer-text-lengths").unwrap();
     let input = dir.join("main.fwp");

@@ -55,59 +55,48 @@ Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: ownership comparisons
+## Current work: applications, compiler costs and sustained load
 
-#270 delivered the documentation refresh and fresh F64 stores. #271 extended
-array ownership to runtime sensor calibration and pixel adjustment. #272 added
-known array callback specialization and compared structured gradients across
-neighboring, independent and densely coupled objectives.
-[All #272 delivery gates pass](docs/measurements/structured-callback-delivery-2026-11-09/README.md).
-The original noisy or unmet timing targets for milestones 1–3 remain open; do not
-repeat unchanged measurements to obtain qualification.
+#270–272 delivered fresh-array stores, captured-map ownership and known array
+callbacks with structured-gradient comparisons. Original noisy or unmet timing
+acceptance for milestones 1–3 remains open; do not repeat unchanged measurements
+to obtain qualification.
 
-Milestone 4 now fills four concrete comparison gaps:
+#273 completes milestone 4 with its parser input cleanup repair, buffer/closure
+comparisons, weak-reference service measurements and actual parser allocation
+observations. All nine production jobs, documentation and the complete-log audit
+pass for its [exact delivered source](docs/measurements/ownership-peer-final-gates-2026-11-09/README.md).
+The [comparison guide](docs/measurements/ownership-peers.md) retains results and
+limits. Complete delivery of 4,096 queued messages still takes 18.65–20.23 times
+C's time and 5.12–6.70 times Swift's; the implementations differ in queues,
+representations and synchronization. ARC counts alone do not explain that gap.
 
-1. **Buffers:** matched barriers and [separate returned-array lifetimes](docs/measurements/returned-buffer-checks-2026-11-09/README.md)
-   now pass in fwp/C/Rust/Swift. [Phase callers and native C/Rust/Swift storage checks](docs/measurements/returned-buffer-phases-2026-11-09/README.md)
-   also pass on both architectures. [Phase timings and process memory](docs/measurements/returned-buffer-time-2026-11-09/README.md)
-   are recorded for both sessions on both hosts. Many AMD64 copy controls remain
-   inconclusive; retain them without unchanged reruns.
-2. **Returned functions:** [scalar Swift allocation attribution now passes](docs/measurements/swift-scalar-closures-2026-11-09/README.md).
-   Retain separate construction/call/release measurements and prior timing misses;
-   do not equate native allocation bytes with fwp payload-only counters.
-3. **Weak registrations:** cancellation, active-call ownership, expiration and
-   [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
-   [Queued cleanup, actual reuse and native backing-storage release now pass](docs/measurements/weak-operation-verification-2026-11-09/README.md).
-   [Weak-operation timings](docs/measurements/weak-operation-time-2026-11-09/README.md)
-   now show substantial C/Rust lookup gaps and mixed Swift comparisons; the
-   [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
-   temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
-   and fwp physical release pass. [Native service allocations](docs/measurements/weak-callback-profiles-2026-11-09/README.md)
-   and their complete journal audit pass. [Complete service timings](docs/measurements/weak-callback-time-2026-11-09/README.md)
-   now pass both sessions: large full delivery takes 18.65–20.23× C's time and
-   5.12–6.70× Swift's. Attribute queue, payload, effect and channel costs before
-   choosing a shared improvement; weak-reference counts alone do not explain it.
-4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
-   and RSS/checkpoint observations pass on both Linux hosts. [Resize calibration](docs/measurements/parser-allocator-calibration-2026-11-09/README.md)
-   and [mapping accounting controls](docs/measurements/parser-mapping-accounting-2026-11-09/README.md)
-   also pass. [Actual parser accounting snapshots now pass](docs/measurements/parser-process-accounting-2026-11-09/README.md),
-   separating accountable address ranges from resident pages. [Actual C/Rust
-   allocation events](docs/measurements/parser-native-allocator-2026-11-09/README.md)
-   now expose 30% more peak requested storage than endpoint capacities for the
-   largest input. [fwp heap/region observations also pass](docs/measurements/parser-heap-events-2026-11-09/README.md):
-   the largest charged peak is during tokenization, and evaluation allocates
-   nothing. [Mapped-resize and arena-retry controls also pass](docs/measurements/parser-allocator-paths-2026-11-09/README.md).
-   Retain explicit limits for allocator paths that did not execute.
-   Preserve the new C/Rust allocation-event
-   and native frame checks without treating them as whole-process memory.
+Milestone 5 follows the [application/compiler/load protocol](docs/measurements/application-tooling.md):
 
-[The scope](docs/measurements/ownership-peers.md) defines matched work, representation
-differences and remaining controls. [First native checks](docs/measurements/ownership-peer-checks-2026-11-08/README.md)
-verify Swift buffer results and C/Rust parser storage on ARM64/AMD64. The
-[four-language follow-up](docs/measurements/four-language-buffers-2026-11-09/README.md)
-now includes fwp and matched barriers; neither establishes a new peer timing result. Freeze each complete protocol before collecting timings.
-Keep the experimental local-pair helper and ordinary public gradient API unchanged
-unless representative evidence justifies a replacement.
+1. **Complete application workflows:** word counting, numerical minimization and
+   queued callbacks through raw/optimized interpretation, native O1/O2, REPL,
+   notebook edits/save/reopen, debugger inspection and retained O0–O3 C/code
+   reports. The [walkthroughs](docs/application-workflows.md) and focused tests
+   are prepared. Repair every native/browser finding before claiming support.
+2. **Expose real compiler phases:** source loading/parsing, macro expansion,
+   inference, specialization, optimization, ownership, C emission and external
+   compilation. Account for nested work without double-counting. Ordinary and
+   observed compilation must emit identical C and results; report observer cost.
+3. **Measure compiler growth:** the protocol's declaration, generic-use and
+   nesting families, with early/late errors, explicit deadlines, memory and
+   source/IR/C sizes on both native Linux architectures. Use the results to
+   select bounded improvements; do not promise linear inference for all inputs.
+4. **Measure sustained HTTP load:** the existing API endpoint with 1/8/32/64
+   persistent connections, two sessions, complete response/error records and a
+   five-minute soak. Separate ordinary latency/throughput from allocation and
+   cleanup instrumentation; include slow clients, cancellation and shutdown.
+5. **Deliver one coherent batch:** fix discovered issues, keep docs and tutorials
+   aligned, retain all observations and original failures, then run the complete
+   final native matrix, documentation and log audit for the next substantial PR.
+
+No compiler-phase timings or sustained-load results have been collected for this
+milestone. Keep the experimental local-pair helper and public gradient API
+unchanged unless representative evidence justifies a replacement.
 
 ## Earlier contracts
 

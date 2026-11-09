@@ -9,6 +9,10 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[The complete ownership comparison passes all delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
+[Milestone 5](application-tooling.md) now checks application workflows and prepares
+compiler-phase and sustained-load measurements; it has no new timing results yet.
+
 [Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
 now separate construction, reading, release and RSS. ARM64 shows lower overall
 time on some large cases but slower reading and costly empty-array churn. Many

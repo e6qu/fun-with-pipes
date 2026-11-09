@@ -8,6 +8,9 @@ sessions on both hosts; failed copy controls remain inconclusive.
 [Weak-operation timings](weak-operation-time-2026-11-09/README.md) are recorded;
 complete service timing now passes both sessions on both hosts, with substantial
 remaining performance gaps. Freeze each protocol before collection.
+[PR #273 completes the final delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
+The protocols and results below retain their original sources and limits;
+[milestone 5](application-tooling.md) is the active implementation work.
 
 ## Questions and programs
 

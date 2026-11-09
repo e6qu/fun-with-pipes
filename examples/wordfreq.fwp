@@ -17,8 +17,4 @@ count-words =
     | sort-by (both (.1 | neg) .0)
     | take 5
 
-main =
-    ()
-    | read-all
-    | count-words
-    | each (format "{}: {}" | print)
+main = () | read-all | count-words | each (format "{}: {}" | print)

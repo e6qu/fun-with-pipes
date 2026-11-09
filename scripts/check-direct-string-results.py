@@ -9,6 +9,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import struct
+import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_SPEC = importlib.util.spec_from_file_location('wordfreq_audit', ROOT / 'scripts/check-current-wordfreq.py')
@@ -24,6 +25,7 @@ LABELS = ['c', 'rust', 'candidate', 'candidate-copy', 'reference', 'reference-co
 
 
 def audit(files, source, machine, session):
+    assert re.fullmatch(r'[0-9a-f]{40}', source), 'full measured source required'
     report = json.loads(files['comparison.json'])
     assert set(files) == set(report['files']) | {'comparison.json'}
     for name, identity in report['files'].items():
@@ -55,9 +57,10 @@ def audit(files, source, machine, session):
     assert reference.encode() == files['reference.c'] and patch == json.loads(files['reference-patch.json'])
     for label in ['candidate', 'reference']:
         assert files[label + '-profile.c'].decode() == CHECK.instrument_raw(PROFILE.instrument(files[label + '.c'].decode()))
-    for saved, current in [('wordfreq.fwp', 'examples/wordfreq.fwp'), ('c.c', 'tests/fixtures/wordfreq_bench.c'),
+    for saved, path in [('wordfreq.fwp', 'examples/wordfreq.fwp'), ('c.c', 'tests/fixtures/wordfreq_bench.c'),
                            ('rust.rs', 'tests/fixtures/wordfreq_bench.rs')]:
-        assert files[saved] == (ROOT / current).read_bytes(), saved
+        measured = subprocess.check_output(['git', 'show', f'{source}:{path}'], cwd=ROOT)
+        assert files[saved] == measured, saved
     binaries = json.loads(files['binaries.json'])
     assert binaries == report['binaries'] and set(binaries) == set(LABELS)
     for label, binary in binaries.items():

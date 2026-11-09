@@ -73,7 +73,7 @@ class Applications(unittest.TestCase):
                 self.assertEqual(rows, [0.0, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
             finally:
                 kernel.interrupt()
-            result = subprocess.run([FWP, "repl", "--no-history"],
+            result = subprocess.run([FWP, "repl", "--stream"],
                 input=f":load {source}\nrosenbrock start | round | eq 49.0\n:quit\n",
                 env=environment, capture_output=True, text=True, encoding="utf-8", timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -124,7 +124,7 @@ class Applications(unittest.TestCase):
             source = Path(directory) / "callbacks.fwp"
             source.write_text(definitions + "\nmain = " + computation + "\n", encoding="utf-8")
             outputs = self.execution_outputs(source, directory, environment, "")
-            result = subprocess.run([FWP, "repl", "--no-history"],
+            result = subprocess.run([FWP, "repl", "--stream"],
                 input=f":load {source}\n(64, 1) | service | .sum | eq 30336\n:quit\n",
                 env=environment, capture_output=True, text=True, encoding="utf-8", timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -178,8 +178,8 @@ class Applications(unittest.TestCase):
         environment = dict(os.environ)
         environment.pop("FWP_NO_OPT", None)
         environment["FWP_LTO"] = "0"
-        with self.subTest(tool="terminal repl"):
-            result = subprocess.run([FWP, "repl", "--no-history"],
+        with self.subTest(tool="scripted repl"):
+            result = subprocess.run([FWP, "repl", "--stream"],
                 cwd=root, input=':load examples/wordfreq.fwp\n"hello Hello." | count-words\n:quit\n',
                 env=environment, capture_output=True, text=True, encoding="utf-8", timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr)

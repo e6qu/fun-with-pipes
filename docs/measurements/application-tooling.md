@@ -1,8 +1,8 @@
 # Milestone 5: applications, compiler costs and sustained load
 
-**Preparation, not results.** Keep [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273)
-unchanged while its final gates run. This is the next [roadmap](../../PLAN.md)
-batch. Freeze its implementation source and complete measurement settings before
+**Implementation in progress, not timing results.** [PR #273's delivery gates
+pass](ownership-peer-final-gates-2026-11-09/README.md). This is the next
+[roadmap](../../PLAN.md) batch. Freeze its implementation source and complete measurement settings before
 collecting timings. Existing unit tests establish individual features; the work
 below checks complete user workflows and measures the costs still missing.
 
@@ -42,14 +42,18 @@ For each application, deliver a short walkthrough and executable checks:
 The [walkthroughs](../application-workflows.md) and
 [application tests](../../sdk/python/tests/test_applications.py) now cover the
 three calculations through raw/optimized interpretation, native O1/O2, the REPL,
-notebook input edits/errors and debugger stops. These new execution checks are
-prepared but have not yet run on native CI. The browser checks now also exercise
+notebook input edits/errors and debugger stops. Their first native run exposed
+the preparation failures listed below. The browser checks also exercise
 all three applications, stale/error states, explicit effects and source-only
 save/reopen. The [inspection script](../../scripts/check-application-disassembly.py)
 retains generated C and actual O0/O1/O2/O3 objects for all three. The focused
 `application-tooling` workflow runs the SDK and inspection checks on both native
 Linux architectures and the browser on AMD64. Execution of these new checks is
-pending; they are not compiler-cost or service-throughput measurements.
+in repair: the first run passes the browser workflows but rejects missing
+scripted-REPL settings, source formatting and an O3 integer-format diagnostic.
+The historical word-count audit also needs to use its recorded source rather
+than today's example. These checks are not compiler-cost or service-throughput
+measurements.
 
 Use the existing [SDK tests](../../sdk/python/tests/test_tools.py),
 [terminal checks](../../sdk/python/tests/test_repl_terminal.py) and
@@ -178,8 +182,9 @@ shared improvement. A temporary weak-lookup result alone does not explain it.
 
 ## Delivery
 
-Keep one active PR. Prepare this batch separately while #273 finishes; publish
-the next substantial PR after its verified squash merge. Update the guides and
+Keep one active PR. #273 is merged; the preparation branch is based on its
+verified squash merge. Publish this complete application/compiler/load batch
+as the next substantial PR. Update the guides and
 handoff with actual commands/results, and fix every encountered issue. Run focused
 checks during development, then one complete final matrix and log audit for the
 assembled batch. Keep full builds and all measurements on GitHub runners.
