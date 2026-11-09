@@ -51,6 +51,10 @@ For example, on a native host with GCC installed:
 CC=gcc FWP_LTO=0 fwp build examples/wordfreq.fwp -O2 -o wordfreq --profile-compile compiler.json
 ```
 
+The report file is created after compilation finishes, so it cannot change
+which source files the compiler sees. It refuses the root source and output
+destinations, including auxiliary C/C++ and browser loader files.
+
 The JSON report records phase start/end times in nanoseconds, parent phase IDs,
 source/token/declaration counts where available, function counts and emitted C
 bytes. It also records the build status, including ordinary compilation errors.

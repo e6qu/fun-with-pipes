@@ -167,6 +167,42 @@ traffic. The existing warmed-baseline plus 8 MiB RSS budget is retained for thos
 bounded cleanup controls; the ordinary soak reports its full trace and slope.
 Do not turn instrumentation overhead into an ordinary throughput result.
 
+The [native driver](../../scripts/load/http-load.rs) and
+[runner](../../scripts/measure-http-load.py) are implemented; runner verification
+is pending. `http-load-checks` first verifies the driver against a controlled
+server (correct/wrong/partial replies and timeout), exercises the actual API,
+and runs its existing physical cleanup/socket/cancellation controls. `http-load`
+is reserved for the complete timed protocol after those checks pass. Session 1
+also runs the single 300-second soak per host. Each trial starts a fresh server.
+No sustained timing result exists yet.
+
+The generator runs on one allowed logical CPU, the server on another. Generator
+CPU saturation limits what this experiment can say about server capacity. The
+retained one-second trace gives both processes' CPU time and RSS; the summary
+reports sampled CPU fractions and the RSS slope, without imposing a new RSS goal.
+C/C++ launchers apply the stated target flags because fwp's `CC`/`CXX` settings
+take executable paths, not argument lists. Their complete source is retained.
+They run only during compilation, outside request timing.
+
+Every attempt is a 32-byte little-endian record: start/end nanoseconds from the
+common generator epoch, request bytes sent, response bytes received, outcome,
+and response-dictionary ID. Each worker has its own stream and exact response-byte
+dictionary; `request.bin` retains the complete request. This stores repeated
+responses once without discarding attempts. Streams are compressed losslessly
+with gzip. The [reader](../../scripts/http_load.py) accepts an explicit compressed
+setting, verifies all records and reconstructs the summary. Outcomes distinguish
+success, deadline, wrong/framing response, early EOF and other IO failure.
+
+Connection setup precedes the common clock. Every connection has one outstanding
+request, and a failed connection stops without retries. Request latency includes
+sending, consuming and validating the response. Recording happens afterward;
+its cost is included in throughput. Warmup attempts, including any crossing into
+the measured interval, remain recorded separately. Only attempts begun in the
+measured interval enter its latency/error denominator; only correct responses
+finished inside it contribute to throughput. Late successes remain in the
+successful-response latency distribution. This is an initial fwp service baseline,
+not a peer comparison with C, Rust or Swift.
+
 The runnable protocol must additionally retain:
 
 - Endpoint computation and exact request/response bytes; keep-alive and connection

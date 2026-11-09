@@ -949,14 +949,16 @@ fn build(args: &[String]) -> ExitCode {
         };
         match compile_profile {
             Some(path) => {
-                let outputs = [
+                let reserved = [
+                    src.clone(),
                     out.clone(),
                     out.with_extension("c"),
                     out.with_extension("h"),
+                    out.with_extension("js"),
                     out.with_extension("float.c"),
                     out.with_extension("float.cpp"),
                 ];
-                fwp::compile_profile::record(&path, &outputs, compile).unwrap_or_else(|error| {
+                fwp::compile_profile::record(&path, &reserved, compile).unwrap_or_else(|error| {
                     eprintln!("fwp build: {error}");
                     1
                 })

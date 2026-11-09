@@ -98,26 +98,54 @@ impl Drop for Activation {
     }
 }
 
+fn destination(path: &Path) -> std::io::Result<PathBuf> {
+    if path.exists() {
+        return path.canonicalize();
+    }
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let name = path.file_name().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "report needs a file name")
+    })?;
+    Ok(parent.canonicalize()?.join(name))
+}
+
 /// Record one worker action. Existing report files are never overwritten.
-/// `outputs` names build destinations that must not alias this report.
-pub fn record(path: &Path, outputs: &[PathBuf], action: impl FnOnce() -> u8) -> Result<u8, String> {
+/// `reserved` names inputs and build destinations that must not alias this report.
+pub fn record(
+    path: &Path,
+    reserved: &[PathBuf],
+    action: impl FnOnce() -> u8,
+) -> Result<u8, String> {
     if ACTIVE.with_borrow(Option::is_some) {
         return Err("compiler reporting is already active on this worker".into());
     }
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)
-        .map_err(|e| format!("cannot create compiler report {}: {e}", path.display()))?;
-    let report_path = path.canonicalize().map_err(|e| e.to_string())?;
-    if outputs
-        .iter()
-        .any(|output| output.canonicalize().is_ok_and(|p| p == report_path))
-    {
-        drop(file);
-        std::fs::remove_file(path).map_err(|e| e.to_string())?;
-        return Err("compiler report must differ from every build output".into());
+    match std::fs::symlink_metadata(path) {
+        Ok(_) => {
+            return Err(format!(
+                "compiler report already exists: {}",
+                path.display()
+            ))
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            return Err(format!(
+                "cannot inspect compiler report {}: {error}",
+                path.display()
+            ))
+        }
     }
+    let report_path = destination(path).map_err(|e| e.to_string())?;
+    if reserved
+        .iter()
+        .any(|p| destination(p).is_ok_and(|p| p == report_path))
+    {
+        return Err("compiler report must differ from source and build outputs".into());
+    }
+    // Do not create the report until compilation ends: creating a file could
+    // otherwise turn an absent imported source into an empty, readable module.
     ACTIVE.with_borrow_mut(|active| {
         *active = Some(Report {
             start: Instant::now(),
@@ -189,6 +217,11 @@ pub fn record(path: &Path, outputs: &[PathBuf], action: impl FnOnce() -> u8) -> 
         ),
         ("phases".into(), Json::Arr(events)),
     ]);
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|e| format!("cannot create compiler report {}: {e}", path.display()))?;
     writeln!(file, "{result}")
         .map_err(|e| format!("cannot write compiler report {}: {e}", path.display()))?;
     Ok(status)

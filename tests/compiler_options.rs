@@ -235,6 +235,7 @@ fn compile_reports_do_not_replace_inputs_or_build_outputs() {
     for report in [
         source.clone(),
         dir.join("artifact.c"),
+        dir.join("artifact.js"),
         dir.join("artifact.float.c"),
         dir.join("artifact.float.cpp"),
     ] {
@@ -254,4 +255,32 @@ fn compile_reports_do_not_replace_inputs_or_build_outputs() {
             assert!(!report.exists());
         }
     }
+}
+
+#[test]
+fn compile_reporting_does_not_create_an_import_before_checking_it() {
+    let dir = fwp::cgen::TempDir::new("compile-profile-import").unwrap();
+    let source = dir.join("input.fwp");
+    std::fs::write(&source, "import absent\nmain = ()\n").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let ordinary = Command::new(compiler)
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    let report = dir.join("absent.fwp");
+    let observed = Command::new(compiler)
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .arg("--profile-compile")
+        .arg(&report)
+        .output()
+        .unwrap();
+    assert_eq!(ordinary.status.code(), Some(1));
+    assert_eq!(
+        (observed.status.code(), observed.stdout, observed.stderr),
+        (ordinary.status.code(), ordinary.stdout, ordinary.stderr)
+    );
+    verify_profile(&report, 1);
+    assert!(!source.with_extension("c").exists());
 }
