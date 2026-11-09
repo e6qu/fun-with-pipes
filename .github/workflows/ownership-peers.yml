@@ -65,7 +65,8 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Build the current compiler
-        if: contains(fromJSON('["weak-callback-service","weak-operation-census","weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
+        id: compiler
+        if: contains(fromJSON('["weak-callback-ownership","weak-callback-service","weak-operation-census","weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
         shell: bash
         run: |
           set -euo pipefail
@@ -106,6 +107,13 @@ jobs:
             --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
             --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
             --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-callback-service
+      - name: Callback service physical ownership and missing-release control
+        if: ${{ !cancelled() && inputs.suite == 'weak-callback-ownership' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_ARC_ARTIFACTS: weak-callback-service-ownership
+        run: >-
+          python3 scripts/run-native-tests.py --targets channel_queue_ownership
+          --idle-timeout 600 --logs weak-callback-service-logs
       - name: Managed weak-operation allocations and result-cell attribution
         if: ${{ !cancelled() && inputs.suite == 'weak-operation-census' }}
         run: |
@@ -276,6 +284,8 @@ jobs:
             weak-operation-reuse/
             weak-operation-census/
             weak-callback-service/
+            weak-callback-service-ownership/
+            weak-callback-service-logs/
             swift-setup/
             swift-peer-evidence/
             swift-allocation-evidence/

@@ -19,7 +19,7 @@ Preserve unrelated root-worktree changes and modified inactive handoffs.
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases, queued cleanup, native storage and actual reuse | Parser internal memory boundaries; weak-operation and service costs |
+| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases/storage/reuse/census; service correctness | Parser internal memory boundaries; weak-operation timing and service storage/costs |
 | 5 | Pending | Existing tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Keep original failed/noisy timing controls. Fewer operations or smaller images
@@ -80,8 +80,8 @@ cases, the existing separate modules, a C-only capped duration pilot, two sessio
 RSS and compiler/image costs. Six altered-evidence controls check reconstruction.
 The same-source phase correctness batch must pass before collecting timings.
 Source `031e6f794` is frozen as `roadmap/weak-operation-time-2026-11-09`.
-Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both queued.
-Docs `42647826087` / `129265780239` is queued. No new speed claim. The shared strict phase
+Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both collecting timings.
+Docs `42647826087` / `129265780239` passes. No new speed claim. The shared strict phase
 reader moved from the checker to `weak_operation_phases.py`, without changing its
 result contract. Three timing-reader and three existing result-reader tests pass.
 
@@ -94,8 +94,11 @@ Three reader tests pass. A guarded Apple Clang O2 check on retained source
 expired lookups, and rejects actual extra allocation/omitted free. It is not a
 rebuilt-compiler or GCC pass. Native source `54b818abc` is frozen as
 `roadmap/weak-operation-census-2026-11-09`: run `42651550496`, AMD64 job
-`129278956168`, ARM64 job `129278955989`, both queued. Docs `42651562531` /
-`129278986150` is queued. This fills the
+`129278956168`, ARM64 job `129278955989`, both pass. Docs `42651562531` /
+`129278986150` passes. [Native results and full logs](measurements/weak-operation-census-2026-11-09/README.md)
+confirm one 16-byte managed result cell per successful lookup at O1/O2, none for
+expired lookups and zero final live bytes; eight observations/eight controls per
+host pass. This fills the
 parent comparison's result-cell attribution requirement without changing the
 queued timing source or claiming native backing bytes/ARC counts.
 
@@ -106,10 +109,14 @@ must fail the independent receiver oracle; C also rejects actual omitted payload
 and registration releases. Guarded Apple Clang/Rust/Swift O2 checks pass for all
 eight native variants. A needless Foundation import exposed a local SDK mismatch;
 using the platform C module removes that dependency and both Swift variants pass.
-The SDK itself was not modified. Three reader tests pass. Production GCC/fwp,
-raw/optimized interpretation and Swift's two production levels are prepared in
-the `weak-callback-service` workflow suite, not yet verified. Full Swift/fwp
-physical-release and all-peer allocation observers, then frozen timing collection,
+The SDK itself was not modified. Three reader tests pass. Source `afafdef5b`, tag
+`roadmap/weak-callback-service-2026-11-09`, passes run `42655781850`: ARM64
+`129293781908`, AMD64 `129293782208`. Each host passes 20 native ordinary/fault
+builds and four raw/optimized interpreter executions. Docs `42655786989` /
+`129293786506` passes. A prepared `channel_queue_ownership` regression adds the
+physical allocation ledger, dynamic/static O1/O2 checks and actual omitted weak
+release; that extension has not yet run. Full Swift/fwp physical-release and
+all-peer allocation observers, then frozen timing collection,
 remain required; these checks are not a service-throughput result.
 
 ## Other evidence and unresolved measurements
@@ -140,7 +147,8 @@ Free space recovered to about 145 GiB. Focused checks use the unchanged
   macOS. Both Linux batches execute that actual checkpoint test.
 - Weak phase/profile/reuse readers: 3/4/3 pass.
 - Repair Python syntax checks and Rust formatting: pass. Documentation audit:
-  417 link sets, 106 immutable preparation pairs and five roadmap steps pass.
+  419 link sets, 106 immutable preparation pairs and five roadmap steps pass before
+  the latest result receipt. New service reader/syntax checks and Rust formatting pass.
 - Apple Clang O2 source diagnostic: original generated entry frees the caller's
   32-byte input early; removing only duplicate entry cleanup preserves it until
   caller release. This is not a rebuilt-compiler or Linux GCC pass.

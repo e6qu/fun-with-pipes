@@ -1,6 +1,6 @@
 # Callback service comparison
 
-**Correctness fixtures prepared; native runner verification and measurements remain open.** This is the application-shaped
+**Native correctness passes; physical-release extensions and measurements remain open.** This is the application-shaped
 part of the [weak-registration comparison](ownership-peers.md#weak-registrations).
 [Reference-operation timings](weak-operation-time.md) exclude queue handling and
 callbacks; their results must not be presented as service throughput.
@@ -75,13 +75,23 @@ than accepting the callback's checksum as its own result.
   fail its live-allocation counters.
 - fwp also runs ordinary/missing-delivery programs through raw and optimized
   interpretation. No new Cargo test target is introduced.
+- The existing `channel_queue_ownership` target now includes a prepared service
+  regression: raw/optimized interpretation, dynamic/static storage at O1/O2,
+  the physical allocation ledger and an actual omitted weak-release fault.
+  Its native result is still pending; adding the test does not establish a pass.
 - The C fixture counts actual allocation/free calls. Rust checks that no other
   strong/weak registrations survive dispatch. Neither result establishes native
   allocator peak bytes or complete Swift/fwp physical release; those observers
   remain required before timing acceptance.
 
 Local guarded O2 checks pass for Apple Clang, Rust and Swift, including every
-native fault variant. These do not verify Linux GCC or the rebuilt fwp compiler.
+native fault variant. Separate production checks now pass on Linux ARM64/AMD64:
+[run 42655781850](https://github.com/e6qu/fun-with-pipes/actions/runs/42655781850),
+source `afafdef5b`, tag `roadmap/weak-callback-service-2026-11-09`. Each host passes
+20 ordinary/fault builds and four raw/optimized interpreter executions.
+[Docs 42655786989](https://github.com/e6qu/fun-with-pipes/actions/runs/42655786989)
+also passes. [Complete logs and raw results](weak-callback-service-2026-11-09/README.md)
+are retained. These results precede the physical-ledger extension above.
 The initial Swift Foundation import hit an installed SDK mismatch; the fixture
 uses only the standard library and platform C module now, and both local Swift
 variants pass. No SDK installation or resource limit was changed.

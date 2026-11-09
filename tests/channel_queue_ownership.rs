@@ -3,6 +3,126 @@ use std::process::Command;
 
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn callback_service_releases_payloads_and_weak_registrations() {
+    let dir = fwp::cgen::TempDir::new("weak-callback-service").unwrap();
+    let source = dir.join("service.fwp");
+    std::fs::write(&source, include_str!("fixtures/weak_callback_service.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let mut expected = Vec::new();
+    for population in [64_i64, 4096] {
+        for mode in 0..4 {
+            let accepted: Vec<_> = (0..population)
+                .filter(|index| {
+                    mode != 2
+                        && (mode != 1 || index % 4 != 0)
+                        && (mode != 3 || *index <= population / 2)
+                })
+                .collect();
+            let sum: i64 = accepted
+                .iter()
+                .map(|index| (*index..*index + 16).sum::<i64>())
+                .sum();
+            expected.push(serde_json::json!({
+                "population": population, "mode": mode, "calls": accepted.len(),
+                "cancelled": if mode == 1 { (population + 3) / 4 } else { 0 },
+                "expired": if mode == 2 { population } else { 0 },
+                "errors": i64::from(mode == 3), "sent": accepted.len(),
+                "received": accepted.len(), "sum": sum, "received_sum": sum,
+            }));
+        }
+    }
+    let check = |result: &std::process::Output| {
+        assert!(result.status.success(), "{result:?}");
+        assert!(result.stderr.is_empty(), "{result:?}");
+        let actual: Vec<serde_json::Value> = std::str::from_utf8(&result.stdout)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(actual, expected);
+    };
+    for raw in [true, false] {
+        let configure = |command: &mut Command| {
+            command.env_remove("FWP_NO_OPT");
+            if raw {
+                command.env("FWP_NO_OPT", "1");
+            }
+        };
+        let mut interpreted = Command::new(compiler);
+        configure(&mut interpreted);
+        check(
+            &interpreted
+                .args(["run", "--interp"])
+                .arg(&source)
+                .output()
+                .unwrap(),
+        );
+        for memory in ["dynamic", "static"] {
+            let cfile = dir.join("service.c");
+            let mut emit = Command::new(compiler);
+            configure(&mut emit);
+            let emitted = emit
+                .args(["build", "--emit-c", "-O2", "--memory", memory])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile)
+                .output()
+                .unwrap();
+            assert!(emitted.status.success(), "{emitted:?}");
+            assert!(
+                emitted.stdout.is_empty() && emitted.stderr.is_empty(),
+                "{emitted:?}"
+            );
+            let original = std::fs::read_to_string(&cfile).unwrap();
+            // The address ledger is test storage outside the managed heap.
+            let observed = ownership_ledger::instrument_native(&original, 1 << 17);
+            let finish = "    owner_ledger_finish();\n";
+            assert_eq!(observed.matches(finish).count(), 1);
+            let observed = observed.replace(finish, &format!("{finish}    if (fwp_heap.live) owner_ledger_error(207, \"physical allocation balance differs\");\n"));
+            for level in ["-O1", "-O2"] {
+                let binary = dir.join("service.exe");
+                fwp::cgen::compile_c(&observed, &binary, level).unwrap();
+                let result = Command::new(&binary).output().unwrap();
+                record_probe::save(
+                    "weak-callback-service",
+                    &format!("{memory}-{raw}-{level}"),
+                    &observed,
+                    &binary,
+                    &result,
+                );
+                check(&result);
+                if !raw && memory == "dynamic" {
+                    let release = "static void fwp_weak_channel_drop(V value) {\n";
+                    assert_eq!(observed.matches(release).count(), 1);
+                    let omitted = observed.replace(
+                        release,
+                        &format!(
+                            "{release}    (void)value; return; /* actual omitted weak release */\n"
+                        ),
+                    );
+                    fwp::cgen::compile_c(&omitted, &binary, level).unwrap();
+                    let result = Command::new(&binary).output().unwrap();
+                    record_probe::save(
+                        "weak-callback-service",
+                        &format!("omitted-weak-{level}"),
+                        &omitted,
+                        &binary,
+                        &result,
+                    );
+                    assert_eq!(result.status.code(), Some(205), "{result:?}");
+                    assert_eq!(
+                        result.stderr,
+                        b"ownership ledger: live allocations remain after ownership cleanup\n"
+                    );
+                }
+            }
+        }
+    }
+}
 
 #[test]
 fn channels_own_queues_and_transfer_received_values() {

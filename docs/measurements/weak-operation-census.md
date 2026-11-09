@@ -1,11 +1,15 @@
 # fwp allocations during weak-reference operations
 
-**Native checks queued; no GCC count result yet.**
+**Native GCC O1/O2 checks pass on ARM64 and AMD64.**
 Source `54b818abc`, tag `roadmap/weak-operation-census-2026-11-09`,
 [run 42651550496](https://github.com/e6qu/fun-with-pipes/actions/runs/42651550496). This diagnostic measures the actual fwp
 operations from the [phase comparison](weak-operation-phases.md), separately from
 [ordinary timings](weak-operation-time.md) and [native C/Rust/Swift allocation
 profiles](weak-operation-storage.md).
+
+[Results and complete logs](weak-operation-census-2026-11-09/README.md): one
+temporary 16-byte `Some` cell per successful lookup, none per expired lookup,
+and zero final managed live storage. All actual allocation/free controls pass.
 
 A successful `channel.upgrade` returns `Some channel`; an expired one returns
 `None`. The `Some` value can require its own heap cell in addition to the channel
@@ -67,5 +71,5 @@ lookup charges zero allocations. Actual extra-allocation and omitted-free contro
 both fail with status 79 as required. The local guard reports 0.19 CPU seconds and
 0.85 elapsed seconds; no limit was raised.
 
-This verifies the observer on that retained source with Apple Clang. The rebuilt
-current compiler and native GCC O1/O2 counts still need runner verification.
+This earlier check verifies the observer on retained source with Apple Clang.
+The native results above now verify the rebuilt compiler and GCC O1/O2 separately.
