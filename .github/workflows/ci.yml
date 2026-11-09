@@ -219,22 +219,30 @@ jobs:
           if-no-files-found: ignore
 
       - name: Package and verify ownership evidence
+        id: ownership_package
         if: always()
-        run: >-
-          python3 scripts/package-evidence.py --input ownership-evidence
-          --output ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.zip
-          --manifest ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.json
-          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+        shell: bash
+        run: |
+          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+            echo "No ownership evidence was created before cancellation."
+            echo "attempted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "attempted=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/package-evidence.py --input ownership-evidence \
+              --output ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.zip \
+              --manifest ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.json \
+              --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+          fi
       - name: Upload verified ownership archive
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           path: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.zip
           archive: false
           if-no-files-found: error
       - name: Preserve ownership file manifest and read failures
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           name: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}-manifest
           path: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}.json
@@ -363,22 +371,30 @@ jobs:
           if-no-files-found: error
 
       - name: Package and verify ownership evidence
+        id: ownership_package
         if: always()
-        run: >-
-          python3 scripts/package-evidence.py --input ownership-evidence
-          --output ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.zip
-          --manifest ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.json
-          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+        shell: bash
+        run: |
+          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+            echo "No ownership evidence was created before cancellation."
+            echo "attempted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "attempted=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/package-evidence.py --input ownership-evidence \
+              --output ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.zip \
+              --manifest ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.json \
+              --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+          fi
       - name: Upload verified ownership archive
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           path: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.zip
           archive: false
           if-no-files-found: error
       - name: Preserve ownership file manifest and read failures
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           name: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}-manifest
           path: ownership-evidence-corpus-${{ runner.os }}-${{ runner.arch }}.json
@@ -608,22 +624,30 @@ jobs:
           if-no-files-found: ignore
 
       - name: Package and verify ownership evidence
+        id: ownership_package
         if: always()
-        run: >-
-          python3 scripts/package-evidence.py --input ownership-evidence
-          --output ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.zip
-          --manifest ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.json
-          --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+        shell: bash
+        run: |
+          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+            echo "No ownership evidence was created before cancellation."
+            echo "attempted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "attempted=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/package-evidence.py --input ownership-evidence \
+              --output ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.zip \
+              --manifest ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.json \
+              --source "${{ github.event.pull_request.head.sha || github.sha }}" --compression 6
+          fi
       - name: Upload verified ownership archive
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           path: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.zip
           archive: false
           if-no-files-found: error
       - name: Preserve ownership file manifest and read failures
         uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ownership_package.outputs.attempted != 'false'
         with:
           name: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}-manifest
           path: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}.json

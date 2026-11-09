@@ -110,10 +110,21 @@ build/download/provider caches, not infrastructure state or active workloads.
 ## Current PR gates
 
 Combined head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`: production
-`42583726102` and docs `42583726111` queued when last checked. The review branch
+`42583726102` was cancelled to avoid a full intermediate matrix before the batch
+is complete; docs `42583726111` passes. One Linux job (`129048368142`) began
+toolchain setup just before cancellation; the other eight never started. Its
+complete log (`/tmp/fwp-pr273-intermediate-cancel.log`) shows cancellation followed
+by packaging/upload errors because no evidence directory existed yet. This is
+not a production pass. The review repair skips that exact early-cancellation
+case while retaining partial evidence and ordinary missing-evidence failures;
+controls execute all three actual workflow bodies with present/absent/invalid
+inputs, both cancelled and ordinary. The repair is not verified yet.
+
+The review branch
 adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite at
-`9a7f1baaf`: focused run `42584848642`, docs `42584852665`; both queued when checked.
-Keep these unverified additions separate from the verified cancellation fixtures.
+`9a7f1baaf`: focused run `42584848642` passes ARM64 (`129052102729`); AMD64
+(`129052102623`) is running. Docs `42584852665` is running. Review the complete
+logs/raw records before claiming both architectures verified.
 Review head `348cc12f58a10559b13aefa96f8885d890cb445b` adds four-language returned-buffer factories, unique/shared
 owners, raw/optimized sum checks and actual wrong-scan/omitted-release controls.
 Focused run `42586120264` and docs `42586123724` are queued. It has no timing result.
@@ -126,7 +137,11 @@ RSS runs. Implement and verify those boundaries before freezing its source tag
 and collecting timing; no samples have been collected under this protocol.
 
 Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
-docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed
+docs `42578853071` (passes), focused peers `42578815959` (both pass). Six production
+jobs pass: both ownership macOS, regular ARM64 macOS, both Windows and benchmarks.
+The other three are running. The six completed main logs in `/tmp/fwp-pr273-129032*.log`
+show only OpenSSL already-installed notices and named scheduler panic controls;
+complete per-target/archive audit still follows the finished run. Review every failed/completed
 job before repairs. The combined update requires new final-head gates; previous
 results do not claim a pass for the new head. Do not merge while milestone 4 work
 or final gates remain.
