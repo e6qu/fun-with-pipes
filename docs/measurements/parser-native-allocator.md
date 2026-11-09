@@ -61,8 +61,8 @@ classify native occurrences from events, and do not call unobserved paths tested
 
 ### Additional native path controls
 
-The prepared follow-up keeps ordinary/parser checks and adds two small programs
-within one control executable. Both use public libc and process-resource APIs;
+[Both native controls pass](parser-allocator-paths-2026-11-09/README.md), alongside
+the ordinary/parser checks. Both use public libc and process-resource APIs;
 the debugger never changes their data, allocation results or control flow.
 
 - **Mapped resize:** explicitly enable mapped large allocations, allocate 1 MiB,

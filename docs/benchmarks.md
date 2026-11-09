@@ -36,7 +36,26 @@ including input/output containers. Peak managed storage remains 9,536 bytes;
 all owners and raw derivative buffers are released. The report separates
 construction, complete-gradient work, release, process RSS and compiler/stack
 costs. These are fwp-before/after results, not a new C/Rust/Swift comparison or
-a complete iterative solve. Full platform delivery is pending.
+a complete iterative solve. [All #272 platform gates pass](measurements/structured-callback-delivery-2026-11-09/README.md).
+
+## Complete callback service
+
+Each call creates 4,096 messages containing 16 integers, delivers them and frees
+the service's data. The [four-language comparison](measurements/weak-callback-time-2026-11-09/README.md)
+uses ordinary C owners, Rust `Rc`/`Weak`, Swift weak references and fwp channels.
+Two sessions per host pass all identical-copy noise controls:
+
+| Host | fwp call time | fwp / C | fwp / Rust | fwp / Swift |
+|---|---|---|---|---|
+| ARM64, Neoverse N2 | 6.47 ms | 20.22–20.23× | 17.21–17.28× | 5.12× |
+| AMD64, EPYC 7763 | 7.78–7.84 ms | 18.65–18.79× | 15.54–15.66× | 6.64–6.70× |
+
+These ratios include construction, delivery and cleanup; 5.12× means 412% extra
+time. Representations and synchronization differ, so the gap is not an isolated
+ARC cost. The report also retains cancellation, expiration and handled-error
+cases, full-process time, allocation profiles, RSS and build costs. fwp's process
+RSS is lower than Swift's here but higher than C/Rust's. This is a serial queued
+service, not the network throughput/latency experiment below.
 
 ## Remaining service load measurements
 
@@ -210,11 +229,12 @@ counts 0/1/16/4,096, checked-overflow cases, actual native binaries and Swift's
 optimized intermediate code. A separate reference-capture control verifies normal
 release and deliberately retained ownership.
 
-It does not fabricate allocation
-counts for the scalar closure. [Callable phase timings](measurements/callable-phases.md) now exist, with the
-original regressions retained. Scalar-closure allocation/count instrumentation,
-weak subscriptions and parser/numerical peers still lack the evidence needed
-for broader ownership or numerical parity claims. **The [first four sessions and their artifact audit](measurements/swift-peers.md)
+The [scalar closure profiles](measurements/swift-scalar-closures-2026-11-09/README.md)
+now attribute allocations to the actual factory. [Callable phase timings](measurements/callable-phases.md)
+retain the original regressions. [Weak operations](measurements/weak-operation-time-2026-11-09/README.md)
+and the [complete service](#complete-callback-service) are measured separately;
+ARC-operation counts and broad numerical/ownership parity remain unestablished.
+**The [first four sessions and their artifact audit](measurements/swift-peers.md)
 are complete.** Five ARM64 cases pass both sessions’ noise controls; map and
 pipeline do not.
 
@@ -293,23 +313,22 @@ for GC removal. The collector-free compiler passed
 That does not refresh historical timings: each report identifies any comparison
 that still needs a new measurement run.
 
-## Planned ownership comparisons
+## Ownership comparison coverage
 
-These comparisons belong to [the measurement plan](../PLAN.md). Compiler improvements and their ownership
-checks already exist; the table identifies which peer comparisons still need
-work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
+These comparisons belong to [the measurement plan](../PLAN.md). Keep measured
+costs and limits separate from [the ownership rules](gc-removal-design.md).
 
-| Workload | Existing evidence | Remaining comparison work |
+| Workload | Verified evidence | Remaining limits |
 |---|---|---|
-| Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
-| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [scalar Swift profiles](measurements/swift-scalar-closures-2026-11-09/README.md) now attribute allocation/release to the real integer-capturing factory. The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. Original ARM acceptance and three AMD construction regressions remain open; [the phase report](measurements/callable-phases.md) retains all later qualified and inconclusive results. |
-| Subscription with weak back-link | [Native phase, cleanup, storage and actual reuse checks](measurements/weak-operation-verification-2026-11-09/README.md) pass for C/Rust/Swift alongside fwp contracts | [Weak-operation timing](measurements/weak-operation-time.md) is queued. Callback-service work remains a separate comparison; ARC-operation counts are unmeasured. |
-| Recursive parser workspace | [Recorded parser comparison](measurements/parser-workspace.md) covers all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | [New native checks](measurements/ownership-peer-checks-2026-11-08/README.md) add C/Rust allocation-transition peaks and Rust frames. Complete allocator-internal transient peaks and reserved/committed storage; requested bytes and individual frames are not process RAM or whole-stack bounds. |
+| Numeric buffers | [Unique-buffer totals](measurements/unique-buffer-peers.md) and [returned-buffer phase timings](measurements/returned-buffer-time-2026-11-09/README.md), including Swift, storage release and RSS | Original misses and noisy controls remain visible. No unchanged retries for qualification. |
+| Returned partial application | [Construction/call/release phases](measurements/callable-phases.md) and [actual scalar Swift allocations](measurements/swift-scalar-closures-2026-11-09/README.md) | Original ARM acceptance and AMD construction regressions remain open; allocation bytes are not ARC-operation counts. |
+| Weak registration and queued service | [Lifetimes, reuse and storage](measurements/weak-operation-verification-2026-11-09/README.md), [isolated timings](measurements/weak-operation-time-2026-11-09/README.md) and [complete service costs](measurements/weak-callback-time-2026-11-09/README.md) | Substantial C/Rust/Swift service gaps need attribution. ARC-operation counts remain unmeasured. |
+| Recursive parser workspace | [Earlier timings](measurements/parser-workspace.md), [C/Rust resize overlap](measurements/parser-native-allocator-2026-11-09/README.md), [fwp heap/region events](measurements/parser-heap-events-2026-11-09/README.md) and [actual process accounting](measurements/parser-process-accounting-2026-11-09/README.md) | [Mapped-resize and arena-retry controls pass](measurements/parser-allocator-paths-2026-11-09/README.md). Owned bytes, resident pages and accountable mappings are separate scopes; no whole-stack or universal allocator-internal peak bound. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
 report representation differences, compiler/flags/host, repeated elapsed times,
-allocations, count/weak operations, peak live bytes, committed/reserved memory,
+allocations, observed count/weak operations, peak live bytes, mapping extents and RSS,
 binary size and stack use. Count-instrumented timings are not production timings.
 The missing fields above keep these broader comparisons open. Declare each
 measurement protocol before execution; retain existing results at their original

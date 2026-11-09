@@ -1,0 +1,2112 @@
+{
+  "amd": {
+    "source": "bb0add788321eb30068889b4961667d1f858d3a1",
+    "commandRecords": 35,
+    "verifiedFiles": 36,
+    "observations": [
+      {
+        "case": "small",
+        "language": "c",
+        "command": 11,
+        "file": "small-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 5,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 7,
+              "phase": 3,
+              "path": "release",
+              "before": 768,
+              "after": 0
+            },
+            {
+              "operation": 8,
+              "phase": 3,
+              "path": "release",
+              "before": 512,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1280,
+          "requestedPeakWithObservedResizeOverlapBytes": 1280,
+          "observedOwnedChunkPeakBytes": 1312,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "small",
+        "language": "rs",
+        "command": 14,
+        "file": "small-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 5,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 7,
+              "phase": 3,
+              "path": "release",
+              "before": 768,
+              "after": 0
+            },
+            {
+              "operation": 8,
+              "phase": 3,
+              "path": "release",
+              "before": 512,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1280,
+          "requestedPeakWithObservedResizeOverlapBytes": 1280,
+          "observedOwnedChunkPeakBytes": 1312,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "medium",
+        "language": "c",
+        "command": 16,
+        "file": "medium-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 11,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 15,
+              "phase": 3,
+              "path": "release",
+              "before": 12288,
+              "after": 0
+            },
+            {
+              "operation": 16,
+              "phase": 3,
+              "path": "release",
+              "before": 8192,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 20480,
+          "requestedPeakWithObservedResizeOverlapBytes": 20480,
+          "observedOwnedChunkPeakBytes": 20512,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "medium",
+        "language": "rs",
+        "command": 19,
+        "file": "medium-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "in-place",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 11,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 15,
+              "phase": 3,
+              "path": "release",
+              "before": 12288,
+              "after": 0
+            },
+            {
+              "operation": 16,
+              "phase": 3,
+              "path": "release",
+              "before": 8192,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 20480,
+          "requestedPeakWithObservedResizeOverlapBytes": 20480,
+          "observedOwnedChunkPeakBytes": 20512,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "large",
+        "language": "c",
+        "command": 21,
+        "file": "large-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 0,
+              "path": "in-place",
+              "before": 8192,
+              "after": 16384
+            },
+            {
+              "operation": 9,
+              "phase": 0,
+              "path": "in-place",
+              "before": 16384,
+              "after": 32768
+            },
+            {
+              "operation": 10,
+              "phase": 0,
+              "path": "in-place",
+              "before": 32768,
+              "after": 65536
+            },
+            {
+              "operation": 11,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 65536,
+              "after": 131072
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 15,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 16,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 17,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 18,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 19,
+              "phase": 1,
+              "path": "in-place",
+              "before": 12288,
+              "after": 24576
+            },
+            {
+              "operation": 20,
+              "phase": 1,
+              "path": "in-place",
+              "before": 24576,
+              "after": 49152
+            },
+            {
+              "operation": 21,
+              "phase": 1,
+              "path": "in-place",
+              "before": 49152,
+              "after": 98304
+            },
+            {
+              "operation": 22,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 98304,
+              "after": 196608
+            },
+            {
+              "operation": 23,
+              "phase": 3,
+              "path": "release",
+              "before": 196608,
+              "after": 0
+            },
+            {
+              "operation": 24,
+              "phase": 3,
+              "path": "release",
+              "before": 131072,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 327680,
+          "requestedPeakWithObservedResizeOverlapBytes": 425984,
+          "observedOwnedChunkPeakBytes": 434192,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "large",
+        "language": "rs",
+        "command": 24,
+        "file": "large-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "in-place",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 0,
+              "path": "in-place",
+              "before": 8192,
+              "after": 16384
+            },
+            {
+              "operation": 9,
+              "phase": 0,
+              "path": "in-place",
+              "before": 16384,
+              "after": 32768
+            },
+            {
+              "operation": 10,
+              "phase": 0,
+              "path": "in-place",
+              "before": 32768,
+              "after": 65536
+            },
+            {
+              "operation": 11,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 65536,
+              "after": 131072
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 15,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 16,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 17,
+              "phase": 1,
+              "path": "in-place",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 18,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 19,
+              "phase": 1,
+              "path": "in-place",
+              "before": 12288,
+              "after": 24576
+            },
+            {
+              "operation": 20,
+              "phase": 1,
+              "path": "in-place",
+              "before": 24576,
+              "after": 49152
+            },
+            {
+              "operation": 21,
+              "phase": 1,
+              "path": "in-place",
+              "before": 49152,
+              "after": 98304
+            },
+            {
+              "operation": 22,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 98304,
+              "after": 196608
+            },
+            {
+              "operation": 23,
+              "phase": 3,
+              "path": "release",
+              "before": 196608,
+              "after": 0
+            },
+            {
+              "operation": 24,
+              "phase": 3,
+              "path": "release",
+              "before": 131072,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 327680,
+          "requestedPeakWithObservedResizeOverlapBytes": 425984,
+          "observedOwnedChunkPeakBytes": 434192,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "left",
+        "language": "c",
+        "command": 26,
+        "file": "left-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 7,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 11,
+              "phase": 3,
+              "path": "release",
+              "before": 3072,
+              "after": 0
+            },
+            {
+              "operation": 12,
+              "phase": 3,
+              "path": "release",
+              "before": 2048,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 5120,
+          "requestedPeakWithObservedResizeOverlapBytes": 6656,
+          "observedOwnedChunkPeakBytes": 6704,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "left",
+        "language": "rs",
+        "command": 29,
+        "file": "left-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 7,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 11,
+              "phase": 3,
+              "path": "release",
+              "before": 3072,
+              "after": 0
+            },
+            {
+              "operation": 12,
+              "phase": 3,
+              "path": "release",
+              "before": 2048,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 5120,
+          "requestedPeakWithObservedResizeOverlapBytes": 5120,
+          "observedOwnedChunkPeakBytes": 5152,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      }
+    ],
+    "pathControls": [
+      {
+        "mode": "mapped",
+        "ordinary": 31,
+        "observed": 32,
+        "file": "path-mapped.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "mapped-allocation",
+              "before": 0,
+              "after": 1048576
+            },
+            {
+              "operation": 2,
+              "phase": 1,
+              "path": "mapped-remap",
+              "before": 1048576,
+              "after": 4194304
+            },
+            {
+              "operation": 3,
+              "phase": 3,
+              "path": "release",
+              "before": 4194304,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 4194304,
+          "requestedPeakWithObservedResizeOverlapBytes": 4194304,
+          "observedOwnedChunkPeakBytes": 4198400,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "mode": "retry",
+        "ordinary": 33,
+        "observed": 34,
+        "file": "path-retry.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 3,
+              "phase": 2,
+              "path": "arena-retry-copy",
+              "before": 128,
+              "after": 1048576
+            },
+            {
+              "operation": 4,
+              "phase": 3,
+              "path": "release",
+              "before": 1048576,
+              "after": 0
+            },
+            {
+              "operation": 5,
+              "phase": 3,
+              "path": "release",
+              "before": 128,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1048704,
+          "requestedPeakWithObservedResizeOverlapBytes": 1048832,
+          "observedOwnedChunkPeakBytes": 1048880,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      }
+    ]
+  },
+  "arm": {
+    "source": "bb0add788321eb30068889b4961667d1f858d3a1",
+    "commandRecords": 35,
+    "verifiedFiles": 36,
+    "observations": [
+      {
+        "case": "small",
+        "language": "c",
+        "command": 11,
+        "file": "small-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 5,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 7,
+              "phase": 3,
+              "path": "release",
+              "before": 768,
+              "after": 0
+            },
+            {
+              "operation": 8,
+              "phase": 3,
+              "path": "release",
+              "before": 512,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1280,
+          "requestedPeakWithObservedResizeOverlapBytes": 1280,
+          "observedOwnedChunkPeakBytes": 1312,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "small",
+        "language": "rs",
+        "command": 14,
+        "file": "small-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 5,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 7,
+              "phase": 3,
+              "path": "release",
+              "before": 768,
+              "after": 0
+            },
+            {
+              "operation": 8,
+              "phase": 3,
+              "path": "release",
+              "before": 512,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1280,
+          "requestedPeakWithObservedResizeOverlapBytes": 1280,
+          "observedOwnedChunkPeakBytes": 1312,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "medium",
+        "language": "c",
+        "command": 16,
+        "file": "medium-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 11,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 15,
+              "phase": 3,
+              "path": "release",
+              "before": 12288,
+              "after": 0
+            },
+            {
+              "operation": 16,
+              "phase": 3,
+              "path": "release",
+              "before": 8192,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 20480,
+          "requestedPeakWithObservedResizeOverlapBytes": 20480,
+          "observedOwnedChunkPeakBytes": 20512,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "medium",
+        "language": "rs",
+        "command": 19,
+        "file": "medium-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "in-place",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 11,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 15,
+              "phase": 3,
+              "path": "release",
+              "before": 12288,
+              "after": 0
+            },
+            {
+              "operation": 16,
+              "phase": 3,
+              "path": "release",
+              "before": 8192,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 20480,
+          "requestedPeakWithObservedResizeOverlapBytes": 20480,
+          "observedOwnedChunkPeakBytes": 20512,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "large",
+        "language": "c",
+        "command": 21,
+        "file": "large-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 0,
+              "path": "in-place",
+              "before": 8192,
+              "after": 16384
+            },
+            {
+              "operation": 9,
+              "phase": 0,
+              "path": "in-place",
+              "before": 16384,
+              "after": 32768
+            },
+            {
+              "operation": 10,
+              "phase": 0,
+              "path": "in-place",
+              "before": 32768,
+              "after": 65536
+            },
+            {
+              "operation": 11,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 65536,
+              "after": 131072
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 15,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 16,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 17,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 18,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 19,
+              "phase": 1,
+              "path": "in-place",
+              "before": 12288,
+              "after": 24576
+            },
+            {
+              "operation": 20,
+              "phase": 1,
+              "path": "in-place",
+              "before": 24576,
+              "after": 49152
+            },
+            {
+              "operation": 21,
+              "phase": 1,
+              "path": "in-place",
+              "before": 49152,
+              "after": 98304
+            },
+            {
+              "operation": 22,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 98304,
+              "after": 196608
+            },
+            {
+              "operation": 23,
+              "phase": 3,
+              "path": "release",
+              "before": 196608,
+              "after": 0
+            },
+            {
+              "operation": 24,
+              "phase": 3,
+              "path": "release",
+              "before": 131072,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 327680,
+          "requestedPeakWithObservedResizeOverlapBytes": 425984,
+          "observedOwnedChunkPeakBytes": 434192,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "large",
+        "language": "rs",
+        "command": 24,
+        "file": "large-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 0,
+              "path": "in-place",
+              "before": 2048,
+              "after": 4096
+            },
+            {
+              "operation": 7,
+              "phase": 0,
+              "path": "in-place",
+              "before": 4096,
+              "after": 8192
+            },
+            {
+              "operation": 8,
+              "phase": 0,
+              "path": "in-place",
+              "before": 8192,
+              "after": 16384
+            },
+            {
+              "operation": 9,
+              "phase": 0,
+              "path": "in-place",
+              "before": 16384,
+              "after": 32768
+            },
+            {
+              "operation": 10,
+              "phase": 0,
+              "path": "in-place",
+              "before": 32768,
+              "after": 65536
+            },
+            {
+              "operation": 11,
+              "phase": 0,
+              "path": "arena-move",
+              "before": 65536,
+              "after": 131072
+            },
+            {
+              "operation": 12,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 13,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 14,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 15,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 16,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 17,
+              "phase": 1,
+              "path": "in-place",
+              "before": 3072,
+              "after": 6144
+            },
+            {
+              "operation": 18,
+              "phase": 1,
+              "path": "in-place",
+              "before": 6144,
+              "after": 12288
+            },
+            {
+              "operation": 19,
+              "phase": 1,
+              "path": "in-place",
+              "before": 12288,
+              "after": 24576
+            },
+            {
+              "operation": 20,
+              "phase": 1,
+              "path": "in-place",
+              "before": 24576,
+              "after": 49152
+            },
+            {
+              "operation": 21,
+              "phase": 1,
+              "path": "in-place",
+              "before": 49152,
+              "after": 98304
+            },
+            {
+              "operation": 22,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 98304,
+              "after": 196608
+            },
+            {
+              "operation": 23,
+              "phase": 3,
+              "path": "release",
+              "before": 196608,
+              "after": 0
+            },
+            {
+              "operation": 24,
+              "phase": 3,
+              "path": "release",
+              "before": 131072,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 327680,
+          "requestedPeakWithObservedResizeOverlapBytes": 425984,
+          "observedOwnedChunkPeakBytes": 434192,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "left",
+        "language": "c",
+        "command": 26,
+        "file": "left-c-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 7,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "arena-move",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 11,
+              "phase": 3,
+              "path": "release",
+              "before": 3072,
+              "after": 0
+            },
+            {
+              "operation": 12,
+              "phase": 3,
+              "path": "release",
+              "before": 2048,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 5120,
+          "requestedPeakWithObservedResizeOverlapBytes": 6656,
+          "observedOwnedChunkPeakBytes": 6704,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "case": "left",
+        "language": "rs",
+        "command": 29,
+        "file": "left-rs-observed.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "in-place",
+              "before": 128,
+              "after": 256
+            },
+            {
+              "operation": 3,
+              "phase": 0,
+              "path": "in-place",
+              "before": 256,
+              "after": 512
+            },
+            {
+              "operation": 4,
+              "phase": 0,
+              "path": "in-place",
+              "before": 512,
+              "after": 1024
+            },
+            {
+              "operation": 5,
+              "phase": 0,
+              "path": "in-place",
+              "before": 1024,
+              "after": 2048
+            },
+            {
+              "operation": 6,
+              "phase": 1,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 192
+            },
+            {
+              "operation": 7,
+              "phase": 1,
+              "path": "in-place",
+              "before": 192,
+              "after": 384
+            },
+            {
+              "operation": 8,
+              "phase": 1,
+              "path": "in-place",
+              "before": 384,
+              "after": 768
+            },
+            {
+              "operation": 9,
+              "phase": 1,
+              "path": "in-place",
+              "before": 768,
+              "after": 1536
+            },
+            {
+              "operation": 10,
+              "phase": 1,
+              "path": "in-place",
+              "before": 1536,
+              "after": 3072
+            },
+            {
+              "operation": 11,
+              "phase": 3,
+              "path": "release",
+              "before": 3072,
+              "after": 0
+            },
+            {
+              "operation": 12,
+              "phase": 3,
+              "path": "release",
+              "before": 2048,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 5120,
+          "requestedPeakWithObservedResizeOverlapBytes": 5120,
+          "observedOwnedChunkPeakBytes": 5152,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      }
+    ],
+    "pathControls": [
+      {
+        "mode": "mapped",
+        "ordinary": 31,
+        "observed": 32,
+        "file": "path-mapped.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "mapped-allocation",
+              "before": 0,
+              "after": 1048576
+            },
+            {
+              "operation": 2,
+              "phase": 1,
+              "path": "mapped-remap",
+              "before": 1048576,
+              "after": 4194304
+            },
+            {
+              "operation": 3,
+              "phase": 3,
+              "path": "release",
+              "before": 4194304,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 4194304,
+          "requestedPeakWithObservedResizeOverlapBytes": 4194304,
+          "observedOwnedChunkPeakBytes": 4198400,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      },
+      {
+        "mode": "retry",
+        "ordinary": 33,
+        "observed": 34,
+        "file": "path-retry.json",
+        "result": {
+          "operations": [
+            {
+              "operation": 1,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 2,
+              "phase": 0,
+              "path": "arena-allocation",
+              "before": 0,
+              "after": 128
+            },
+            {
+              "operation": 3,
+              "phase": 2,
+              "path": "arena-retry-copy",
+              "before": 128,
+              "after": 1048576
+            },
+            {
+              "operation": 4,
+              "phase": 3,
+              "path": "release",
+              "before": 1048576,
+              "after": 0
+            },
+            {
+              "operation": 5,
+              "phase": 3,
+              "path": "release",
+              "before": 128,
+              "after": 0
+            }
+          ],
+          "endpointRequestedPeakBytes": 1048704,
+          "requestedPeakWithObservedResizeOverlapBytes": 1048832,
+          "observedOwnedChunkPeakBytes": 1048880,
+          "finalLiveAllocations": 0,
+          "scope": "Owned libc chunk extents and requested bytes; not allocator retained pages, metadata, RSS or a kernel transient peak"
+        }
+      }
+    ]
+  }
+}

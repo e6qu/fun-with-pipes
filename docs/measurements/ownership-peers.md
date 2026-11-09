@@ -1,7 +1,7 @@
-# Ownership comparisons: next measurement work
+# Ownership comparisons
 
-This is milestone 4 of the [roadmap](../../PLAN.md). It prepares comparisons,
-not another compiler optimization. [The first native checks](ownership-peer-checks-2026-11-08/README.md)
+This is milestone 4 of the [roadmap](../../PLAN.md): measure ownership costs
+before selecting further optimizations. [The first native checks](ownership-peer-checks-2026-11-08/README.md)
 cover Swift buffer results and C/Rust parser storage/frames. Returned-buffer
 [phase timings and RSS](returned-buffer-time-2026-11-09/README.md) now include both
 sessions on both hosts; failed copy controls remain inconclusive.
@@ -269,8 +269,9 @@ These do not promise physical RAM or establish allocator-internal transient peak
 The [actual C/Rust allocation traces](parser-native-allocator-2026-11-09/README.md)
 now include observed old/new resize overlap, and [fwp heap/region events](parser-heap-events-2026-11-09/README.md)
 reconstruct its charged storage and region subdivision. The largest fwp peak is
-during tokenization; tree evaluation allocates nothing. Native arena-retry and
-mapped-resize calibration are the final observer-path checks, not new timing runs.
+during tokenization; tree evaluation allocates nothing. [Native arena-retry and
+mapped-resize controls also pass](parser-allocator-paths-2026-11-09/README.md).
+They verify the observer's handling of those paths, without new timing claims.
 
 ## Before collecting timings
 

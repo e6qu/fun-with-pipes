@@ -1,20 +1,16 @@
 # Current work
 
-**Next:** verify the mapped-resize observer repair, then integrate the complete
-comparison batch into #273 for final production gates. Both native arena retries
-and fwp heap/region observations pass; their complete records are retained. Service timing and actual C/Rust allocation traces
-pass and their complete results are retained. Follow the
-[frozen service timing protocol](measurements/weak-callback-time.md). Keep this
-batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
-incomplete; do not merge an interim green head.
+**Next:** run and audit the final nine production jobs and documentation for
+[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273), fixing every failure
+before squash merge. Use the PR's exact head, not an earlier preparation source.
+All focused comparison/observer checks now pass; milestone 4 still needs final
+delivery gates. Do not rerun unchanged timing samples to obtain qualification.
 
-Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; latest path-control source `5ead19840`, tag
-`roadmap/parser-allocator-paths-2026-11-09`. Its mapped-boundary repair is prepared
-for `parser-native-allocator`, with an explicit immutable `parser_memory_tag`. PR branch:
-`ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
-Integrate the complete preparation batch into this PR before final production
-verification. Preserve unrelated root-worktree changes and inactive handoffs.
+Worktree: `.worktrees/recording-capacity-gate`, branch `ownership-buffer-review`.
+The complete batch goes to the normal PR branch `ownership-peer-comparisons`.
+Its prior head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011` is an ancestor. Resolve
+the current PR head and its runs when resuming; do not reuse earlier green gates.
+Preserve unrelated root-worktree changes.
 
 ## Roadmap status
 
@@ -23,155 +19,77 @@ verification. Preserve unrelated root-worktree changes and inactive handoffs.
 | 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, cleanup, allocations and paired timing; parser entry repair and process accounting | Mapped-path repair; final production/docs/audit gates |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage/reuse and service timings; parser cleanup repair, process accounting and heap/region traces | Final production/docs/audit gates |
 | 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
-Retain original noisy/unmet timing results. Fewer operations or smaller images do
-not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
+Keep original noisy/unmet timing results. Fewer operations or smaller binaries do
+not complete runtime acceptance. Do not rerun unchanged samples for qualification.
 
-## Current verified results and failures
+## Final observer checks
 
-- **Mapped-path repair:** `5ead19840`, run `42684252690`, AMD64 `129386709132`,
-  ARM64 `129386709232`: all parser traces/faults and actual two-arena retry pass;
-  mapped observations fail on both because an inlined helper has no readable
-  parameter `p`. Observe the real `__mremap` call and verify its extent against
-  the final live header; retain matching distro source. Initialize thread-cache
-  metadata before measurement and reject unattributed internal storage. All
-  accepted earlier traces still reconstruct under the stricter reader; eight
-  reader tests pass. [Complete failures and retry results](measurements/parser-allocator-paths-2026-11-09/README.md).
-  Docs `42684257355` / `129386712159` passes. Native repair is pending.
+[Run 42686754531](https://github.com/e6qu/fun-with-pipes/actions/runs/42686754531)
+passes at `bb0add788321eb30068889b4961667d1f858d3a1`, tag
+`roadmap/parser-mapped-boundary-2026-11-09`: AMD64 `129395531588`, ARM64
+`129395531599`. [Documentation 42686761614](https://github.com/e6qu/fun-with-pipes/actions/runs/42686761614),
+job `129395546461`, also passes. Both native jobs pass eight parser traces,
+four actual missing releases, successful mapped resize and two-arena retry.
+All 35 complete command records and 36 compact file hashes per host pass audit.
 
-- **fwp heap/region events:** source `823791751`, tag
-  `roadmap/parser-heap-events-2026-11-09`, run `42682917578`, AMD64 `129381983810`
-  and ARM64 `129381984032`, passes. Ten builds, eight actual O1/O2 traces, eight
-  wrong expected results and 24 missing-release/broken-observer controls pass per
-  host. Artifacts `13702983607` / `13704330690`; docs `42682924250` /
-  `129381997520` passes. Complete native logs have no warnings/errors. All raw
-  traces/faults reconstruct and 78 retained files per host match native hashes.
-  A bounded download stopped before one duplicate C source; reapplying the
-  retained instrumentation reproduces its native hash, without raising limits.
-  [Results and complete compact records](measurements/parser-heap-events-2026-11-09/README.md).
-  The reader now names a missing resize-source allocation and requires each fault
-  class's exact diagnostic. Native source/output is unchanged; all original fault
-  streams establish the intended cause under the strengthened reader.
-- **Service timing repair:** source `069e76ed8`, run `42675215554`, AMD64
-  `129354672051`, ARM64 `129354672223`. Both pass all 28 builds, 178 result/fault
-  checks, 64 invalid arguments and two interpreter modes. Both paired timing
-  sessions, raw-evidence audits and six corruption controls per host now pass.
-  Artifacts: AMD64 `13700674134`, ARM64 `13700694287`.
-  Docs `42675219991` / `129354681805` passes. Full delivery at 4,096 messages
-  takes 18.65–20.23× C and 5.12–6.70× Swift across hosts. All comparisons qualify
-  in both sessions. Reports, ratios, RSS/build costs, controls and logs are retained.
-  No samples rerun.
-  [First failures and combined descriptor/link repair](measurements/weak-callback-time-2026-11-09/README.md)
-  retain all native logs and journals; no measurement ran before those repairs.
-- **Parser allocation observer:** source `19b8b48fe`, run `42679061783`; AMD64
-  `129368372898`, ARM64 `129368372298`. Both pass five builds and eight ordinary
-  results; all 12 diagnostic executions fail. Repair all three observer causes:
-  tail-call return tracking, C expressions in Rust frames and late auto-load
-  settings. [Complete retained failures](measurements/parser-native-allocator-2026-11-09/README.md).
-  Docs `42679066951` / `129368381461` passes. Repair `62775d559`, run
-  `42680540810`, passes AMD64 `129373593731` and ARM64 `129373593563`: eight
-  actual traces and four omitted frees each. All compact records reconstruct;
-  largest requested peak is 425,984 bytes, 30% above endpoint capacity.
-  [Tables and complete retained records](measurements/parser-native-allocator-2026-11-09/README.md).
-  Repair docs `42680547196` / `129373594319` passes.
-- **Parser accounting:** source `6d1608c4f`, run `42673573956`; docs `42673580483`.
-  Attempts 1 and 2 failed before jobs with GitHub internal errors. Attempt 2 IDs:
-  `b32b4d94-27e5-4122-8539-4301d00c7a35` / `7f804619-adc9-4c50-b9fa-12ed4c5199e6`.
-  Attempt 3 passes: ARM64 `129352636403`, AMD64 `129352636561`, docs `129352646215`.
-  Each host passes all six parser tests, primitive inventory, memory observations
-  and seven corruption controls. All 195 raw snapshots per host reconstruct;
-  complete text records are retained compactly. The generated 1 GiB worker stack
-  matches the large accountable mapping; it is not 1 GiB of resident RAM.
-  [Measured scopes and exact tables](measurements/parser-process-accounting-2026-11-09/README.md).
-- **Service native profiles:** source `c0ac432fc`, run `42664664795`, AMD64
-  `129325013027`, ARM64 `129325013096`: 16 diagnostic builds and 80 profiles per
-  host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
-  service storage is released; actual omitted payload/weak releases retain exactly
-  the expected bytes. [Results and limits](measurements/weak-callback-profiles-2026-11-09/README.md).
-- **Service archive audit:** repair `f3f023820`, run `42669442687` /
-  `129341760168`, passes: both archives reconstruct, all 954 command records and
-  164 heaptrack status blocks are checked. Docs `42669449481` / `129341771404`
-  passes. The audit now parses normal profiler stderr and rejects extra warnings;
-  it does not suppress diagnostics. Compact complete journals/stacks and the
-  original failed audit remain retained. No native profile was rerun.
-- **Allocator calibration:** source `3c214f136`, run `42666642464`, AMD64
-  `129331964348`, ARM64 `129331964527`: four real resize controls pass with empty
-  debugger stderr. Source-path/timestamp issues are repaired, not suppressed.
-  [Original warnings, failed repair and final evidence](measurements/parser-allocator-calibration-2026-11-09/README.md).
-- **Mapping accounting:** same source, run `42666647306`, AMD64 `129331981618`,
-  ARM64 `129331981260`: O1/O2 ordinary/no-reservation mappings and eight actual
-  omitted-touch/unmap controls pass per host. Both retain mode-0 host policy.
-  Accountable extents and resident pages are distinct; system-wide commit counters
-  are not a process guarantee. [All raw snapshots and controls](measurements/parser-mapping-accounting-2026-11-09/README.md).
-- **Docs for `3c214f136`:** run `42666658591` / `129332015531` passes. Complete
-  allocator/accounting logs contain no warnings/errors. Native service logs have
-  the optional g++ manual-page notice and normal libtool install-time relinking.
+The original mapped observation stopped inside an inlined helper with no usable
+parameter. The repair observes the real `__mremap` call and confirms the returned
+extent against the final live header, without reading the old mapping after a
+move. The control warms unrelated libc thread-cache metadata before measurement;
+the reader rejects unattributed internal storage. [Original failures, complete
+passing records and scope limits](measurements/parser-allocator-paths-2026-11-09/README.md).
 
-## Compiler repair and earlier evidence
+## Verified comparison results
 
-The parser's consuming region worker and owning function entry both released its
-input. The entry now shares `rc::consumes_arg` with direct calls. Source
-`ee30d13b0`, run `42645911091`, passes both Linux hosts, all six parser tests,
-primitive inventory and memory/corruption controls. Native/WASI regressions cover
-aliases, parse errors, allocation failure and actual extra-drop faults; remaining
-platforms still require final gates. [Repair](measurements/parser-entry-cleanup-2026-11-09/README.md).
+| Work | Source / native run | Result and retained evidence |
+|---|---|---|
+| Complete callback service | `069e76ed8` / `42675215554` | Both sessions and six corruption controls pass on each host. Full delivery of 4,096 messages takes 18.65–20.23× C and 5.12–6.70× Swift. [Time, RSS, allocation and build scopes](measurements/weak-callback-time-2026-11-09/README.md). |
+| Actual C/Rust parser allocations | `62775d559` / `42680540810` | Eight traces and four missing-release controls pass per host. Largest requested peak is 425,984 bytes, 30% above endpoint capacity. [All raw records](measurements/parser-native-allocator-2026-11-09/README.md). |
+| Actual fwp heap/region events | `823791751` / `42682917578` | Ten builds, eight O1/O2 traces, eight wrong results and 24 actual release/observer faults pass per host. Largest charged peak is 458,704 bytes above baseline, during tokenization; evaluation allocates nothing. [Tables and complete records](measurements/parser-heap-events-2026-11-09/README.md). |
+| Parser process accounting | `6d1608c4f` / `42673573956`, attempt 3 | Both hosts pass six parser tests, snapshots and seven corruption controls. Earlier attempts failed internally before jobs. [Kernel policy, RSS and mapping scopes](measurements/parser-process-accounting-2026-11-09/README.md). |
+| Service allocation profiles | `c0ac432fc` / `42664664795`; audit `f3f023820` / `42669442687` | Both native profiles and all 954 command records pass. [Payloads, metadata and actual missing releases](measurements/weak-callback-profiles-2026-11-09/README.md). |
 
-The fwp service physical ledger passes at `cf6a0a12e`, run `42658708144`: eight
-raw/optimized dynamic/static O1/O2 builds release all allocations; actual omitted
-weak release fails with status 205. [Evidence](measurements/weak-callback-service-2026-11-09/README.md).
+Documentation passes for all five rows. Complete native logs have no outstanding
+compiler/debugger warnings. Receipts retain original failures and exact job/artifact
+IDs, including the service ARM link repair and parser debugger repairs.
 
-[Weak timings](measurements/weak-operation-time-2026-11-09/README.md) show substantial
-C/Rust lookup gaps and mixed Swift results. The [census](measurements/weak-operation-census-2026-11-09/README.md)
-finds a temporary 16-byte `Some` allocation per successful fwp lookup and none for
-expired lookup; this does not explain all measured gaps.
-[Buffer timing](measurements/returned-buffer-time-2026-11-09/README.md) retains both
-sessions and every original noise failure. ARC operation counts and maximum dynamic
-stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
+[Weak lookup timings](measurements/weak-operation-time-2026-11-09/README.md) and
+[the allocation census](measurements/weak-operation-census-2026-11-09/README.md)
+separate a temporary 16-byte successful-lookup result from target/weak metadata.
+[Buffer phases](measurements/returned-buffer-time-2026-11-09/README.md) retain both
+sessions and all original noisy cases. ARC-operation counts, maximum dynamic
+stack and a universal allocator-internal peak remain unmeasured. Failed mapped
+remap followed by copy is a reader model, not native evidence.
 
-## Prepared work and delivery checks
+## Compiler repair and final delivery
 
-- Service timing implementation is published: 28 O1/O2 or Onone/O native builds,
-  178 result/fault checks, 64 invalid arguments and two interpreter modes gate
-  collection. A C-only pilot fixes each work count before two balanced sessions;
-  both service and process clocks retain separate 2% copy controls. The collector
-  also records RSS, build costs and native images; six changed-evidence controls
-  must fail. Both native caller-verification groups now pass; timing and its
-  reconstruction/corruption controls now pass on both hosts.
-- Guarded local C/Rust/Swift O2 callers pass 48 result cases and actual missing
-  delivery/backward-clock controls. The first Swift link found that the local
-  clock object targeted macOS 15 while Swift targeted 14; explicitly compiling
-  the clock for 14 repairs it. Only affected Swift builds were repeated. Four
-  timing-reader tests and two descriptor-boundary tests pass. No local fwp build
-  or benchmark was run.
-- The repaired boundary accepts both actual native emitted sources; focused Rust
-  archive-link result/fault checks pass locally. Both complete failed native
-  journals were audited before publication; no other failure was found.
-- Parser accounting validation now rejects invalid kernel/system records and
-  policy changes during a process. Seven archive corruptions include policies
-  whose hashes and journals were updated consistently. Local reader checks pass
-  10 tests; the Linux stopped-child check remains runner-only.
-- Prepared [actual native allocator observer](measurements/parser-native-allocator.md):
-  O2 ordinary/observed C/Rust parser pairs, four real omitted-tree-release controls,
-  matched libc/Rust debug source, bounded raw events and exact vector-ledger
-  reconciliation. Five local reader tests pass, including duplicate nested returns,
-  mapped/retry models and missing/reordered events. Native repair now passes;
-  synthetic mapped-copy paths are not native verification. The separate
-  [fwp heap/region observer](measurements/parser-heap-events.md) now passes:
-  ten O1/O2 builds, eight actual traces, eight wrong-result checks and 24 actual
-  missing-release/observer faults. Five local reader tests pass. All four source
-  variants patch both retained native generated programs; no local compiler build
-  or parser execution was run. The first patch found both native and WASI resize
-  definitions; it now selects the native allocation body explicitly.
-- The handoff rewrite briefly removed the status column required by its checker;
-  the column is restored. The audit now passes 431 doc link sets, 106 immutable
-  preparation pairs and all five roadmap steps.
-- Local focused checks use `python3 scripts/local-guard.py` unchanged. Disk free
-  space is about 137 GiB. Full builds, profiles and suites stay on GitHub.
-- Complete parser-control artifacts are under 128 KiB compressed each; all raw
-  snapshots, manifests and native headers reconstruct locally. Service journals
-  exceed the 2 MiB member limit and are processed on runners. Do not raise limits.
-- Final integration requires nine exact-head production jobs, docs and full-log
-  audit. [Earlier passing head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
-  does not verify later changes. The numerical dispatcher must stay below 512,000 bytes.
+The consuming parser worker and owning function entry both released its input.
+The entry now follows `rc::consumes_arg`. Source `ee30d13b0`, run `42645911091`,
+passes both Linux hosts, six parser tests, primitive inventory and actual extra-drop
+controls. Regressions cover caller aliases, parse errors and allocation failure.
+[Repair evidence](measurements/parser-entry-cleanup-2026-11-09/README.md).
+Remaining platforms require the final exact-head gates.
+
+Source comparisons confirm no production/compiler or service timing-source changes
+since `069e76ed8`, and no generated fwp heap-observer source changes since
+`823791751`. The stricter heap reader adds a useful missing-allocation diagnostic;
+all original fault streams still fail for their intended causes. Earlier
+[passing production head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
+does not verify this later batch.
+
+## Local verification and resources
+
+- Through `python3 scripts/local-guard.py`: eight native-allocator reader tests,
+  five fwp heap-reader tests, Python syntax checks and 433 documentation link sets,
+  106 immutable preparation pairs and all five roadmap rows pass.
+- All retained positive traces reconstruct. All 61 fwp command records and 24 fault
+  causes per host are checked. A bounded download stopped before one duplicate
+  generated C file; source reconstruction matches its original native hash.
+  Complete compact records are retained without raising any limits.
+- No local fwp compiler build, full suite or benchmark ran. Native execution stays
+  on GitHub. Preserve 64 GiB free disk, 2 GiB target data, 1 GiB workload RSS and
+  the guard's 180-second limit. Last observed disk free space: about 126 GiB.
+- Keep the numerical dispatcher below 512,000 bytes; it is currently 502,158.

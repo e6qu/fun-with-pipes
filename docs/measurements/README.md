@@ -40,7 +40,7 @@ now separates accountable address ranges from resident pages. [Actual C/Rust
 resize overlap](parser-native-allocator-2026-11-09/README.md) and [fwp heap/region
 events](parser-heap-events-2026-11-09/README.md) now pass. The largest fwp charged
 peak occurs during tokenization; evaluation allocates nothing. [Arena retry
-passes; mapped observation is under repair](parser-allocator-paths-2026-11-09/README.md).
+and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
 
 ## Latest deliveries
 
