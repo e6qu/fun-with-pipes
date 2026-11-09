@@ -67,14 +67,16 @@ repeat unchanged measurements to obtain qualification.
 
 Milestone 4 now fills four concrete comparison gaps:
 
-1. **Buffers:** match optimization barriers in fwp/C/Rust/Swift; distinguish a
-   complete operation from a separately compiled factory returning live storage.
-   Measure construction, use and release for unique and shared arrays.
+1. **Buffers:** matched barriers and [separate returned-array lifetimes](docs/measurements/returned-buffer-checks-2026-11-09/README.md)
+   now pass in fwp/C/Rust/Swift. Next verify native storage and the phase callers,
+   then measure construction, use and release under the [explicit protocol](docs/measurements/returned-buffer-phases.md).
 2. **Returned functions:** [scalar Swift allocation attribution now passes](docs/measurements/swift-scalar-closures-2026-11-09/README.md).
    Retain separate construction/call/release measurements and prior timing misses;
    do not equate native allocation bytes with fwp payload-only counters.
-3. **Weak registrations:** verify cancellation, active-call ownership, expiration
-   and cleanup first; measure weak lookup and callback-service work separately.
+3. **Weak registrations:** cancellation, active-call ownership, expiration and
+   [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
+   Complete queued cleanup/controlled reuse, then measure weak operations and
+   callback-service work separately, including value and backing-storage release.
 4. **Parser workspace:** complete allocator-internal transient peaks and
    reserved/committed/RSS observations. Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.

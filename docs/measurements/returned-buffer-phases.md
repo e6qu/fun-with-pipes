@@ -7,7 +7,7 @@ Retain the exact measurement source under an immutable tag before collection.
 
 ## What runs
 
-A factory returns an array containing `0` through `length - 1`. A separately
+A factory (an array-building function) returns integers `0` through `length - 1`. A separately
 compiled caller sums it, then releases it. The shared case creates a second
 owner, reads through the first, releases the first, reads through the surviving
 owner, then releases it. For length 4, the unique checksum is `6` and the shared
@@ -46,7 +46,8 @@ and release arrays in increasing slot order. Each batch measures:
 Four clock readings delimit a unique batch; six delimit a shared batch. Add the
 two reading intervals and two release intervals in the shared case. Do not read
 the clock per element or per array. Use the existing separately compiled
-`CLOCK_MONOTONIC` helper and failed-clock controls. Slot initialization/destruction
+`CLOCK_MONOTONIC` helper, which measures elapsed time without wall-clock adjustments,
+and its failed-clock controls. Slot initialization/destruction
 belongs to its phase; slot allocation, startup and final output belong only to
 whole-process time. Check the exact checksum in every process.
 
@@ -86,3 +87,13 @@ Retain original/prepared sources, commands, raw pilot/samples, actual binaries,
 identical-copy digests, source/tag identity, compile elapsed time/RSS and code/frame
 reports. State unmeasured boundaries explicitly. Interpret any result as the cost
 of these external factory/reader/release boundaries, not of all local array code.
+
+## Current preparation
+
+The native phase callers and their record reader are implemented but not yet
+verified. `returned-buffer-phases` checks outputs/arguments, actual wrong sums and
+a separately linked clock that moves backward. Its runs are correctness controls;
+they collect no peer ratios. C/fwp and Swift use reusable typed pointer slots;
+Rust uses a preallocated `Vec` and forward draining. Their slot initialization
+and release bookkeeping are included in the corresponding phases. Native
+storage observations, pilot selection and the paired timing collector remain.

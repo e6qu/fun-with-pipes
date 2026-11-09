@@ -52,9 +52,9 @@ to match C/Rust's diagnostic exit code.
 
 ### Returned-buffer preparation
 
-The new `returned-buffer-checks` suite is under native verification.
-[The first run and repair](returned-buffer-checks-2026-11-09/README.md) retain the
-Swift borrowed-array compile errors; no four-language native pass is claimed yet. It builds
+The [returned-buffer checks](returned-buffer-checks-2026-11-09/README.md) now pass
+on both native architectures, with the first Swift borrowed-array compile errors
+and their repair retained. The suite builds
 factory and caller separately without LTO at C/Rust O1/O2 and Swift Onone/O.
 fwp uses the current compiler's O2-generated C, compiled by the same GCC as C.
 The factory returns integers `0` through `length - 1`; the caller sums them.
