@@ -9,9 +9,14 @@ Keep the existing benchmark grammar and inputs: balanced trees of 31, 511 and
 8,191 nodes, plus the 127-node left-nested tree. This is a prefix-expression
 benchmark, not the fwp language parser. Compare current fwp, C and Rust; no old
 fwp compiler is needed. C/Rust borrow token slices; fwp owns token strings.
-Preserve those representations and report their differences.
+Preserve those representations and report their differences. Each process performs
+**one parse**. C/Rust keep their borrowed token arrays until the tree is released;
+fwp consumes its owned token strings while building the tree. The fwp harness
+keeps the generated program's ordinary runtime initialization, worker thread,
+stack reservation and shutdown. It calls the current owned `calculate` entry;
+no earlier compiler or custom replacement runtime is used.
 
-## Measurements to add
+## Frozen process-memory protocol
 
 | Measurement | Method | Boundary |
 |---|---|---|
@@ -24,13 +29,16 @@ For stopped-process snapshots, record mapping size, resident pages, private
 clean/dirty pages, anonymous pages and swap separately. Preserve raw maps and
 all numeric fields used in summaries. Kernel documentation distinguishes
 [mapping size from resident pages](https://www.kernel.org/doc/html/latest/filesystems/proc.html).
-A reserved address range is not physical memory. These snapshots also do not
+A reserved address range is not physical memory. A GNU-time RSS result of zero
+is retained as an unresolved counter observation, never described as a process
+using no memory. Phase snapshots remain separate observations, not replacements
+for that counter. These snapshots also do not
 establish a per-process committed-memory value; do not relabel RSS or writable
 mapping size as committed bytes.
 
 ## Checkpoints and controls
 
-Implement the same logical checkpoints in all three diagnostic programs:
+Use the same logical checkpoints in all three diagnostic programs:
 
 1. Runtime and input ready, before tokenization.
 2. Tokens complete, before tree construction.
@@ -42,8 +50,10 @@ The helper sends its checkpoint identity and waits for an explicit parent reply.
 Take observations while the child is stopped, then resume it. Match the exact
 checkpoint sequence; missing, repeated or out-of-order checkpoints fail. Bound
 waits and always terminate/reap a failed child. The helper must not allocate
-parser-owned memory or retain the tree. Check the same result and node count as
-the ordinary executable. Diagnostic elapsed time is not a timing result.
+parser-owned memory or retain the tree. Check the same result in every build and count actual nodes in each diagnostic
+build. The ordinary fwp build has no added node counter. Wrong-result controls
+must fail after completing all five diagnostic checkpoints; an unrelated crash
+is not an accepted result check. Diagnostic elapsed time is not a timing result.
 
 Before observing a parser, verify the reader with a separate native control:
 reserve a named address range, make its pages writable, touch every page, then
@@ -72,3 +82,23 @@ overflow parser inputs and actual omitted-release checks.
 This preparation narrows the implementation steps in the
 [ownership comparison](ownership-peers.md#parser-workspace); it does not replace
 that milestone's unfinished requirements.
+
+## Implementation and verification
+
+[The collector](../../scripts/measure-parser-process-memory.py) records 36 ordinary
+RSS processes, 24 five-phase parser observations, 24 deliberately wrong-result
+controls and eight raw/optimized interpreter checks on each host. Three native
+mapping controls run before any parser observation. Reader tests cover malformed
+units/maps, premature exit, wrong checkpoint order, timeout and child reaping.
+
+[The source adapter](../../scripts/parser_memory_source.py) inserts checkpoints
+only at verified current-code boundaries. Source changes fail those checks rather
+than silently selecting a different function. The audit reconstructs prepared
+source and inputs, checks actual ELF architectures, and independently reads every
+raw mapping, result, process journal and build/RSS counter. Four actual evidence
+corruptions must be rejected even after their manifest hashes are updated.
+
+[The native workflow](../../.github/workflows/parser-process-memory.yml) also
+preserves the allocation-transition, invalid-input, omitted-release and frame
+checks. The source is frozen as `roadmap/parser-process-memory-2026-11-09` before
+collection. Implementation is prepared; native results remain pending.

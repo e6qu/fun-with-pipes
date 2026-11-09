@@ -1,15 +1,19 @@
 # Current work
 
-**Next:** verify the minimal Swift cancellation-lifetime repair and preserved
-original filename in one focused C/Rust/Swift + source-diagnosis batch, then
-continue weak-operation/service and parser-memory work in the same PR.
-Both original-check diagnoses (`42610103348`, source `2c1d74410`) identify original
-line 146: expected destruction immediately after clearing the owner. Extending
-through cancellation alone passes with unchanged assertions on both architectures,
-with and without debug information; lookup-only changes still fail. The current
-fixture exactly matches that passing source hash. The broader lookup
-extensions and diagnostic assertion wrapper are removed; all original failed
-records remain.
+**Next:** collect and audit the frozen parser process-memory batch on native
+ARM64/AMD64, while the final Swift cancellation checks finish. Keep both in PR
+#273. The parser collector is prepared, not yet verified: ordinary RSS uses one
+parse per process; separate stopped children expose five named phases. Actual
+missing-touch/unmap controls and wrong-result checks must pass before acceptance.
+Allocator-internal peaks and committed memory remain unresolved.
+
+Swift final checks `42615022531` and docs `42615026734`, source `e7d312488`, are
+queued. Both earlier original-check diagnoses (`42610103348`, `2c1d74410`) locate
+the failure at original line 146: expected destruction after clearing the owner.
+Extending through cancellation alone passes with unchanged assertions on both
+architectures, with and without debug information; lookup-only changes fail.
+The current fixture matches that passing source hash. The queued follow-up
+preserves the original filename and repeats all C/Rust/Swift lifetime checks.
 
 Buffer timing `42602375928` passes both sessions/audits on both hosts; noisy
 comparisons remain inconclusive. Docs `42606196247` at `2cb8e313d` pass.
@@ -119,7 +123,7 @@ invalid `cancelled()` expression is retained in `42589084768`; the repair uses
 
 ## Local resources and previous merge
 
-About 14 GiB is free, below the required 64 GiB. Keep tests/builds/profiles on
+About 13 GiB is free, below the required 64 GiB. Keep tests/builds/profiles on
 GitHub; never bypass the local guard. Active target data is empty. Inspected user
 caches total about 1.4 GiB, insufficient to restore the reserve. Earlier cleanup
 preserved modified handoffs, source and infrastructure state. Small report reads
@@ -131,5 +135,7 @@ commit rule. [Its receipt](measurements/structured-callback-delivery-2026-11-09/
 verifies every gate. Duplicate merge run `42577384035` was cancelled and its
 interrupted logs reviewed. Current work is based on that exact merge.
 
-The numerical dispatch workflow is 511,734 bytes, close to GitHub's 512,000-byte
-limit. Add substantial new suites as reusable workflows, not inline steps.
+The numerical dispatcher previously approached GitHub's 512,000-byte limit.
+Ownership peer jobs now live in a reusable workflow; the dispatcher is below
+500 KiB. Parser memory is another reusable workflow. Keep substantial new suites
+out of the dispatcher; the docs audit enforces the size limit.
