@@ -77,3 +77,33 @@ maximum. This does not measure allocator-internal transient peaks, RSS, reserved
 addresses, ARC instruction counts, callback-service time or fwp managed bytes.
 The [parser memory experiment](parser-process-memory.md) and weak-operation timing
 work retain their separate acceptance requirements.
+
+## Actual address reuse
+
+[The reuse checker](../../scripts/check-weak-operation-reuse.py) prepares a
+separate correctness experiment, using the same native operation modules. Each
+ordinary binary repeats this sequence 1,024 times:
+
+1. Create a target, save its address as an integer, and create its weak reference.
+2. Verify a live lookup; release the strong owner; verify expiration.
+3. Create a replacement target. Compare its address with the saved integer.
+4. Require the old weak reference to remain expired and the replacement's weak
+   reference to work. Release the replacement and both weak references.
+
+C/Swift must observe at least one actual reused target address. A result with no
+reuse fails this evidence requirement; repeating allocations alone is insufficient.
+Rust must observe **zero** reused addresses while the old `Weak` retains the
+original `Rc` allocation. Its backing storage has not yet been freed. The test
+does not pretend these representations have the same reuse boundary.
+
+No released object is inspected: only the saved integer address is compared.
+An actual fault build checks a newly created weak link to the replacement in
+place of the expired link. It must return the specific reuse-check diagnostic,
+demonstrating that the observer rejects a link which refers to the new target.
+
+`suite=weak-operation-reuse` builds ordinary/fault callers at C/Rust O1/O2 and
+Swift Onone/O: **12 builds and 18 result/fault/argument checks per host**. Reports
+retain exact reuse counts, source/binary identities and every failure. Three
+local reader tests pass; native execution is pending. The existing
+[fwp runtime control](../../tests/fixtures/weak_channel_lifetimes.c) already
+requires actual channel-address reuse; this addition fills the native peer gap.

@@ -1,16 +1,19 @@
 """Compile native reference operations separately from the explicit phase caller."""
 import hashlib
 
+from weak_operation_reuse import rebound_source
 from weak_operation_source import once
 
 
 def build(args, folder, fixtures, emitted, run, env, language, level, variant, mode, clock):
     assert language in ('c', 'rs', 'swift', 'fwp') and level in (1, 2)
-    assert mode in ('phases', 'profiles')
-    assert (clock is None) == (mode == 'profiles')
+    assert mode in ('phases', 'profiles', 'reuse')
+    assert (clock is not None) == (mode == 'phases')
     assert mode != 'profiles' or (language != 'fwp' and variant == 'ordinary')
-    caller_name = 'weak_operation_time' if mode == 'phases' else 'weak_operation_storage'
-    assert variant in ('ordinary', 'wrong-lookup', 'backward-clock', 'release-observed', 'omit-owner', 'omit-weak')
+    assert mode != 'reuse' or (language != 'fwp' and variant in ('ordinary', 'rebound'))
+    assert variant != 'rebound' or mode == 'reuse'
+    caller_name = {'phases': 'weak_operation_time', 'profiles': 'weak_operation_storage', 'reuse': 'weak_operation_reuse'}[mode]
+    assert variant in ('ordinary', 'wrong-lookup', 'backward-clock', 'release-observed', 'omit-owner', 'omit-weak', 'rebound')
     diagnostic = variant in ('release-observed', 'omit-owner', 'omit-weak')
     assert not diagnostic or language in ('c', 'fwp')
     part = folder / f'{language}-{level}-{variant}'
@@ -31,6 +34,8 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, m
             source = once(source, '        for (int64_t i = 0; i < population; i++) reference_release_owner(owners[i]);', '')
         elif variant == 'omit-weak':
             source = once(source, '        for (int64_t i = 0; i < population; i++) reference_release_weak(weak[i]);', '')
+        elif variant == 'rebound':
+            source = rebound_source(source, language)
         caller = part / 'caller.c'
         caller.write_text(source)
         flags = ['-std=gnu11', '-O' + str(level), '-ffp-contract=off', '-fno-lto', '-march=' + args.c_arch, '-fstack-usage',
@@ -59,7 +64,12 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, m
         if clock is not None:
             run([args.ar, 'crs', part / 'libreference_clock.a', clock], (0, '', ''), env)
             native_clock = ['-L', 'native=' + str(part), '-l', 'static=reference_clock']
-        link = [args.rustc, *flags, fixtures / (caller_name + '.rs'), '--extern', f'weak_operation={library}',
+        caller = fixtures / (caller_name + '.rs')
+        if variant == 'rebound':
+            source = rebound_source(caller.read_text(), language)
+            caller = part / 'caller.rs'
+            caller.write_text(source)
+        link = [args.rustc, *flags, caller, '--extern', f'weak_operation={library}',
                 *native_clock, '-o', binary]
         run(link, (0, '', ''), env)
     else:
@@ -75,9 +85,14 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, m
         factory.write_text(source)
         run([args.swiftc, *flags, '-parse-as-library', '-module-name', 'WeakOperation', '-emit-module',
              '-emit-module-path', part / 'WeakOperation.swiftmodule', '-emit-object', factory, '-o', part / 'factory.o'], (0, '', ''), env)
+        caller = fixtures / (caller_name + '.swift')
+        if variant == 'rebound':
+            source = rebound_source(caller.read_text(), language)
+            caller = part / 'caller.swift'
+            caller.write_text(source)
         link = [args.swiftc, *flags, '-I', part,
                 *([] if clock is None else ['-import-objc-header', fixtures / 'callable_phase_clock.h']),
-                fixtures / (caller_name + '.swift'), part / 'factory.o',
+                caller, part / 'factory.o',
                 *([] if clock is None else [clock]), '-o', binary]
         run(link, (0, '', ''), env)
     image = binary.read_bytes()

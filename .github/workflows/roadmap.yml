@@ -36,6 +36,7 @@ jobs:
           python3 scripts/test-parser-process-memory.py
           python3 scripts/test-weak-operation-phases.py
           python3 scripts/test-weak-operation-profiles.py
+          python3 scripts/test-weak-operation-reuse.py
       - name: Retained scalar Swift closure allocation reports
         run: |
           python3 scripts/test-swift-closure-records.py

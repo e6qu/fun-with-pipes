@@ -215,6 +215,11 @@ queued. Payload representations differ (C/Swift heap objects, Rust inline values
 so destructor counts are correctness checks, not an allocation or callback-service
 performance comparison.
 
+The [address-reuse preparation](weak-operation-storage.md#actual-address-reuse)
+now records actual addresses in C/Rust/Swift and rejects a link rebound to a
+replacement. C/Swift must observe target reuse; Rust must retain the original
+backing allocation while its weak owner exists. Native verification is pending.
+
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation
 before entry, during the callback and after completion. Closing an fwp channel is

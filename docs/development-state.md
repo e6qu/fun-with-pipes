@@ -70,6 +70,13 @@ three binaries, 24 ordinary results and 48 profiles per host. Native execution i
 queued at `2470f2a94`. Keep the earlier queued sources unchanged; this addition does not
 establish a new timing, storage or ARC result.
 
+Address-reuse preparation also uses the same native C/Rust/Swift operations:
+save an integer target address, release the target, then inspect only live
+replacement addresses and weak lookup results. Require actual C/Swift reuse,
+Rust's retained-backing exclusion, and rejection of a real replacement-link
+control. Expected: 12 builds and 18 native checks per host. Native execution is
+pending; the earlier lifetime fixture's 64 replacements did not prove reuse.
+
 The queue has no explanatory annotations or assigned runners. These workflows
 have no concurrency lock or environment approval. A separate older 146-job
 workflow occupied runners during review and has since ended; that does not
@@ -118,9 +125,11 @@ Focused local checks use `python3 scripts/local-guard.py` with unchanged limits:
   passes. Linux CI must still execute the real checkpoint test.
 - `python3 scripts/test-weak-operation-phases.py`: three pass.
 - `python3 scripts/test-weak-operation-profiles.py`: four pass.
+- `python3 scripts/test-weak-operation-reuse.py`: three pass; reuse collector,
+  reader and updated builder syntax checks also pass.
 - Python syntax compilation of the new collector, storage reader, tests and
   updated build/caller modules: pass. These are not native compiler checks.
-- `python3 scripts/check-roadmap.py`: 412 document link sets, 106 immutable
+- `python3 scripts/check-roadmap.py`: 413 document link sets, 106 immutable
   preparation pairs and all five roadmap steps pass; commit messages pass.
 
 The first sandboxed guard invocation could not inspect `ps`; the same guard
