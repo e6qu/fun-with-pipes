@@ -38,9 +38,11 @@ Add Swift's native `Array<Int64>` to these programs. Keep two experiments distin
    factory must return a usable buffer. Time construction, useful work and release
    separately; keep the buffer alive until the release boundary.
 
-Use the same external input/result barriers in all four timing peers. The new
-Swift correctness fixture uses these barriers, while the old C/Rust fixtures use
-inline barriers; those binaries do not yet establish a matched timing comparison.
+Use the same external input/result barriers in all four timing peers. The buffer
+checker now prepares C/Rust/Swift with one separately compiled C barrier and
+retains original and prepared source hashes. Actual wrong-barrier builds must
+fail the result oracle. This new boundary still needs native verification and
+integration with the fwp harness before the four-language timing comparison.
 Do not derive Swift allocation counts from `Array.count` or presumed capacity.
 Check unique and aliased arrays separately, including validity of the surviving
 owner after the other is released. Swift out-of-memory behavior is not promised
@@ -99,8 +101,7 @@ The new C/Rust/Swift correctness fixtures exercise cancellation before entry,
 cancellation inside an active callback, nested acquisition, expiration and 64
 subsequent target creations. They are not timing peers yet, do not force address
 reuse, and do not measure native allocation or ARC counts. C failure controls
-omit active release, expiration or metadata release and must fail. Verification
-is pending on both native Linux architectures.
+omit active release, expiration or metadata release and must fail. [Both native Linux architectures pass](weak-peer-checks-2026-11-09/README.md).
 
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation

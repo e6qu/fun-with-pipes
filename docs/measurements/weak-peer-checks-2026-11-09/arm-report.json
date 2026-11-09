@@ -1,0 +1,204 @@
+{
+  "source": "5dfd82825fce7c7d6caa5040913e64ec7c708635",
+  "architecture": "aarch64",
+  "host": {
+    "system": "Linux",
+    "node": "ab6383c196aa",
+    "release": "7.0.0-1017-azure",
+    "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026",
+    "machine": "aarch64",
+    "processor": "aarch64"
+  },
+  "sourceHashes": {
+    "c": "9809d0d07dfde16d8f277e6bbdbebe69821209a19e3cae6a40c19fc9626a8ba0",
+    "rs": "bca5592bd56eeb959c983708b5c4b918981d757a8f864d44754f977442197a4c",
+    "swift": "f75e69b3f213ee03790ba74cb3593592fc7e72decec53cdb4617cc0a14c8ce68"
+  },
+  "checks": [
+    {
+      "language": "c",
+      "variant": "ordinary",
+      "level": 1,
+      "binarySha256": "9545cd079fa979b6f989e3b7c1bad2d81c3ff3ff3ca0d11ff5f349e128a174a0",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-ordinary-1"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "language": "c",
+      "variant": "ordinary",
+      "level": 2,
+      "binarySha256": "eccc0779a8d7e75b26ea385e4d5cc470c7e6c696e519d3a8a302963e89ed0f58",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-ordinary-2"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-active-release",
+      "level": 1,
+      "binarySha256": "e8f41cd297d3568688ea9c16922e66246172cc18ea328a1a04aa94fb109d3981",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-active-release-1"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-active-release",
+      "level": 2,
+      "binarySha256": "69a79b26b429a46cd50bab6336b994ebf8ba09ffe0d2551f49f2748c633d66cf",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-active-release-2"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-expiration",
+      "level": 1,
+      "binarySha256": "e97684cad1ef4a1664d68694ac95d21387df961cd38b0ec0d20dc0f36871c484",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-expiration-1"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-expiration",
+      "level": 2,
+      "binarySha256": "bab86add140adac78b271519998fb6b03bc2c3c9f19c7e546dd6dbe69186bd9e",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-expiration-2"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-metadata-release",
+      "level": 1,
+      "binarySha256": "c5622fe68c126b4f4fb237c2aee796fea50d70a6fefca788b9a38c4451e47613",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-metadata-release-1"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "c",
+      "variant": "omitted-metadata-release",
+      "level": 2,
+      "binarySha256": "047aa66bca96b6fdc72f8634e21b28c8430182f0b2e4930b56d2e8ce67647fb8",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/c-omitted-metadata-release-2"
+        ],
+        "status": 79,
+        "stdout": "",
+        "stderr": "lifetime check failed\n"
+      }
+    },
+    {
+      "language": "rs",
+      "variant": "ordinary",
+      "level": 1,
+      "binarySha256": "12fd919eb41e3aa17e537a35246b64c8d23f8a58ee5339bc8ca0449df76111ab",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/rs-ordinary-1"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "language": "rs",
+      "variant": "ordinary",
+      "level": 2,
+      "binarySha256": "ffb8a20694af6ea9ee2e1b0f4b5ee11b2ea60eadf3b7c2d311e747befdaa903b",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/rs-ordinary-2"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "language": "swift",
+      "variant": "ordinary",
+      "level": 1,
+      "binarySha256": "69517160b98a940ac29c8039c54f54f01c181c8a9432e1be876e366dd8eaa09a",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/swift-ordinary-1"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "language": "swift",
+      "variant": "ordinary",
+      "level": 2,
+      "binarySha256": "dccf74fa8964f915ca4817e4667f6e6a9bc65cdcc2eea68d58ccfbcc5b1f8aba",
+      "result": {
+        "command": [
+          "/__w/fun-with-pipes/fun-with-pipes/weak-peer-checks/swift-ordinary-2"
+        ],
+        "status": 0,
+        "stdout": "calls=1 destroyed=65 expired=1 cancelled=1\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "settings": {
+    "cc": "gcc",
+    "rustc": "rustc",
+    "swiftc": "swiftc",
+    "source": "5dfd82825fce7c7d6caa5040913e64ec7c708635",
+    "arch": "aarch64",
+    "c_arch": "armv8-a",
+    "rust_cpu": "generic",
+    "target": "aarch64-unknown-linux-gnu",
+    "output": "weak-peer-checks"
+  },
+  "scope": "Serial callback lifetime correctness, not timing, allocation or ARC counts",
+  "versions": {
+    "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+    "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: aarch64-unknown-linux-gnu\n"
+  }
+}

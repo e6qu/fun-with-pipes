@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** verify the new weak-registration checks on native Linux ARM64/AMD64,
-then complete the remaining milestone 4 comparisons in one substantial PR.
+**Next:** verify matched buffer barriers on native Linux ARM64/AMD64, then
+complete the remaining milestone 4 comparisons in this substantial PR.
 Branch: `ownership-peer-comparisons`, worktree `.worktrees/recording-capacity-gate`.
 No new PR is open yet. Preserve unrelated root-worktree changes.
 
@@ -38,14 +38,18 @@ source `4c6cda41fc2739569cdeda241da85b2a7310b89c`, retained by immutable tag
 reader tests, parser allocation transitions, native Rust frames and fault controls.
 The first run's masked Rust observer abort and its repair remain in the report.
 
-New, unverified C/Rust/Swift weak-registration fixtures cover live and expired
+[Verified C/Rust/Swift weak-registration fixtures](measurements/weak-peer-checks-2026-11-09/README.md) cover live and expired
 lookup, cancellation before/during/after a callback, nested acquisition, last-owner
 release during a callback and later target creation. Actual C omissions of active
 release, expiration and metadata release must fail. They use native Swift weak
 references and Rust Rc/Weak for the serial contract, without pretending their
 allocation layouts match fwp. They do not force address reuse or count ARC calls.
-The existing `ownership-peer-checks` suite includes the new checks and retains
-partial evidence even when an independent step fails.
+Run `42578072461` passes on both hosts at `5dfd82825`; complete logs and raw
+commands are reviewed. Immutable tag `roadmap/weak-peer-checks-2026-11-09` retains
+that source. Docs run `42578075331` is still running. The next buffer change
+prepares all three peer languages with the same external C input/result barrier,
+plus actual wrong-barrier rejection controls. Its native verification is pending.
+The suite retains partial evidence even when an independent step fails.
 
 Remaining: matched external buffer barriers and returned-buffer phases, scalar
 Swift closure allocation attribution, weak-operation/service timing and storage,
