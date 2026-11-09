@@ -1,15 +1,16 @@
 # Current work
 
-**Next:** verify the repaired C/Rust parser allocation observer, retain the completed
-service timing results, then cover fwp region events and unobserved allocator
-paths. Follow the
+**Next:** run the prepared fwp heap/region event observer, then resolve native
+coverage for the remaining allocator paths. Service timing and actual C/Rust
+allocation traces now pass and their complete results are retained. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
 incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; service repair source `069e76ed8`, tag
-`roadmap/weak-callback-time-repair-2026-11-09`. PR branch:
+`ownership-buffer-review`; native allocator repair `62775d559`, tag
+`roadmap/parser-native-allocator-repair-2026-11-09`. The next prepared suite is
+`parser-heap-events` with an explicit immutable `parser_memory_tag`. PR branch:
 `ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
 Integrate the complete preparation batch into this PR before final production
 verification. Preserve unrelated root-worktree changes and inactive handoffs.
@@ -21,7 +22,7 @@ verification. Preserve unrelated root-worktree changes and inactive handoffs.
 | 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, cleanup, allocations and paired timing; parser entry repair and process accounting | Retain service timing tables; parser internal peaks |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, cleanup, allocations and paired timing; parser entry repair and process accounting | fwp parser heap/region events; remaining allocator path coverage |
 | 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Retain original noisy/unmet timing results. Fewer operations or smaller images do
@@ -34,8 +35,10 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
   checks, 64 invalid arguments and two interpreter modes. Both paired timing
   sessions, raw-evidence audits and six corruption controls per host now pass.
   Artifacts: AMD64 `13700674134`, ARM64 `13700694287`.
-  Docs `42675219991` / `129354681805` passes. Full service gaps remain substantial;
-  reports are downloaded, and concise tables still need retention. No samples rerun.
+  Docs `42675219991` / `129354681805` passes. Full delivery at 4,096 messages
+  takes 18.65–20.23× C and 5.12–6.70× Swift across hosts. All comparisons qualify
+  in both sessions. Reports, ratios, RSS/build costs, controls and logs are retained.
+  No samples rerun.
   [First failures and combined descriptor/link repair](measurements/weak-callback-time-2026-11-09/README.md)
   retain all native logs and journals; no measurement ran before those repairs.
 - **Parser allocation observer:** source `19b8b48fe`, run `42679061783`; AMD64
@@ -43,7 +46,12 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
   results; all 12 diagnostic executions fail. Repair all three observer causes:
   tail-call return tracking, C expressions in Rust frames and late auto-load
   settings. [Complete retained failures](measurements/parser-native-allocator-2026-11-09/README.md).
-  Docs `42679066951` / `129368381461` passes. Repaired native execution is pending.
+  Docs `42679066951` / `129368381461` passes. Repair `62775d559`, run
+  `42680540810`, passes AMD64 `129373593731` and ARM64 `129373593563`: eight
+  actual traces and four omitted frees each. All compact records reconstruct;
+  largest requested peak is 425,984 bytes, 30% above endpoint capacity.
+  [Tables and complete retained records](measurements/parser-native-allocator-2026-11-09/README.md).
+  Repair docs `42680547196` / `129373594319` passes.
 - **Parser accounting:** source `6d1608c4f`, run `42673573956`; docs `42673580483`.
   Attempts 1 and 2 failed before jobs with GitHub internal errors. Attempt 2 IDs:
   `b32b4d94-27e5-4122-8539-4301d00c7a35` / `7f804619-adc9-4c50-b9fa-12ed4c5199e6`.
@@ -124,13 +132,19 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   O2 ordinary/observed C/Rust parser pairs, four real omitted-tree-release controls,
   matched libc/Rust debug source, bounded raw events and exact vector-ledger
   reconciliation. Five local reader tests pass, including duplicate nested returns,
-  mapped/retry models and missing/reordered events. Native repair is pending;
-  synthetic paths are not native verification. fwp region events remain separate.
+  mapped/retry models and missing/reordered events. Native repair now passes;
+  synthetic paths are not native verification. The separate
+  [fwp heap/region observer](measurements/parser-heap-events.md) is prepared:
+  ten O1/O2 builds, eight actual traces, eight wrong-result checks and 24 actual
+  missing-release/observer faults. Five local reader tests pass. All four source
+  variants patch both retained native generated programs; no local compiler build
+  or parser execution was run. The first patch found both native and WASI resize
+  definitions; it now selects the native allocation body explicitly.
 - The handoff rewrite briefly removed the status column required by its checker;
-  the column is restored. The audit now passes 426 doc link sets, 106 immutable
+  the column is restored. The audit now passes 430 doc link sets, 106 immutable
   preparation pairs and all five roadmap steps.
 - Local focused checks use `python3 scripts/local-guard.py` unchanged. Disk free
-  space is about 142 GiB. Full builds, profiles and suites stay on GitHub.
+  space is about 137 GiB. Full builds, profiles and suites stay on GitHub.
 - Complete parser-control artifacts are under 128 KiB compressed each; all raw
   snapshots, manifests and native headers reconstruct locally. Service journals
   exceed the 2 MiB member limit and are processed on runners. Do not raise limits.

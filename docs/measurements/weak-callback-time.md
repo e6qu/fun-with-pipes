@@ -1,6 +1,6 @@
 # Queued callback service timing protocol
 
-**Prepared protocol; no timing result yet.** This measures the ordinary service
+**[Both native sessions now pass](weak-callback-time-2026-11-09/README.md).** This measures the ordinary service
 whose [results and ownership](weak-callback-service.md) are already checked. It
 answers whether the isolated weak-reference costs matter in a complete queue
 lifetime. It does not measure a concurrent network server.

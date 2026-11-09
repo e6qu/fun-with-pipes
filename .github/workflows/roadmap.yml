@@ -37,6 +37,7 @@ jobs:
           python3 scripts/test-parser-mapping-accounting.py
           python3 scripts/test-parser-allocator-observation.py
           python3 scripts/test-parser-native-allocator.py
+          python3 scripts/test-parser-heap-events.py
           python3 scripts/test-weak-callback-profiles.py
           python3 scripts/test-weak-callback-source.py
           python3 scripts/test-weak-callback-timing.py

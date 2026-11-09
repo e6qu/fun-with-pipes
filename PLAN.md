@@ -83,14 +83,19 @@ Milestone 4 now fills four concrete comparison gaps:
    [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
    temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
    and fwp physical release pass. [Native service allocations](docs/measurements/weak-callback-profiles-2026-11-09/README.md)
-   and their complete journal audit pass; complete service timing before attributing
-   whole-service cost to weak references.
+   and their complete journal audit pass. [Complete service timings](docs/measurements/weak-callback-time-2026-11-09/README.md)
+   now pass both sessions: large full delivery takes 18.65–20.23× C's time and
+   5.12–6.70× Swift's. Attribute queue, payload, effect and channel costs before
+   choosing a shared improvement; weak-reference counts alone do not explain it.
 4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
    and RSS/checkpoint observations pass on both Linux hosts. [Resize calibration](docs/measurements/parser-allocator-calibration-2026-11-09/README.md)
    and [mapping accounting controls](docs/measurements/parser-mapping-accounting-2026-11-09/README.md)
    also pass. [Actual parser accounting snapshots now pass](docs/measurements/parser-process-accounting-2026-11-09/README.md),
-   separating accountable address ranges from resident pages. Connect allocator
-   events to actual parser allocations before claiming internal transient peaks.
+   separating accountable address ranges from resident pages. [Actual C/Rust
+   allocation events](docs/measurements/parser-native-allocator-2026-11-09/README.md)
+   now expose 30% more peak requested storage than endpoint capacities for the
+   largest input. Complete the [fwp heap/region observer](docs/measurements/parser-heap-events.md)
+   and classify remaining unobserved allocator paths explicitly.
    Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 

@@ -1,0 +1,73 @@
+name: Actual fwp parser allocation events
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Immutable source tag for these parser observations
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  events:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-parser-heap-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Native compiler tools
+        run: sudo apt-get update && sudo apt-get install -y gcc g++ python3 libssl-dev pkg-config
+      - name: Build current compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir parser-heap-setup
+          cargo fetch --locked 2>&1 | tee parser-heap-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee parser-heap-setup/build.log
+      - name: Allocation balance, resize and region reader controls
+        run: python3 scripts/test-parser-heap-events.py
+      - name: Actual O1/O2 parser events and omitted-release/observer faults
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/check-parser-heap-events.py --compiler target/debug/fwp --cc gcc
+          --source "$GITHUB_SHA" --tag "$SOURCE_TAG" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --output parser-heap-events
+      - name: Preserve complete commands, raw events, sources and binaries
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-heap-events-${{ matrix.arch }}
+          path: |
+            parser-heap-setup/
+            parser-heap-events/
+          if-no-files-found: error

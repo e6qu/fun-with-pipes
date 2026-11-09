@@ -6,7 +6,8 @@ cover Swift buffer results and C/Rust parser storage/frames. Returned-buffer
 [phase timings and RSS](returned-buffer-time-2026-11-09/README.md) now include both
 sessions on both hosts; failed copy controls remain inconclusive.
 [Weak-operation timings](weak-operation-time-2026-11-09/README.md) are recorded;
-complete service timing remains open. Freeze each protocol before collection.
+complete service timing now passes both sessions on both hosts, with substantial
+remaining performance gaps. Freeze each protocol before collection.
 
 ## Questions and programs
 
@@ -155,7 +156,8 @@ phase boundaries, native representations and the required fault controls.
 [Native storage preparation](weak-operation-storage.md) follows the same targets
 through strong-owner and weak-owner release. [Both pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md).
 [Weak timings](weak-operation-time-2026-11-09/README.md) now expose substantial
-C/Rust lookup gaps and mixed Swift results; service timings remain open.
+C/Rust lookup gaps and mixed Swift results. [Complete service timings](weak-callback-time-2026-11-09/README.md)
+also show substantial gaps, including against Swift; they do not isolate ARC costs.
 
 Compare two scopes separately:
 

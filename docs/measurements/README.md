@@ -30,7 +30,9 @@ show substantial C/Rust lookup gaps and mixed Swift results. The
 16-byte result allocation per successful lookup in this caller.
 [Queued-service results and cleanup](weak-callback-service-2026-11-09/README.md)
 and [native service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
-pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) remains open.
+pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) now passes
+both sessions on both hosts: large full delivery takes 18.65–20.23× C's time and
+5.12–6.70× Swift's, with less process RSS than Swift but more than C/Rust.
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
 the memory observations pass on both Linux hosts. [Actual parser accounting](parser-process-accounting-2026-11-09/README.md)

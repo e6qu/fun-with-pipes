@@ -1,6 +1,7 @@
 # Parser memory: remaining observer work
 
-**Allocator-internal parser peaks remain open.** [Resize calibration](parser-allocator-calibration-2026-11-09/README.md)
+**[Actual C/Rust owned-chunk peaks now pass](parser-native-allocator-2026-11-09/README.md);
+[fwp's heap/region events](parser-heap-events.md) remain in preparation.** [Resize calibration](parser-allocator-calibration-2026-11-09/README.md)
 and [actual parser RSS/mapping accounting](parser-process-accounting-2026-11-09/README.md)
 pass on both Linux hosts. Neither final vector capacity nor stopped-process
 snapshots establish temporary storage inside a resize.
@@ -58,8 +59,10 @@ and [return-value observation](https://sourceware.org/gdb/current/onlinedocs/gdb
 Breakpoint changes occur while stopped in the outer command loop, not inside
 breakpoint callbacks. Run `suite=parser-allocator-calibration` with an explicit
 `parser_memory_tag`; it builds only the small native control, not the fwp compiler.
-This is calibration of ordinary-arena paths. Applying it to parser allocations,
-mapped/retry paths and full transient peaks remains work.
+This is calibration of ordinary-arena paths. The actual parser observer now uses
+real caller-address breakpoints to follow libc tail calls and verifies both native
+architectures. Mapped-remap/retry paths were not exercised by those parser inputs;
+do not broaden that evidence into a full allocator-internal memory guarantee.
 
 ## Commit accounting
 

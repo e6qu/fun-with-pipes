@@ -1,6 +1,6 @@
 # Actual parser allocator events
 
-**Native observer repair pending verification.** This connects the
+**[Both native hosts pass](parser-native-allocator-2026-11-09/README.md).** This connects the
 [installed-libc calibration](parser-allocator-calibration-2026-11-09/README.md)
 to the real C/Rust parser vectors. It does not change the allocator or measure
 diagnostic execution time as performance.
@@ -43,7 +43,8 @@ These numbers exclude allocator-retained free pages, arena metadata and kernel
 internals. They are not whole-process RSS or guaranteed memory. The separate
 [accounting snapshots](parser-process-accounting-2026-11-09/README.md) cover those
 observed process boundaries. fwp's managed heap and separately allocated region
-blocks require their own event mapping; this C/Rust observer does not verify them.
+blocks require their [own event mapping](parser-heap-events.md); this C/Rust
+observer does not verify them.
 
 ## Acceptance and retained failures
 
