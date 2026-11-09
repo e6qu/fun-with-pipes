@@ -78,9 +78,11 @@ The diagnostic ledger is not used for the 4,096-closure population.
 Keep every source, generated-C variant, native executable, command, raw timing,
 RSS sample, count record and digest. Audit samples against command output, source
 identity and byte-identical executable copies. Successful collection means the
-records are complete, not that performance acceptance passed. Swift allocation
-and ARC-operation counts remain missing; phase timings alone cannot attribute
-its costs specifically to ARC. Its reference-capture lifetime controls and scalar
+records are complete, not that performance acceptance passed. This timing run did
+not measure Swift allocations or ARC operations. The later
+[scalar closure profiles](swift-scalar-closures-2026-11-09/README.md) attribute
+allocation and release to the actual factory; ARC operations remain unmeasured.
+Phase timings alone cannot attribute costs specifically to ARC. Reference-capture lifetime controls and scalar
 overflow controls remain in the earlier Swift suite.
 
 ## Delivery status

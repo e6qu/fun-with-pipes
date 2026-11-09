@@ -5,8 +5,17 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [structured-callbacks, structured-gradients, captured-maps, array-affinity, array-review, array-peers, fresh-array, array-builder-diagnosis, array-metadata, loop-array-diagnosis, local-derivative-audit, numeric-worker-analysis, local-derivative-checks, local-derivatives, tape-record-audit, tape-records-report, tape-records-compiler-report, tape-record-time, tape-record-analysis, tape-record-checks, recording-context-diagnostic, recording-context-parent, recording-context-checks, recording-context-census, recording-context-analysis, recording-context-time, recording-context-census-report, recording-context-compiler-report, recording-context-report, recording-call-analysis, recording-lookup-checks, recording-capacity-checks, recording-capacity-census, recording-capacity-analysis, recording-capacity-time, recording-capacity-census-report, recording-capacity-compiler-report, recording-capacity-report, scalar-constant-census, recording-lookup-census, recording-inline-census, scalar-constant-analysis, recording-lookup-analysis, recording-inline-analysis, scalar-constant-time, recording-lookup-time, recording-inline-time, scalar-constant-census-report, recording-lookup-census-report, recording-inline-census-report, scalar-constant-compiler-report, recording-lookup-compiler-report, recording-inline-compiler-report, scalar-constant-report, recording-lookup-report, recording-inline-report, scalar-constant-checks, source-format, storage-compiler-report, packed-pair-census-report, packed-pair-time, packed-pair-report, storage-measurement-controls, packed-pair-analysis, packed-pair-census, focused-storage-audit, production-log-audit, packed-pair-checks, gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-records, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [parser-heap-events, parser-native-allocator, weak-callback-time, weak-callback-profile-audit, parser-mapping-accounting, weak-callback-profiles, parser-allocator-calibration, weak-callback-ownership, weak-callback-service, weak-operation-census, weak-operation-reuse, weak-operation-time, weak-operation-profiles, weak-operation-phases, parser-process-memory, weak-swift-diagnosis, returned-buffer-time, returned-buffer-profiles, returned-buffer-phases, returned-buffer-checks, weak-peer-checks, swift-closure-allocations, ownership-peer-checks, structured-callbacks, structured-gradients, captured-maps, array-affinity, array-review, array-peers, fresh-array, array-builder-diagnosis, array-metadata, loop-array-diagnosis, local-derivative-audit, numeric-worker-analysis, local-derivative-checks, local-derivatives, tape-record-audit, tape-records-report, tape-records-compiler-report, tape-record-time, tape-record-analysis, tape-record-checks, recording-context-diagnostic, recording-context-parent, recording-context-checks, recording-context-census, recording-context-analysis, recording-context-time, recording-context-census-report, recording-context-compiler-report, recording-context-report, recording-call-analysis, recording-lookup-checks, recording-capacity-checks, recording-capacity-census, recording-capacity-analysis, recording-capacity-time, recording-capacity-census-report, recording-capacity-compiler-report, recording-capacity-report, scalar-constant-census, recording-lookup-census, recording-inline-census, scalar-constant-analysis, recording-lookup-analysis, recording-inline-analysis, scalar-constant-time, recording-lookup-time, recording-inline-time, scalar-constant-census-report, recording-lookup-census-report, recording-inline-census-report, scalar-constant-compiler-report, recording-lookup-compiler-report, recording-inline-compiler-report, scalar-constant-report, recording-lookup-report, recording-inline-report, scalar-constant-checks, source-format, storage-compiler-report, packed-pair-census-report, packed-pair-time, packed-pair-report, storage-measurement-controls, packed-pair-analysis, packed-pair-census, focused-storage-audit, production-log-audit, packed-pair-checks, gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-records, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
+      parser_memory_tag:
+        description: Immutable parser memory or allocator-calibration source tag
+        type: string
+      weak_time_tag:
+        description: Immutable weak-reference or callback-service timing source tag
+        type: string
+      buffer_time_tag:
+        description: Immutable returned-buffer timing source tag
+        type: string
       numeric_representation:
         description: Derivative representation
         type: choice
@@ -58,6 +67,74 @@ on:
         description: API run with native diagnostic executables
         type: string
 jobs:
+  weak_operation_time:
+    if: inputs.suite == 'weak-operation-time'
+    uses: ./.github/workflows/weak-operation-time.yml
+    with:
+      source_tag: ${{ inputs.weak_time_tag }}
+  weak_callback_time:
+    if: inputs.suite == 'weak-callback-time'
+    uses: ./.github/workflows/weak-callback-time.yml
+    with:
+      source_tag: ${{ inputs.weak_time_tag }}
+  weak_callback_profile_audit:
+    if: inputs.suite == 'weak-callback-profile-audit'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Reconstruct complete native service archives and audit commands
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/audit-weak-callback-profiles.py --gh gh --run 42664664795
+          --source c0ac432fc2b802d71d472085ea4fa6b0100b624f --output weak-callback-profile-audit
+      - name: Retain complete audit result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: weak-callback-profile-audit
+          path: |
+            weak-callback-profile-audit/report.json
+            weak-callback-profile-audit/*.gz
+          if-no-files-found: error
+  parser_mapping_accounting:
+    if: inputs.suite == 'parser-mapping-accounting'
+    uses: ./.github/workflows/parser-mapping-accounting.yml
+    with:
+      source_tag: ${{ inputs.parser_memory_tag }}
+  parser_allocator_calibration:
+    if: inputs.suite == 'parser-allocator-calibration'
+    uses: ./.github/workflows/parser-allocator-calibration.yml
+    with:
+      source_tag: ${{ inputs.parser_memory_tag }}
+  parser_heap_events:
+    if: inputs.suite == 'parser-heap-events'
+    uses: ./.github/workflows/parser-heap-events.yml
+    with:
+      source_tag: ${{ inputs.parser_memory_tag }}
+  parser_native_allocator:
+    if: inputs.suite == 'parser-native-allocator'
+    uses: ./.github/workflows/parser-native-allocator.yml
+    with:
+      source_tag: ${{ inputs.parser_memory_tag }}
+  parser_process_memory:
+    if: inputs.suite == 'parser-process-memory'
+    uses: ./.github/workflows/parser-process-memory.yml
+    with:
+      source_tag: ${{ inputs.parser_memory_tag }}
+  returned_buffer_time:
+    if: inputs.suite == 'returned-buffer-time'
+    uses: ./.github/workflows/returned-buffer-time.yml
+    permissions:
+      contents: read
+    with:
+      source_tag: ${{ inputs.buffer_time_tag }}
   structured_gradients:
     if: contains(fromJSON('["structured-gradients","structured-callbacks"]'), inputs.suite)
     uses: ./.github/workflows/structured-ad.yml
@@ -2697,143 +2774,13 @@ jobs:
           if-no-files-found: error
 
   swift_peers:
-    if: contains(fromJSON('["swift-peers","callable-phases","swift-allocations"]'), inputs.suite)
-    strategy:
-      fail-fast: false
-      matrix:
-        session: ${{ fromJSON(inputs.suite == 'swift-peers' && '[1,2]' || '[1]') }}
-        include:
-          - runner: ubuntu-24.04
-            arch: x86_64
-            c_arch: x86-64
-            rust_cpu: x86-64
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-            c_arch: armv8-a
-            rust_cpu: generic
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.runner }}
-    container: swift:6.4.2-noble
-    timeout-minutes: 40
-    env:
-      CC: gcc
-      CXX: g++
-      CARGO_BUILD_JOBS: 2
-      CARGO_INCREMENTAL: '0'
-      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
-      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
-      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
-    steps:
-      - name: Native build and measurement dependencies
-        run: apt-get update && apt-get install -y git gcc g++ libssl-dev pkg-config python3 time llvm curl
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@master
-        env:
-          # GitHub supplies /github/home to the root container; no sudo was used.
-          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
-        with:
-          toolchain: 1.99.1
-      - uses: actions/cache@v6
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
-      - name: Preserve container identity and native toolchain
-        run: |
-          swiftc --version
-          uname -m
-          cat /etc/os-release
-          test "$(uname -m)" = "${{ matrix.arch }}"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-      - name: Build the current compiler
-        shell: bash
-        run: |
-          set -o pipefail
-          mkdir swift-setup
-          cargo fetch --locked 2>&1 | tee swift-setup/fetch.log
-          cargo build --locked --offline --bin fwp 2>&1 | tee swift-setup/build.log
-      - name: Measurement schedule and Swift overflow controls
-        run: |
-          python3 scripts/test-swift-peer-records.py
-          python3 scripts/test-callable-phase-records.py
-          python3 scripts/check-measurement-clocks.py --cc gcc
-          python3 scripts/check-swift-arithmetic.py --swiftc swiftc --target "${{ matrix.arch }}-unknown-linux-gnu" --output swift-arithmetic
-      - name: Allocation profiler
-        if: inputs.suite == 'swift-allocations'
-        shell: bash
-        run: |
-          set -euo pipefail
-          apt-get install -y heaptrack libunwind-dev strace make
-          curl --fail --location --output swift-setup/libunwind-1.8.3.tar.gz \
-            https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
-          echo 'be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b  swift-setup/libunwind-1.8.3.tar.gz' | sha256sum --check
-          tar -xf swift-setup/libunwind-1.8.3.tar.gz -C swift-setup
-          cd swift-setup/libunwind-1.8.3
-          ./configure --prefix="$GITHUB_WORKSPACE/swift-setup/unwinder" --disable-static --disable-tests --disable-documentation \
-            --disable-coredump --disable-ptrace --disable-setjmp \
-            2>&1 | tee ../unwind-configure.log
-          make -j2 2>&1 | tee ../unwind-build.log
-          make install 2>&1 | tee ../unwind-install.log
-          cd "$GITHUB_WORKSPACE"
-          rm -rf swift-setup/libunwind-1.8.3
-      - name: Allocation report controls
-        if: inputs.suite == 'swift-allocations'
-        run: python3 scripts/test-swift-allocation-records.py
-      - name: Four-language allocation profiles
-        if: inputs.suite == 'swift-allocations'
-        run: >-
-          python3 scripts/profile-swift-allocations.py collect
-          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
-          --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
-          --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
-          --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace
-          --unwind-library-directory swift-setup/unwinder/lib --output swift-allocation-evidence
-      - name: Recompute allocator observations
-        if: inputs.suite == 'swift-allocations'
-        run: >-
-          python3 scripts/profile-swift-allocations.py audit --input swift-allocation-evidence
-          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
-      - name: Four-language programs and native Swift closures
-        if: inputs.suite == 'swift-peers'
-        run: >-
-          python3 scripts/measure-swift-peers.py collect
-          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
-          --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
-          --rust-cpu "${{ matrix.rust_cpu }}" --rust-target "${{ matrix.arch }}-unknown-linux-gnu"
-          --swift-target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
-          --objdump llvm-objdump --session "${{ matrix.session }}" --output swift-peer-evidence
-      - name: Recompute retained observations
-        if: inputs.suite == 'swift-peers'
-        run: >-
-          python3 scripts/measure-swift-peers.py audit --input swift-peer-evidence
-          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
-      - name: Two callable sessions on this same native host
-        if: inputs.suite == 'callable-phases'
-        shell: bash
-        run: |
-          set -euo pipefail
-          for session in 1 2; do
-            python3 scripts/measure-callable-phases.py collect \
-              --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
-              --cc gcc --rustc rustc --swiftc swiftc --time /usr/bin/time --objdump llvm-objdump \
-              --session "$session" --output "callable-phase-evidence-$session"
-            python3 scripts/measure-callable-phases.py audit \
-              --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
-          done
-      - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
-          path: |
-            swift-setup/
-            swift-peer-evidence/
-            swift-allocation-evidence/
-            swift-arithmetic/
-            callable-phase-evidence-*/
-          if-no-files-found: error
+    if: contains(fromJSON('["weak-callback-profiles","weak-callback-ownership","weak-callback-service","weak-operation-census","weak-operation-reuse","weak-operation-profiles","weak-operation-phases","weak-swift-diagnosis","swift-peers","callable-phases","swift-allocations","swift-closure-allocations","ownership-peer-checks","weak-peer-checks","returned-buffer-checks","returned-buffer-phases","returned-buffer-profiles"]'), inputs.suite)
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/ownership-peers.yml
+    with:
+      suite: ${{ inputs.suite }}
 
   scan_comparison:
     if: inputs.suite == 'scan-comparison'
@@ -3080,7 +3027,7 @@ jobs:
         if: ${{ !cancelled() && inputs.suite == 'buffer-peer-checks' && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc --output buffer-checks/peers 2>&1 | tee buffer-checks/peers.log
+          python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc --languages c rs --output buffer-checks/peers 2>&1 | tee buffer-checks/peers.log
           python3 scripts/test-unique-buffer-baselines.py 2>&1 | tee buffer-checks/schedule.log
           python3 scripts/test-generated-buffer-observers.py 2>&1 | tee buffer-checks/observer-controls.log
           python3 scripts/check-measurement-clocks.py --cc gcc 2>&1 | tee buffer-checks/clocks.log

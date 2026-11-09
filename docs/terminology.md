@@ -396,6 +396,36 @@ Allocator headers/rounding add **overhead** beyond payload. **Managed charge**,
 resident code, stacks and foreign libraries. Do not add independent peaks as if
 they occurred at the same instant.
 
+
+### Writable memory is not necessarily resident memory
+
+**Committed memory** needs a named definition. Linux reports system-wide commit
+accounting; fwp's internal `fwp_heap.committed` instead counts heap chunks made
+available for reading/writing. Neither number is the process's RSS.
+
+| Observation | What it answers |
+|---|---|
+| Reserved addresses | Which address ranges exist? |
+| Writable capacity | Which ranges may the program write to? |
+| Resident pages | Which pages currently occupy RAM? |
+| OS commit accounting | What memory obligation does this operating system account for, under its stated policy? |
+
+For example, the [parser observer control](measurements/parser-process-memory.md)
+reserves 16 MiB, makes it writable, touches every page, then unmaps it. Making the
+range writable must not be mistaken for touching all its pages. Its checks inspect
+that named mapping; unrelated runtime/library pages belong to separate totals.
+Linux's [`smaps` documentation](https://www.kernel.org/doc/html/latest/filesystems/proc.html)
+and [overcommit rules](https://docs.kernel.org/mm/overcommit-accounting.html)
+define those separate OS observations. Subtracting two system-wide commit readings
+on a shared runner cannot identify one program's contribution.
+
+An **allocator-internal transient peak** can occur inside a resize. Growing an
+8 KiB allocation to 16 KiB might allocate the new block, copy, then free the old
+one: 24 KiB of requested storage temporarily coexist. A resize may instead reuse
+storage. A log taken only after `realloc` returns cannot distinguish those peaks.
+[Allocator statistics](https://sourceware.org/glibc/manual/latest/html_node/Statistics-of-Malloc.html)
+report current allocator state; they do not supply that missing event history.
+
 | Term | Meaning |
 |---|---|
 | Baseline / candidate / same-source reference | Compared implementation / proposed change / same compiler source with only the studied change disabled. |

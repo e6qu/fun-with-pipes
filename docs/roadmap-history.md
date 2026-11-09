@@ -11,6 +11,16 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current five milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Known array callbacks and structured gradients (PR #272)
+
+[PR #272](https://github.com/e6qu/fun-with-pipes/pull/272) removes temporary
+numeric inputs from known array callbacks using bounded specialization.
+[All delivery gates pass](measurements/structured-callback-delivery-2026-11-09/README.md).
+The three objective shapes retain general gradients, nested AD and F128 coverage;
+no new public structured-gradient wrapper was needed. Large ARM64 cases use
+85–91% less computation, with fewer allocations and unchanged peak managed bytes.
+[AMD64 timing acceptance stays open](measurements/structured-array-callbacks-2026-11-08/README.md).
+
 ## Runtime scalar captures and empty array owners (PR #271)
 
 [PR #271](https://github.com/e6qu/fun-with-pipes/pull/271) reuses dead input arrays

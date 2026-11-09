@@ -1,0 +1,72 @@
+{
+  "amd-report.json.gz": {
+    "bytes": 643768,
+    "sha256": "8b4d2b735ef0c63f52905543e35178504acfc002d92b8135a53be5aa1f627c2f",
+    "compressedSha256": "fd00cf584ff4646d495c4820dd98dc727564777313b5aeaab1a3c8f1394f4655"
+  },
+  "amd-job.log.gz": {
+    "bytes": 322748,
+    "sha256": "00d584983a085d35b552dafcfffb84364391fecedc5adc8d0864dc5362112eff",
+    "compressedSha256": "2a430275625bcf75a1bfcc6a511901391541e2d81bc59e56e36bef8892a3a99a"
+  },
+  "arm-report.json.gz": {
+    "bytes": 592730,
+    "sha256": "4dc66245b5715113a8b1d9351400966511161fcf788219823bbfdf8a171cc333",
+    "compressedSha256": "e6173db404a5d99bbb51bcf4e15edfcaee5b0652e21f24ceece446a89284772e"
+  },
+  "arm-job.log.gz": {
+    "bytes": 323602,
+    "sha256": "d622c0dc64db16c8879c04c63cc74f9de7816a478133f2cd0471de28af0fa118",
+    "compressedSha256": "de6176b2a360512736bf0ae5ae604aff586e2f4c2ae998d619a6b38a77ac9866"
+  },
+  "docs-job.log.gz": {
+    "bytes": 443206,
+    "sha256": "2e9744f7fe3b906f3bc32a2d220a30b2729c37e6e75f342967c6a0c0a0fbfed6",
+    "compressedSha256": "20b5651994e0e61316a465b856ae0ef2ecf0b79992f9dbfcff7a3ed18ee690ed"
+  },
+  "first-audit-report.json.gz": {
+    "bytes": 78230,
+    "sha256": "8810607121729344902c4f8e6b5c955f0da41ee71ee376a2de00e2236cabcd90",
+    "compressedSha256": "f53cccbdc2674d0efd72e217692519a509750f1d973df4fc31f0fcbe485256bd"
+  },
+  "first-audit-job.log.gz": {
+    "bytes": 262379,
+    "sha256": "8e364cb3b2378927cc879ccd8c8581e363acad8fffb04f687ad8a515c4a97c68",
+    "compressedSha256": "d9fdd648ba7fb219692e3369828e12e6b9094f7833e3a190fc437d4118e89854"
+  },
+  "x86_64-commands.jsonl.gz": {
+    "bytes": 14777775,
+    "sha256": "bad3f7be25965884b5ae1b941e25d9aa6b25c7b10ff70a79369fcbf7f787043e",
+    "compressedSha256": "03e7932a88405e6a6e1fa83a1fc1059956d7b3e6f967c733fdb71faf30f26c44"
+  },
+  "x86_64-stacks.tar.gz": {
+    "bytes": 19394560,
+    "sha256": "2308c81fdad9a01dbc501c64f3107d7b29021b4b4829355e05f3c166ab91a2d3",
+    "compressedSha256": "5979df391b2d00d50513f021bb7fb2e64ad94905dc88ae47715c01ec992e6563"
+  },
+  "aarch64-commands.jsonl.gz": {
+    "bytes": 13871364,
+    "sha256": "c92fea513a43b2ae3447a1fcbbfbbafbd215d510c0683f6eeb547cd7d473ca6a",
+    "compressedSha256": "bf8eb568ddb5ae62775986e4cd1f91df6d9f77ed99c6a74c602b40327616e16c"
+  },
+  "aarch64-stacks.tar.gz": {
+    "bytes": 17909760,
+    "sha256": "981fca6b26f2c8d945e2ff40f20941136cf647ff8878ee57381362df92c43ca4",
+    "compressedSha256": "9fbe704c751cd5c07619e671bde8a07a9df6f01630a995aae1d5c5e5128cfe4f"
+  },
+  "repair-audit-report.json.gz": {
+    "bytes": 27535,
+    "sha256": "75f7b6b0ea7ff9f269c369cd64d480c6f0944b32ca688cccf27148617895bf33",
+    "compressedSha256": "cf95f9a9e3cda3df842382395e4e9ed43408eab181066faeb0fbd85ca2eb2599"
+  },
+  "repair-audit-job.log.gz": {
+    "bytes": 212183,
+    "sha256": "09fa284c6020b877c9233c86fd711239e08d595eff6138ce9236d842c4116072",
+    "compressedSha256": "42c5835a719b7288498d4172d1250c5a382b6e75a97bd259ab34e2e7433ce8f7"
+  },
+  "repair-docs-job.log.gz": {
+    "bytes": 444169,
+    "sha256": "44067a538ac942fd1640f180678f884c741b9f67a4c55372d94804c1f3ad3744",
+    "compressedSha256": "558cf5b19cf27cbf299182d7e951fe7aeda76d69f5fb60fe46bf6b0f14610475"
+  }
+}

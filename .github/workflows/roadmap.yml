@@ -31,6 +31,26 @@ jobs:
           python3 scripts/test-borrowed-array-costs.py
           python3 scripts/test-captured-map-costs.py
           python3 scripts/test-structured-ad-costs.py
+          python3 scripts/test-returned-buffer-phases.py
+          python3 scripts/test-returned-buffer-profiles.py
+          python3 scripts/test-parser-process-memory.py
+          python3 scripts/test-parser-mapping-accounting.py
+          python3 scripts/test-parser-allocator-observation.py
+          python3 scripts/test-parser-native-allocator.py
+          python3 scripts/test-parser-heap-events.py
+          python3 scripts/test-weak-callback-profiles.py
+          python3 scripts/test-weak-callback-source.py
+          python3 scripts/test-weak-callback-timing.py
+          python3 scripts/test-weak-operation-phases.py
+          python3 scripts/test-weak-operation-timing.py
+          python3 scripts/test-weak-operation-profiles.py
+          python3 scripts/test-weak-operation-reuse.py
+          python3 scripts/test-weak-operation-census.py
+          python3 scripts/test-weak-callback-service.py
+      - name: Retained scalar Swift closure allocation reports
+        run: |
+          python3 scripts/test-swift-closure-records.py
+          python3 scripts/check-swift-closure-report.py --directory docs/measurements/swift-scalar-closures-2026-11-09
       - name: Retained structured callback timing and storage reports
         run: python3 scripts/check-structured-callback-report.py --directory docs/measurements/structured-array-callbacks-2026-11-08
       - name: Exact-source production log audit controls

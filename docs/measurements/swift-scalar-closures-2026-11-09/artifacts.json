@@ -1,0 +1,33 @@
+{
+  "run": 42580332788,
+  "source": "96e2bf43aa2f500e17c747cb87cadd0177d683b1",
+  "artifacts": [
+    {
+      "host": "amd",
+      "artifact": 13656972283,
+      "sha256": "8194b63a276b25ce69e3632589f742cbdb8f192d914a3cd94ba96f447c424f5b",
+      "bytes": 3196423,
+      "job": 129037264818,
+      "attempt": 1,
+      "profiles": true
+    },
+    {
+      "host": "arm",
+      "artifact": 13657636125,
+      "sha256": "0c858cbfad4781daf6e607bdc9d7c3d5737a60e3ae5d6a7974f05642a00089ba",
+      "bytes": 3265826,
+      "job": 129039789077,
+      "attempt": 2,
+      "profiles": true
+    },
+    {
+      "host": "arm-first",
+      "artifact": 13657485583,
+      "sha256": "89048dfd029a0ec92a557abae711e3fff2a3109d78ffff78c15d194f0fd59322",
+      "bytes": 56060,
+      "job": 129037264981,
+      "attempt": 1,
+      "profiles": false
+    }
+  ]
+}

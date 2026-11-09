@@ -1,0 +1,1928 @@
+{
+  "amd": {
+    "source": "82379175139e88f8eba51273dd27e9e4c9655dda",
+    "observations": [
+      {
+        "case": "small",
+        "level": 1,
+        "command": 17,
+        "result": {
+          "allocations": 98,
+          "reusedAddresses": 30,
+          "baselineChargedBytes": 80,
+          "peakRequestedBytes": 1398,
+          "peakChargedBytes": 1744,
+          "regionBlocks": 2,
+          "regionRequestedBytes": 768,
+          "regionChargedBytes": 768,
+          "regionNodeBytes": 616,
+          "regionUnusedBytes": 104,
+          "resizes": [
+            {
+              "old": 140506759692288,
+              "before": 64,
+              "after": 128,
+              "fresh": 140506759823360,
+              "requestedAtCopy": 275,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 140506759823360,
+              "before": 128,
+              "after": 256,
+              "fresh": 140506759888896,
+              "requestedAtCopy": 552,
+              "chargedAtCopy": 640
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "small",
+        "level": 2,
+        "command": 18,
+        "result": {
+          "allocations": 98,
+          "reusedAddresses": 30,
+          "baselineChargedBytes": 80,
+          "peakRequestedBytes": 1398,
+          "peakChargedBytes": 1744,
+          "regionBlocks": 2,
+          "regionRequestedBytes": 768,
+          "regionChargedBytes": 768,
+          "regionNodeBytes": 616,
+          "regionUnusedBytes": 104,
+          "resizes": [
+            {
+              "old": 139615826608128,
+              "before": 64,
+              "after": 128,
+              "fresh": 139615826739200,
+              "requestedAtCopy": 275,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 139615826739200,
+              "before": 128,
+              "after": 256,
+              "fresh": 139615826804736,
+              "requestedAtCopy": 552,
+              "chargedAtCopy": 640
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "medium",
+        "level": 1,
+        "command": 29,
+        "result": {
+          "allocations": 1546,
+          "reusedAddresses": 510,
+          "baselineChargedBytes": 1280,
+          "peakRequestedBytes": 21591,
+          "peakChargedBytes": 28624,
+          "regionBlocks": 6,
+          "regionRequestedBytes": 12032,
+          "regionChargedBytes": 12032,
+          "regionNodeBytes": 10216,
+          "regionUnusedBytes": 1672,
+          "resizes": [
+            {
+              "old": 139954896240640,
+              "before": 64,
+              "after": 128,
+              "fresh": 139954896371712,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 139954896371712,
+              "before": 128,
+              "after": 256,
+              "fresh": 139954896437248,
+              "requestedAtCopy": 549,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 139954896437248,
+              "before": 256,
+              "after": 512,
+              "fresh": 139954896502784,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 139954896502784,
+              "before": 512,
+              "after": 1024,
+              "fresh": 139954896568320,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 139954896568320,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 139954896633856,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 139954896633856,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 139954896699392,
+              "requestedAtCopy": 8768,
+              "chargedAtCopy": 10240
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "medium",
+        "level": 2,
+        "command": 30,
+        "result": {
+          "allocations": 1546,
+          "reusedAddresses": 510,
+          "baselineChargedBytes": 1280,
+          "peakRequestedBytes": 21591,
+          "peakChargedBytes": 28624,
+          "regionBlocks": 6,
+          "regionRequestedBytes": 12032,
+          "regionChargedBytes": 12032,
+          "regionNodeBytes": 10216,
+          "regionUnusedBytes": 1672,
+          "resizes": [
+            {
+              "old": 140013593427968,
+              "before": 64,
+              "after": 128,
+              "fresh": 140013593559040,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 140013593559040,
+              "before": 128,
+              "after": 256,
+              "fresh": 140013593624576,
+              "requestedAtCopy": 549,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 140013593624576,
+              "before": 256,
+              "after": 512,
+              "fresh": 140013593690112,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 140013593690112,
+              "before": 512,
+              "after": 1024,
+              "fresh": 140013593755648,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 140013593755648,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 140013593821184,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 140013593821184,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 140013593886720,
+              "requestedAtCopy": 8768,
+              "chargedAtCopy": 10240
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "large",
+        "level": 1,
+        "command": 41,
+        "result": {
+          "allocations": 24628,
+          "reusedAddresses": 8192,
+          "baselineChargedBytes": 18319,
+          "peakRequestedBytes": 345958,
+          "peakChargedBytes": 458704,
+          "regionBlocks": 44,
+          "regionRequestedBytes": 167680,
+          "regionChargedBytes": 167680,
+          "regionNodeBytes": 163816,
+          "regionUnusedBytes": 2808,
+          "resizes": [
+            {
+              "old": 140566119579648,
+              "before": 64,
+              "after": 128,
+              "fresh": 140566119710720,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 140566119710720,
+              "before": 128,
+              "after": 256,
+              "fresh": 140566119776256,
+              "requestedAtCopy": 547,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 140566119776256,
+              "before": 256,
+              "after": 512,
+              "fresh": 140566119841792,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 140566119841792,
+              "before": 512,
+              "after": 1024,
+              "fresh": 140566119907328,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 140566119907328,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 140566119972864,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 140566119972864,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 140566120038400,
+              "requestedAtCopy": 8766,
+              "chargedAtCopy": 10240
+            },
+            {
+              "old": 140566120038400,
+              "before": 4096,
+              "after": 8192,
+              "fresh": 140566120103936,
+              "requestedAtCopy": 17528,
+              "chargedAtCopy": 20480
+            },
+            {
+              "old": 140566120103936,
+              "before": 8192,
+              "after": 16384,
+              "fresh": 140566120169472,
+              "requestedAtCopy": 35056,
+              "chargedAtCopy": 40960
+            },
+            {
+              "old": 140566120169472,
+              "before": 16384,
+              "after": 32768,
+              "fresh": 140566120235008,
+              "requestedAtCopy": 70115,
+              "chargedAtCopy": 81920
+            },
+            {
+              "old": 140566120235008,
+              "before": 32768,
+              "after": 65536,
+              "fresh": 140566120300544,
+              "requestedAtCopy": 140232,
+              "chargedAtCopy": 163840
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "large",
+        "level": 2,
+        "command": 42,
+        "result": {
+          "allocations": 24628,
+          "reusedAddresses": 8192,
+          "baselineChargedBytes": 18319,
+          "peakRequestedBytes": 345958,
+          "peakChargedBytes": 458704,
+          "regionBlocks": 44,
+          "regionRequestedBytes": 167680,
+          "regionChargedBytes": 167680,
+          "regionNodeBytes": 163816,
+          "regionUnusedBytes": 2808,
+          "resizes": [
+            {
+              "old": 140271729770496,
+              "before": 64,
+              "after": 128,
+              "fresh": 140271729901568,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 140271729901568,
+              "before": 128,
+              "after": 256,
+              "fresh": 140271729967104,
+              "requestedAtCopy": 547,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 140271729967104,
+              "before": 256,
+              "after": 512,
+              "fresh": 140271730032640,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 140271730032640,
+              "before": 512,
+              "after": 1024,
+              "fresh": 140271730098176,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 140271730098176,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 140271730163712,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 140271730163712,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 140271730229248,
+              "requestedAtCopy": 8766,
+              "chargedAtCopy": 10240
+            },
+            {
+              "old": 140271730229248,
+              "before": 4096,
+              "after": 8192,
+              "fresh": 140271730294784,
+              "requestedAtCopy": 17528,
+              "chargedAtCopy": 20480
+            },
+            {
+              "old": 140271730294784,
+              "before": 8192,
+              "after": 16384,
+              "fresh": 140271730360320,
+              "requestedAtCopy": 35056,
+              "chargedAtCopy": 40960
+            },
+            {
+              "old": 140271730360320,
+              "before": 16384,
+              "after": 32768,
+              "fresh": 140271730425856,
+              "requestedAtCopy": 70115,
+              "chargedAtCopy": 81920
+            },
+            {
+              "old": 140271730425856,
+              "before": 32768,
+              "after": 65536,
+              "fresh": 140271730491392,
+              "requestedAtCopy": 140232,
+              "chargedAtCopy": 163840
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "left",
+        "level": 1,
+        "command": 53,
+        "result": {
+          "allocations": 390,
+          "reusedAddresses": 126,
+          "baselineChargedBytes": 320,
+          "peakRequestedBytes": 5374,
+          "peakChargedBytes": 7120,
+          "regionBlocks": 4,
+          "regionRequestedBytes": 3840,
+          "regionChargedBytes": 3840,
+          "regionNodeBytes": 2536,
+          "regionUnusedBytes": 1208,
+          "resizes": [
+            {
+              "old": 139573290074112,
+              "before": 64,
+              "after": 128,
+              "fresh": 139573290205184,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 139573290205184,
+              "before": 128,
+              "after": 256,
+              "fresh": 139573290270720,
+              "requestedAtCopy": 544,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 139573290270720,
+              "before": 256,
+              "after": 512,
+              "fresh": 139573290336256,
+              "requestedAtCopy": 1088,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 139573290336256,
+              "before": 512,
+              "after": 1024,
+              "fresh": 139573290401792,
+              "requestedAtCopy": 2177,
+              "chargedAtCopy": 2560
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "left",
+        "level": 2,
+        "command": 54,
+        "result": {
+          "allocations": 390,
+          "reusedAddresses": 126,
+          "baselineChargedBytes": 320,
+          "peakRequestedBytes": 5374,
+          "peakChargedBytes": 7120,
+          "regionBlocks": 4,
+          "regionRequestedBytes": 3840,
+          "regionChargedBytes": 3840,
+          "regionNodeBytes": 2536,
+          "regionUnusedBytes": 1208,
+          "resizes": [
+            {
+              "old": 139761943576576,
+              "before": 64,
+              "after": 128,
+              "fresh": 139761943707648,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 139761943707648,
+              "before": 128,
+              "after": 256,
+              "fresh": 139761943773184,
+              "requestedAtCopy": 544,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 139761943773184,
+              "before": 256,
+              "after": 512,
+              "fresh": 139761943838720,
+              "requestedAtCopy": 1088,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 139761943838720,
+              "before": 512,
+              "after": 1024,
+              "fresh": 139761943904256,
+              "requestedAtCopy": 2177,
+              "chargedAtCopy": 2560
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      }
+    ],
+    "faults": [
+      {
+        "case": "small",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 19,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "small",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 20,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "small",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 21,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "small",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 22,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "small",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 23,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "small",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 24,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 31,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 32,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 33,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 34,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "medium",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 35,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "medium",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 36,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "large",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 43,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "large",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 44,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "large",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 45,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "large",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 46,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "large",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 47,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "large",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 48,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "left",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 55,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "left",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 56,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "left",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 57,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "left",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 58,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "left",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 59,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "left",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 60,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      }
+    ],
+    "reconstructedSource": "wrong-slot-size-O2.c matches original native manifest",
+    "phaseTraffic": {
+      "small-O1": [
+        {
+          "phase": 0,
+          "allocations": 65,
+          "requestedTrafficBytes": 1510,
+          "chargedTrafficBytes": 1936,
+          "releases": 3
+        },
+        {
+          "phase": 1,
+          "allocations": 33,
+          "requestedTrafficBytes": 1384,
+          "chargedTrafficBytes": 1504,
+          "releases": 93
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 2
+        }
+      ],
+      "small-O2": [
+        {
+          "phase": 0,
+          "allocations": 65,
+          "requestedTrafficBytes": 1510,
+          "chargedTrafficBytes": 1936,
+          "releases": 3
+        },
+        {
+          "phase": 1,
+          "allocations": 33,
+          "requestedTrafficBytes": 1384,
+          "chargedTrafficBytes": 1504,
+          "releases": 93
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 2
+        }
+      ],
+      "medium-O1": [
+        {
+          "phase": 0,
+          "allocations": 1029,
+          "requestedTrafficBytes": 25623,
+          "chargedTrafficBytes": 32656,
+          "releases": 7
+        },
+        {
+          "phase": 1,
+          "allocations": 517,
+          "requestedTrafficBytes": 22248,
+          "chargedTrafficBytes": 24288,
+          "releases": 1533
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 6
+        }
+      ],
+      "medium-O2": [
+        {
+          "phase": 0,
+          "allocations": 1029,
+          "requestedTrafficBytes": 25623,
+          "chargedTrafficBytes": 32656,
+          "releases": 7
+        },
+        {
+          "phase": 1,
+          "allocations": 517,
+          "requestedTrafficBytes": 22248,
+          "chargedTrafficBytes": 24288,
+          "releases": 1533
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 6
+        }
+      ],
+      "large-O1": [
+        {
+          "phase": 0,
+          "allocations": 16393,
+          "requestedTrafficBytes": 411430,
+          "chargedTrafficBytes": 524176,
+          "releases": 11
+        },
+        {
+          "phase": 1,
+          "allocations": 8235,
+          "requestedTrafficBytes": 331496,
+          "chargedTrafficBytes": 364256,
+          "releases": 24573
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 44
+        }
+      ],
+      "large-O2": [
+        {
+          "phase": 0,
+          "allocations": 16393,
+          "requestedTrafficBytes": 411430,
+          "chargedTrafficBytes": 524176,
+          "releases": 11
+        },
+        {
+          "phase": 1,
+          "allocations": 8235,
+          "requestedTrafficBytes": 331496,
+          "chargedTrafficBytes": 364256,
+          "releases": 24573
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 44
+        }
+      ],
+      "left-O1": [
+        {
+          "phase": 0,
+          "allocations": 259,
+          "requestedTrafficBytes": 6334,
+          "chargedTrafficBytes": 8080,
+          "releases": 5
+        },
+        {
+          "phase": 1,
+          "allocations": 131,
+          "requestedTrafficBytes": 6376,
+          "chargedTrafficBytes": 6880,
+          "releases": 381
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 4
+        }
+      ],
+      "left-O2": [
+        {
+          "phase": 0,
+          "allocations": 259,
+          "requestedTrafficBytes": 6334,
+          "chargedTrafficBytes": 8080,
+          "releases": 5
+        },
+        {
+          "phase": 1,
+          "allocations": 131,
+          "requestedTrafficBytes": 6376,
+          "chargedTrafficBytes": 6880,
+          "releases": 381
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 4
+        }
+      ]
+    },
+    "checkedCommandCount": 61
+  },
+  "arm": {
+    "source": "82379175139e88f8eba51273dd27e9e4c9655dda",
+    "observations": [
+      {
+        "case": "small",
+        "level": 1,
+        "command": 17,
+        "result": {
+          "allocations": 98,
+          "reusedAddresses": 30,
+          "baselineChargedBytes": 80,
+          "peakRequestedBytes": 1398,
+          "peakChargedBytes": 1744,
+          "regionBlocks": 2,
+          "regionRequestedBytes": 768,
+          "regionChargedBytes": 768,
+          "regionNodeBytes": 616,
+          "regionUnusedBytes": 104,
+          "resizes": [
+            {
+              "old": 281141841690624,
+              "before": 64,
+              "after": 128,
+              "fresh": 281141841821696,
+              "requestedAtCopy": 275,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 281141841821696,
+              "before": 128,
+              "after": 256,
+              "fresh": 281141841887232,
+              "requestedAtCopy": 552,
+              "chargedAtCopy": 640
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "small",
+        "level": 2,
+        "command": 18,
+        "result": {
+          "allocations": 98,
+          "reusedAddresses": 30,
+          "baselineChargedBytes": 80,
+          "peakRequestedBytes": 1398,
+          "peakChargedBytes": 1744,
+          "regionBlocks": 2,
+          "regionRequestedBytes": 768,
+          "regionChargedBytes": 768,
+          "regionNodeBytes": 616,
+          "regionUnusedBytes": 104,
+          "resizes": [
+            {
+              "old": 280400917889024,
+              "before": 64,
+              "after": 128,
+              "fresh": 280400918020096,
+              "requestedAtCopy": 275,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280400918020096,
+              "before": 128,
+              "after": 256,
+              "fresh": 280400918085632,
+              "requestedAtCopy": 552,
+              "chargedAtCopy": 640
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "medium",
+        "level": 1,
+        "command": 29,
+        "result": {
+          "allocations": 1546,
+          "reusedAddresses": 510,
+          "baselineChargedBytes": 1280,
+          "peakRequestedBytes": 21591,
+          "peakChargedBytes": 28624,
+          "regionBlocks": 6,
+          "regionRequestedBytes": 12032,
+          "regionChargedBytes": 12032,
+          "regionNodeBytes": 10216,
+          "regionUnusedBytes": 1672,
+          "resizes": [
+            {
+              "old": 280315115208704,
+              "before": 64,
+              "after": 128,
+              "fresh": 280315115339776,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280315115339776,
+              "before": 128,
+              "after": 256,
+              "fresh": 280315115405312,
+              "requestedAtCopy": 549,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 280315115405312,
+              "before": 256,
+              "after": 512,
+              "fresh": 280315115470848,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 280315115470848,
+              "before": 512,
+              "after": 1024,
+              "fresh": 280315115536384,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 280315115536384,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 280315115601920,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 280315115601920,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 280315115667456,
+              "requestedAtCopy": 8768,
+              "chargedAtCopy": 10240
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "medium",
+        "level": 2,
+        "command": 30,
+        "result": {
+          "allocations": 1546,
+          "reusedAddresses": 510,
+          "baselineChargedBytes": 1280,
+          "peakRequestedBytes": 21591,
+          "peakChargedBytes": 28624,
+          "regionBlocks": 6,
+          "regionRequestedBytes": 12032,
+          "regionChargedBytes": 12032,
+          "regionNodeBytes": 10216,
+          "regionUnusedBytes": 1672,
+          "resizes": [
+            {
+              "old": 280902651346944,
+              "before": 64,
+              "after": 128,
+              "fresh": 280902651478016,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280902651478016,
+              "before": 128,
+              "after": 256,
+              "fresh": 280902651543552,
+              "requestedAtCopy": 549,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 280902651543552,
+              "before": 256,
+              "after": 512,
+              "fresh": 280902651609088,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 280902651609088,
+              "before": 512,
+              "after": 1024,
+              "fresh": 280902651674624,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 280902651674624,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 280902651740160,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 280902651740160,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 280902651805696,
+              "requestedAtCopy": 8768,
+              "chargedAtCopy": 10240
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "large",
+        "level": 1,
+        "command": 41,
+        "result": {
+          "allocations": 24628,
+          "reusedAddresses": 8192,
+          "baselineChargedBytes": 18319,
+          "peakRequestedBytes": 345958,
+          "peakChargedBytes": 458704,
+          "regionBlocks": 44,
+          "regionRequestedBytes": 167680,
+          "regionChargedBytes": 167680,
+          "regionNodeBytes": 163816,
+          "regionUnusedBytes": 2808,
+          "resizes": [
+            {
+              "old": 280954117029888,
+              "before": 64,
+              "after": 128,
+              "fresh": 280954117160960,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280954117160960,
+              "before": 128,
+              "after": 256,
+              "fresh": 280954117226496,
+              "requestedAtCopy": 547,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 280954117226496,
+              "before": 256,
+              "after": 512,
+              "fresh": 280954117292032,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 280954117292032,
+              "before": 512,
+              "after": 1024,
+              "fresh": 280954117357568,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 280954117357568,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 280954117423104,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 280954117423104,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 280954117488640,
+              "requestedAtCopy": 8766,
+              "chargedAtCopy": 10240
+            },
+            {
+              "old": 280954117488640,
+              "before": 4096,
+              "after": 8192,
+              "fresh": 280954117554176,
+              "requestedAtCopy": 17528,
+              "chargedAtCopy": 20480
+            },
+            {
+              "old": 280954117554176,
+              "before": 8192,
+              "after": 16384,
+              "fresh": 280954117619712,
+              "requestedAtCopy": 35056,
+              "chargedAtCopy": 40960
+            },
+            {
+              "old": 280954117619712,
+              "before": 16384,
+              "after": 32768,
+              "fresh": 280954117685248,
+              "requestedAtCopy": 70115,
+              "chargedAtCopy": 81920
+            },
+            {
+              "old": 280954117685248,
+              "before": 32768,
+              "after": 65536,
+              "fresh": 280954117750784,
+              "requestedAtCopy": 140232,
+              "chargedAtCopy": 163840
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "large",
+        "level": 2,
+        "command": 42,
+        "result": {
+          "allocations": 24628,
+          "reusedAddresses": 8192,
+          "baselineChargedBytes": 18319,
+          "peakRequestedBytes": 345958,
+          "peakChargedBytes": 458704,
+          "regionBlocks": 44,
+          "regionRequestedBytes": 167680,
+          "regionChargedBytes": 167680,
+          "regionNodeBytes": 163816,
+          "regionUnusedBytes": 2808,
+          "resizes": [
+            {
+              "old": 280341160656896,
+              "before": 64,
+              "after": 128,
+              "fresh": 280341160787968,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280341160787968,
+              "before": 128,
+              "after": 256,
+              "fresh": 280341160853504,
+              "requestedAtCopy": 547,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 280341160853504,
+              "before": 256,
+              "after": 512,
+              "fresh": 280341160919040,
+              "requestedAtCopy": 1096,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 280341160919040,
+              "before": 512,
+              "after": 1024,
+              "fresh": 280341160984576,
+              "requestedAtCopy": 2192,
+              "chargedAtCopy": 2560
+            },
+            {
+              "old": 280341160984576,
+              "before": 1024,
+              "after": 2048,
+              "fresh": 280341161050112,
+              "requestedAtCopy": 4384,
+              "chargedAtCopy": 5120
+            },
+            {
+              "old": 280341161050112,
+              "before": 2048,
+              "after": 4096,
+              "fresh": 280341161115648,
+              "requestedAtCopy": 8766,
+              "chargedAtCopy": 10240
+            },
+            {
+              "old": 280341161115648,
+              "before": 4096,
+              "after": 8192,
+              "fresh": 280341161181184,
+              "requestedAtCopy": 17528,
+              "chargedAtCopy": 20480
+            },
+            {
+              "old": 280341161181184,
+              "before": 8192,
+              "after": 16384,
+              "fresh": 280341161246720,
+              "requestedAtCopy": 35056,
+              "chargedAtCopy": 40960
+            },
+            {
+              "old": 280341161246720,
+              "before": 16384,
+              "after": 32768,
+              "fresh": 280341161312256,
+              "requestedAtCopy": 70115,
+              "chargedAtCopy": 81920
+            },
+            {
+              "old": 280341161312256,
+              "before": 32768,
+              "after": 65536,
+              "fresh": 280341161377792,
+              "requestedAtCopy": 140232,
+              "chargedAtCopy": 163840
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "left",
+        "level": 1,
+        "command": 53,
+        "result": {
+          "allocations": 390,
+          "reusedAddresses": 126,
+          "baselineChargedBytes": 320,
+          "peakRequestedBytes": 5374,
+          "peakChargedBytes": 7120,
+          "regionBlocks": 4,
+          "regionRequestedBytes": 3840,
+          "regionChargedBytes": 3840,
+          "regionNodeBytes": 2536,
+          "regionUnusedBytes": 1208,
+          "resizes": [
+            {
+              "old": 281183008587776,
+              "before": 64,
+              "after": 128,
+              "fresh": 281183008718848,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 281183008718848,
+              "before": 128,
+              "after": 256,
+              "fresh": 281183008784384,
+              "requestedAtCopy": 544,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 281183008784384,
+              "before": 256,
+              "after": 512,
+              "fresh": 281183008849920,
+              "requestedAtCopy": 1088,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 281183008849920,
+              "before": 512,
+              "after": 1024,
+              "fresh": 281183008915456,
+              "requestedAtCopy": 2177,
+              "chargedAtCopy": 2560
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      },
+      {
+        "case": "left",
+        "level": 2,
+        "command": 54,
+        "result": {
+          "allocations": 390,
+          "reusedAddresses": 126,
+          "baselineChargedBytes": 320,
+          "peakRequestedBytes": 5374,
+          "peakChargedBytes": 7120,
+          "regionBlocks": 4,
+          "regionRequestedBytes": 3840,
+          "regionChargedBytes": 3840,
+          "regionNodeBytes": 2536,
+          "regionUnusedBytes": 1208,
+          "resizes": [
+            {
+              "old": 280514599059456,
+              "before": 64,
+              "after": 128,
+              "fresh": 280514599190528,
+              "requestedAtCopy": 272,
+              "chargedAtCopy": 320
+            },
+            {
+              "old": 280514599190528,
+              "before": 128,
+              "after": 256,
+              "fresh": 280514599256064,
+              "requestedAtCopy": 544,
+              "chargedAtCopy": 640
+            },
+            {
+              "old": 280514599256064,
+              "before": 256,
+              "after": 512,
+              "fresh": 280514599321600,
+              "requestedAtCopy": 1088,
+              "chargedAtCopy": 1280
+            },
+            {
+              "old": 280514599321600,
+              "before": 512,
+              "after": 1024,
+              "fresh": 280514599387136,
+              "requestedAtCopy": 2177,
+              "chargedAtCopy": 2560
+            }
+          ],
+          "finalLiveAllocations": 0,
+          "scope": "Parser allocations above the live input/runtime baseline; charged bytes are size-class slots or large requests, not allocator-retained pages, RSS or reserved address space"
+        }
+      }
+    ],
+    "faults": [
+      {
+        "case": "small",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 19,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "small",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 20,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "small",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 21,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "small",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 22,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "small",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 23,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "small",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 24,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 31,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 32,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 33,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "medium",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 34,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "medium",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 35,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "medium",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 36,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "large",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 43,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "large",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 44,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "large",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 45,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "large",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 46,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "large",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 47,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "large",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 48,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "left",
+        "mode": "omit-region-release",
+        "level": 1,
+        "command": 55,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "left",
+        "mode": "omit-region-release",
+        "level": 2,
+        "command": 56,
+        "diagnostic": "parser allocations remain live",
+        "readerDiagnostic": "parser allocations remain live"
+      },
+      {
+        "case": "left",
+        "mode": "omit-allocation-event",
+        "level": 1,
+        "command": 57,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "left",
+        "mode": "omit-allocation-event",
+        "level": 2,
+        "command": 58,
+        "diagnostic": "",
+        "readerDiagnostic": "resize source lacks its allocation event"
+      },
+      {
+        "case": "left",
+        "mode": "wrong-slot-size",
+        "level": 1,
+        "command": 59,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      },
+      {
+        "case": "left",
+        "mode": "wrong-slot-size",
+        "level": 2,
+        "command": 60,
+        "diagnostic": "heap live bytes disagree with allocation events",
+        "readerDiagnostic": "heap live bytes disagree with allocation events"
+      }
+    ],
+    "reconstructedSource": "wrong-slot-size-O2.c matches original native manifest",
+    "phaseTraffic": {
+      "small-O1": [
+        {
+          "phase": 0,
+          "allocations": 65,
+          "requestedTrafficBytes": 1510,
+          "chargedTrafficBytes": 1936,
+          "releases": 3
+        },
+        {
+          "phase": 1,
+          "allocations": 33,
+          "requestedTrafficBytes": 1384,
+          "chargedTrafficBytes": 1504,
+          "releases": 93
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 2
+        }
+      ],
+      "small-O2": [
+        {
+          "phase": 0,
+          "allocations": 65,
+          "requestedTrafficBytes": 1510,
+          "chargedTrafficBytes": 1936,
+          "releases": 3
+        },
+        {
+          "phase": 1,
+          "allocations": 33,
+          "requestedTrafficBytes": 1384,
+          "chargedTrafficBytes": 1504,
+          "releases": 93
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 2
+        }
+      ],
+      "medium-O1": [
+        {
+          "phase": 0,
+          "allocations": 1029,
+          "requestedTrafficBytes": 25623,
+          "chargedTrafficBytes": 32656,
+          "releases": 7
+        },
+        {
+          "phase": 1,
+          "allocations": 517,
+          "requestedTrafficBytes": 22248,
+          "chargedTrafficBytes": 24288,
+          "releases": 1533
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 6
+        }
+      ],
+      "medium-O2": [
+        {
+          "phase": 0,
+          "allocations": 1029,
+          "requestedTrafficBytes": 25623,
+          "chargedTrafficBytes": 32656,
+          "releases": 7
+        },
+        {
+          "phase": 1,
+          "allocations": 517,
+          "requestedTrafficBytes": 22248,
+          "chargedTrafficBytes": 24288,
+          "releases": 1533
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 6
+        }
+      ],
+      "large-O1": [
+        {
+          "phase": 0,
+          "allocations": 16393,
+          "requestedTrafficBytes": 411430,
+          "chargedTrafficBytes": 524176,
+          "releases": 11
+        },
+        {
+          "phase": 1,
+          "allocations": 8235,
+          "requestedTrafficBytes": 331496,
+          "chargedTrafficBytes": 364256,
+          "releases": 24573
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 44
+        }
+      ],
+      "large-O2": [
+        {
+          "phase": 0,
+          "allocations": 16393,
+          "requestedTrafficBytes": 411430,
+          "chargedTrafficBytes": 524176,
+          "releases": 11
+        },
+        {
+          "phase": 1,
+          "allocations": 8235,
+          "requestedTrafficBytes": 331496,
+          "chargedTrafficBytes": 364256,
+          "releases": 24573
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 44
+        }
+      ],
+      "left-O1": [
+        {
+          "phase": 0,
+          "allocations": 259,
+          "requestedTrafficBytes": 6334,
+          "chargedTrafficBytes": 8080,
+          "releases": 5
+        },
+        {
+          "phase": 1,
+          "allocations": 131,
+          "requestedTrafficBytes": 6376,
+          "chargedTrafficBytes": 6880,
+          "releases": 381
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 4
+        }
+      ],
+      "left-O2": [
+        {
+          "phase": 0,
+          "allocations": 259,
+          "requestedTrafficBytes": 6334,
+          "chargedTrafficBytes": 8080,
+          "releases": 5
+        },
+        {
+          "phase": 1,
+          "allocations": 131,
+          "requestedTrafficBytes": 6376,
+          "chargedTrafficBytes": 6880,
+          "releases": 381
+        },
+        {
+          "phase": 2,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 0
+        },
+        {
+          "phase": 3,
+          "allocations": 0,
+          "requestedTrafficBytes": 0,
+          "chargedTrafficBytes": 0,
+          "releases": 4
+        }
+      ]
+    },
+    "checkedCommandCount": 61
+  }
+}

@@ -1,0 +1,62 @@
+# Pending messages own a 16-integer payload and a weak receiving channel.
+# The receiving side independently checks the values actually sent.
+Pending = (I64, WeakChannel[Array[I64]], Array[I64])
+Counts = (I64, I64, I64, I64, I64)
+ServiceResult = {
+    population: I64, mode: I64, calls: I64, cancelled: I64, expired: I64,
+    errors: I64, sent: I64, received: I64, sum: I64, received_sum: I64,
+}
+receiving : I64 -> Channel[Array[I64]] ! {Async}
+receiving = channel.make
+pending : I64 -> Channel[Array[I64]] -> List[Pending] ! {Async}
+pending = fn population -> fn owner ->
+    range 0 population | map (fn index ->
+        (index, channel.downgrade owner, array.generate 16 (add index)))
+expired-pending : I64 -> List[Pending] ! {Async}
+expired-pending = fn population -> pending population (receiving population)
+
+# A callback error carries the checksum of the payload already delivered.
+deliver : Bool -> (Channel[Array[I64]], Array[I64]) -> I64 ! {Async, Error[I64]}
+deliver = fn reject -> fn (owner, payload) ->
+    let checksum = array.fold add 0 payload
+    in let sent = channel.send owner payload
+    in reject | match
+        True -> fail checksum
+        False -> checksum
+
+dispatch : I64 -> I64 -> List[Pending] -> Counts ! {Async}
+dispatch = fn mode -> fn population -> fold-until
+    (fn (calls, cancelled, expired, errors, checksum) -> fn (index, weak, payload) ->
+        and (mode == 1) (index % 4 == 0) | match
+            True -> Again (calls, cancelled + 1, expired, errors, checksum)
+            False -> channel.upgrade weak | match
+                None -> Again (calls, cancelled, expired + 1, errors, checksum)
+                Some owner ->
+                    (owner, payload) | attempt (deliver (and (mode == 3) (index == population / 2))) | match
+                        Ok value -> Again (calls + 1, cancelled, expired, errors, checksum + value)
+                        Err value -> Stop (calls + 1, cancelled, expired, errors + 1, checksum + value))
+    (0, 0, 0, 0, 0)
+
+drain : Channel[Array[I64]] -> (I64, I64) ! {Async}
+drain = fn owner ->
+    let closed = channel.close owner
+    in (0, 0) | loop (fn (count, checksum) -> channel.recv owner | match
+        None -> Stop (count, checksum)
+        Some payload -> Again (count + 1, checksum + array.fold add 0 payload))
+
+result : I64 -> I64 -> Counts -> (I64, I64) -> ServiceResult
+result = fn population -> fn mode -> fn (calls, cancelled, expired, errors, checksum) -> fn (received, received-sum) ->
+    { population = population, mode = mode, calls = calls, cancelled = cancelled,
+      expired = expired, errors = errors, sent = calls, received = received,
+      sum = checksum, received_sum = received-sum }
+live-service : I64 -> I64 -> Channel[Array[I64]] -> ServiceResult ! {Async}
+live-service = fn population -> fn mode -> fn owner ->
+    let counts = pending population owner | dispatch mode population
+    in result population mode counts (drain owner)
+export service : (I64, I64) -> ServiceResult ! {Async}
+service = fn (population, mode) -> mode == 2 | match
+    True -> result population mode (expired-pending population | dispatch mode population) (0, 0)
+    False -> live-service population mode (receiving population)
+
+main = [(64, 0), (64, 1), (64, 2), (64, 3), (4096, 0), (4096, 1), (4096, 2), (4096, 3)]
+    | each (service | json.write | print)

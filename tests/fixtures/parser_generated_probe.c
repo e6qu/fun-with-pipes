@@ -31,7 +31,7 @@ static int parser_case_inner(const char *text, int64_t expected, int parse_error
     handler.cleanup = fwp_cleanups; fwp_handlers = &handler;
     parser_allocations = parser_nodes = 0; parser_failure = failure;
     if (!setjmp(handler.jb)) {
-        V result = @entry@(input);
+        V result = @call@;
         if (failure || parse_error || (int64_t)result != expected) return 244;
         if (!parser_nodes || !parser_allocations) return 245;
     } else {

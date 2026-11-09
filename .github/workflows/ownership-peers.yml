@@ -1,0 +1,306 @@
+name: Ownership peer checks and measurements
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        description: Explicit peer experiment selected by the dispatcher
+        required: true
+        type: string
+
+jobs:
+  swift_peers:
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        session: ${{ fromJSON(inputs.suite == 'swift-peers' && '[1,2]' || '[1]') }}
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    container: swift:6.4.2-noble
+    timeout-minutes: 40
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - name: Native build and measurement dependencies
+        run: apt-get update && apt-get install -y git gcc python3 binutils curl
+      - name: Compiler and timing dependencies
+        run: apt-get install -y g++ libssl-dev pkg-config time llvm
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        env:
+          # GitHub supplies /github/home to the root container; no sudo was used.
+          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Preserve container identity and native toolchain
+        run: |
+          swiftc --version
+          uname -m
+          cat /etc/os-release
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Build the current compiler
+        id: compiler
+        if: contains(fromJSON('["weak-callback-ownership","weak-callback-service","weak-operation-census","weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir swift-setup
+          cargo fetch --locked 2>&1 | tee swift-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee swift-setup/build.log
+      - name: Returned buffer factories, surviving aliases and release
+        if: contains(fromJSON('["returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
+        run: >-
+          python3 scripts/check-returned-buffer-peers.py --cc gcc --rustc rustc --swiftc swiftc
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output returned-buffer-checks
+      - name: Returned buffer phase callers and backward-clock controls
+        if: ${{ !cancelled() && inputs.suite == 'returned-buffer-phases' }}
+        run: |
+          python3 scripts/test-returned-buffer-phases.py
+          python3 scripts/check-measurement-clocks.py --cc gcc
+          python3 scripts/check-returned-buffer-phases.py --cc gcc --ar ar --rustc rustc --swiftc swiftc \
+            --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
+            --target "${{ matrix.arch }}-unknown-linux-gnu" --output returned-buffer-phases
+      - name: Parser evidence rejection controls
+        if: inputs.suite == 'ownership-peer-checks'
+        run: python3 scripts/test-parser-workspace-evidence.py
+      - name: Buffer peer results and argument controls
+        if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
+        run: >-
+          python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc
+          --languages c rs swift fwp --compiler target/debug/fwp --swiftc swiftc
+          --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
+          --output ownership-peer-checks
+      - name: Queued callback delivery, cancellation, expiration and errors
+        if: ${{ !cancelled() && inputs.suite == 'weak-callback-service' }}
+        run: |
+          python3 scripts/test-weak-callback-service.py
+          python3 scripts/check-weak-callback-service.py --cc gcc --rustc rustc --swiftc swiftc \
+            --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
+            --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-callback-service
+      - name: Callback service physical ownership and missing-release control
+        if: ${{ !cancelled() && inputs.suite == 'weak-callback-ownership' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_ARC_ARTIFACTS: weak-callback-service-ownership
+        run: >-
+          python3 scripts/run-native-tests.py --targets channel_queue_ownership
+          --idle-timeout 600 --logs weak-callback-service-logs
+      - name: Managed weak-operation allocations and result-cell attribution
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-census' }}
+        run: |
+          python3 scripts/test-weak-operation-census.py
+          python3 scripts/check-weak-operation-census.py --cc gcc --compiler target/debug/fwp \
+            --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --c-arch "${{ matrix.c_arch }}" \
+            --output weak-operation-census
+      - name: Weak phase result-reader controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-phases' }}
+        run: python3 scripts/test-weak-operation-phases.py
+      - name: Separate weak-operation phases and native fault controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-phases' }}
+        run: >-
+          python3 scripts/check-weak-operation-phases.py --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-operation-phases
+      - name: Original Swift weak lifetime diagnosis
+        if: ${{ !cancelled() && contains(fromJSON('["weak-operation-phases","weak-swift-diagnosis"]'), inputs.suite) }}
+        run: >-
+          python3 scripts/diagnose-swift-weak-lifetimes.py --swiftc swiftc
+          --source "$GITHUB_SHA" --original c9bf8dfac232d6441044622c04ec1d59d5fa111f
+          --arch "${{ matrix.arch }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
+          --output weak-swift-diagnosis
+      - name: Weak target address reuse and replacement-link controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-reuse' }}
+        run: |
+          python3 scripts/test-weak-operation-reuse.py
+          python3 scripts/check-weak-operation-reuse.py --cc gcc --ar ar --rustc rustc --swiftc swiftc \
+            --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --c-arch "${{ matrix.c_arch }}" \
+            --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
+            --output weak-operation-reuse
+      - name: Weak registration cancellation and callback-error cleanup
+        if: ${{ !cancelled() && contains(fromJSON('["weak-operation-phases","ownership-peer-checks","weak-peer-checks","weak-swift-diagnosis"]'), inputs.suite) }}
+        run: >-
+          python3 scripts/check-weak-registration-peers.py --cc gcc --rustc rustc --swiftc swiftc
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-peer-checks
+      - name: Parser growth, cleanup and native frame evidence
+        if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
+        run: >-
+          python3 scripts/check-parser-peer-storage.py --cc gcc --rustc rustc
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --objcopy objcopy --output parser-peer-checks
+      - name: Measurement schedule and Swift overflow controls
+        if: contains(fromJSON('["swift-peers","callable-phases","swift-allocations","swift-closure-allocations"]'), inputs.suite)
+        run: |
+          python3 scripts/test-swift-peer-records.py
+          python3 scripts/test-callable-phase-records.py
+          python3 scripts/check-measurement-clocks.py --cc gcc
+          python3 scripts/check-swift-arithmetic.py --swiftc swiftc --target "${{ matrix.arch }}-unknown-linux-gnu" --output swift-arithmetic
+      - name: Allocation profiler
+        if: contains(fromJSON('["weak-callback-profiles","weak-operation-profiles","swift-allocations","swift-closure-allocations","returned-buffer-profiles"]'), inputs.suite)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p swift-setup
+          apt-get install -y heaptrack libunwind-dev strace make gh
+          curl --fail --location --retry 3 --retry-delay 3 --retry-max-time 120 \
+            --connect-timeout 20 --max-time 60 --output swift-setup/libunwind-1.8.3.tar.gz \
+            https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
+          echo 'be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b  swift-setup/libunwind-1.8.3.tar.gz' | sha256sum --check
+          tar -xf swift-setup/libunwind-1.8.3.tar.gz -C swift-setup
+          cd swift-setup/libunwind-1.8.3
+          ./configure --prefix="$GITHUB_WORKSPACE/swift-setup/unwinder" --disable-static --disable-tests --disable-documentation \
+            --disable-coredump --disable-ptrace --disable-setjmp \
+            2>&1 | tee ../unwind-configure.log
+          make -j2 2>&1 | tee ../unwind-build.log
+          make install 2>&1 | tee ../unwind-install.log
+          cd "$GITHUB_WORKSPACE"
+          rm -rf swift-setup/libunwind-1.8.3
+      - name: Complete first buffer profile archive audit
+        if: inputs.suite == 'returned-buffer-profiles'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/audit-first-buffer-profiles.py --arch "${{ matrix.arch }}"
+          --gh gh --output returned-buffer-profiles-first-audit
+      - name: Native service allocations and actual missing releases
+        if: ${{ !cancelled() && inputs.suite == 'weak-callback-profiles' }}
+        run: |
+          python3 scripts/test-weak-callback-profiles.py
+          python3 scripts/profile-weak-callback-service.py collect --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
+            --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace \
+            --unwind-library-directory swift-setup/unwinder/lib --output weak-callback-profiles
+      - name: Native weak storage and staged release controls
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-profiles' }}
+        run: |
+          python3 scripts/test-weak-operation-profiles.py
+          python3 scripts/profile-weak-operations.py collect --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --cc gcc --ar ar --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
+            --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace \
+            --unwind-library-directory swift-setup/unwinder/lib --output weak-operation-profiles
+      - name: Native returned buffer allocation and release controls
+        if: ${{ !cancelled() && inputs.suite == 'returned-buffer-profiles' }}
+        run: |
+          python3 scripts/test-returned-buffer-profiles.py
+          python3 scripts/profile-returned-buffers.py --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --cc gcc --ar ar --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
+            --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace \
+            --unwind-library-directory swift-setup/unwinder/lib --output returned-buffer-profiles
+      - name: Scalar Swift closure allocation and release controls
+        if: inputs.suite == 'swift-closure-allocations'
+        run: |
+          python3 scripts/test-swift-closure-records.py
+          python3 scripts/profile-swift-closures.py --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+            --cc gcc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --target "${{ matrix.arch }}-unknown-linux-gnu" --heaptrack heaptrack \
+            --heaptrack-print heaptrack_print --strace strace \
+            --unwind-library-directory swift-setup/unwinder/lib --output swift-closure-evidence
+      - name: Allocation report controls
+        if: inputs.suite == 'swift-allocations'
+        run: python3 scripts/test-swift-allocation-records.py
+      - name: Four-language allocation profiles
+        if: inputs.suite == 'swift-allocations'
+        run: >-
+          python3 scripts/profile-swift-allocations.py collect
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
+          --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
+          --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace
+          --unwind-library-directory swift-setup/unwinder/lib --output swift-allocation-evidence
+      - name: Recompute allocator observations
+        if: inputs.suite == 'swift-allocations'
+        run: >-
+          python3 scripts/profile-swift-allocations.py audit --input swift-allocation-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+      - name: Four-language programs and native Swift closures
+        if: inputs.suite == 'swift-peers'
+        run: >-
+          python3 scripts/measure-swift-peers.py collect
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
+          --rust-cpu "${{ matrix.rust_cpu }}" --rust-target "${{ matrix.arch }}-unknown-linux-gnu"
+          --swift-target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
+          --objdump llvm-objdump --session "${{ matrix.session }}" --output swift-peer-evidence
+      - name: Recompute retained observations
+        if: inputs.suite == 'swift-peers'
+        run: >-
+          python3 scripts/measure-swift-peers.py audit --input swift-peer-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+      - name: Two callable sessions on this same native host
+        if: inputs.suite == 'callable-phases'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for session in 1 2; do
+            python3 scripts/measure-callable-phases.py collect \
+              --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
+              --cc gcc --rustc rustc --swiftc swiftc --time /usr/bin/time --objdump llvm-objdump \
+              --session "$session" --output "callable-phase-evidence-$session"
+            python3 scripts/measure-callable-phases.py audit \
+              --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          done
+      - name: Preserve all completed and failed observations
+        if: ${{ always() && hashFiles('weak-callback-profiles/**', 'weak-callback-service/**', 'weak-operation-census/**', 'weak-operation-reuse/**', 'weak-operation-profiles/**', 'weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
+          path: |
+            returned-buffer-profiles-first-audit/
+            returned-buffer-profiles/
+            returned-buffer-phases/
+            returned-buffer-checks/
+            ownership-peer-checks/
+            parser-peer-checks/
+            weak-peer-checks/
+            weak-swift-diagnosis/
+            weak-operation-phases/
+            weak-operation-profiles/
+            weak-operation-reuse/
+            weak-operation-census/
+            weak-callback-profiles/
+            weak-callback-service/
+            weak-callback-service-ownership/
+            weak-callback-service-logs/
+            swift-setup/
+            swift-peer-evidence/
+            swift-allocation-evidence/
+            swift-closure-evidence/
+            swift-arithmetic/
+            callable-phase-evidence-*/
+          if-no-files-found: error
+

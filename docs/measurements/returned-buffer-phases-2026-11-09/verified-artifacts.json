@@ -1,0 +1,43 @@
+{
+  "source": "ec9313228681689daa4c20c495edd8b5f9faa583",
+  "tag": "roadmap/returned-buffer-observers-2026-11-09",
+  "artifacts": [
+    {
+      "kind": "phases",
+      "host": "amd",
+      "run": 42600727564,
+      "job": 129104245897,
+      "id": 13666226810,
+      "bytes": 21240357,
+      "sha256": "505ce65f4946f26f3e03c1c3eb144a23fb1dbb7baa4e35083318b25d4e3360ff"
+    },
+    {
+      "kind": "phases",
+      "host": "arm",
+      "run": 42600727564,
+      "job": 129104245735,
+      "id": 13665473763,
+      "bytes": 18530064,
+      "sha256": "9904c68b1d25af265613581b53c1474d3886157ddd25013a7b9385e46bcd7890"
+    },
+    {
+      "kind": "profiles",
+      "host": "amd",
+      "run": 42600729662,
+      "job": 129104261777,
+      "id": 13665768286,
+      "bytes": 22013178,
+      "sha256": "ada3a034c53bda4a9469e554024a263c53e7504307557de3b44c34ecc0c1bf8a"
+    },
+    {
+      "kind": "profiles",
+      "host": "arm",
+      "run": 42600729662,
+      "job": 129104262069,
+      "id": 13665972652,
+      "bytes": 14560336,
+      "sha256": "763287131eeaf8e979dee3b3a31113a2f93a140c44c40bcb1b231c4b82da5a14"
+    }
+  ],
+  "verification": "Selected reports and command/diagnostic records retrieved by HTTP range with ZIP CRC verification. Current archive hashes are GitHub metadata, not independently checked locally. Both runners fully hashed and audited the earlier profile archives; their receipts are retained."
+}

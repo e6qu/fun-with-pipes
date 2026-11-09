@@ -211,7 +211,8 @@ def main():
                          text=False, encoding='utf-8', check=False)
             results[label] = dict(status=result.returncode, stdout=result.stdout.decode(), stderr=result.stderr.decode())
             if expected is None:
-                assert result.returncode != 0, (name, label)
+                status = 101 if label == 'rust' or name.endswith('-overflow') else 92
+                assert result.returncode == status and not result.stdout, (name, label, result)
             else:
                 value = json.loads(result.stdout)
                 assert result.returncode == 0 and not result.stderr

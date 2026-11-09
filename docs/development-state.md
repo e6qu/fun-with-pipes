@@ -1,124 +1,95 @@
 # Current work
 
-**Next:** audit the final production/docs runs started by this report publication
-on [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
-complete-log audit. Find their IDs from the PR's current head; the measured
-compiler source is `4a32c102f74f738433c1d55969936b023a5510f0`.
-Do not merge before all nine production jobs, docs and the complete-log audit
-pass for the final commit. Preserve that final head while checks run.
-The report was verified on `structured-autodiff-report-review` before publication;
-that temporary verification branch has no separate PR.
+**Next:** run and audit the final nine production jobs and documentation for
+[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273), fixing every failure
+before squash merge. Use the PR's exact head, not an earlier preparation source.
+All focused comparison/observer checks now pass; milestone 4 still needs final
+delivery gates. Do not rerun unchanged timing samples to obtain qualification.
+
+Worktree: `.worktrees/recording-capacity-gate`, branch `ownership-buffer-review`.
+The complete batch goes to the normal PR branch `ownership-peer-comparisons`.
+Its prior head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011` is an ancestor. Resolve
+the current PR head and its runs when resuming; do not reuse earlier green gates.
+Preserve unrelated root-worktree changes.
 
 ## Roadmap status
 
-| Step | Status | Delivered or verified | Remaining |
+| Step | Status | Delivered | Remaining |
 |---|---|---|---|
-| 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
-| 2 | In progress | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
-| 3 | In progress | #272 known array callbacks; focused safety and four measurement audits pass | Publish reports; final platform/docs/audit gates; retain AMD timing misses. |
-| 4 | Pending | Comparison scope in PLAN.md | Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
-| 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained-load measurements. |
+| 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
+| 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
+| 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage/reuse and service timings; parser cleanup repair, process accounting and heap/region traces | Final production/docs/audit gates |
+| 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
-The local-pair gradient remains experimental. Independent loss uses existing
-`array.map (derivative loss)`; no new public gradient API is selected. Do not
-rerun unchanged timing sessions to obtain qualification.
+Keep original noisy/unmet timing results. Fewer operations or smaller binaries do
+not complete runtime acceptance. Do not rerun unchanged samples for qualification.
 
-## Source and worktree
+## Final observer checks
 
-Branch `structured-autodiff-comparison`, worktree `.worktrees/recording-capacity-gate`.
-Preserve unrelated root-worktree changes. Verified base #271 merge:
-`b76306b20a1d7727917ef6184c9a8716967ceb89`, same tree as its tested head.
-[Delivery receipt](measurements/captured-map-delivery-2026-11-08/README.md)
-records all nine passing production jobs, docs, full audit and merge verification.
+[Run 42686754531](https://github.com/e6qu/fun-with-pipes/actions/runs/42686754531)
+passes at `bb0add788321eb30068889b4961667d1f858d3a1`, tag
+`roadmap/parser-mapped-boundary-2026-11-09`: AMD64 `129395531588`, ARM64
+`129395531599`. [Documentation 42686761614](https://github.com/e6qu/fun-with-pipes/actions/runs/42686761614),
+job `129395546461`, also passes. Both native jobs pass eight parser traces,
+four actual missing releases, successful mapped resize and two-arena retry.
+All 35 complete command records and 36 compact file hashes per host pass audit.
 
-Frozen comparison baseline: `04ddc0ac5d296ec895364236c4120341d7328e41`.
-Acceptance commit: `412b50b52d5f694ffb0b7d871b807715cdde3dda`.
-Published tags `roadmap/structured-gradient-baseline-2026-11-08` and
-`roadmap/structured-gradient-acceptance-2026-11-08` preserve them after squash.
-`roadmap/structured-gradient-candidate-2026-11-08` preserves measured candidate
-`4a32c102f74f738433c1d55969936b023a5510f0`. Do not move these tags.
+The original mapped observation stopped inside an inlined helper with no usable
+parameter. The repair observes the real `__mremap` call and confirms the returned
+extent against the final live header, without reading the old mapping after a
+move. The control warms unrelated libc thread-cache metadata before measurement;
+the reader rejects unattributed internal storage. [Original failures, complete
+passing records and scope limits](measurements/parser-allocator-paths-2026-11-09/README.md).
 
-## What this batch proves
+## Verified comparison results
 
-[Initial method study](measurements/structured-gradient-methods-2026-11-08/README.md):
-41 method/input combinations, four sessions, all evidence audits pass. It
-compares complete fwp gradients with each other, not peer-language parity.
+| Work | Source / native run | Result and retained evidence |
+|---|---|---|
+| Complete callback service | `069e76ed8` / `42675215554` | Both sessions and six corruption controls pass on each host. Full delivery of 4,096 messages takes 18.65–20.23× C and 5.12–6.70× Swift. [Time, RSS, allocation and build scopes](measurements/weak-callback-time-2026-11-09/README.md). |
+| Actual C/Rust parser allocations | `62775d559` / `42680540810` | Eight traces and four missing-release controls pass per host. Largest requested peak is 425,984 bytes, 30% above endpoint capacity. [All raw records](measurements/parser-native-allocator-2026-11-09/README.md). |
+| Actual fwp heap/region events | `823791751` / `42682917578` | Ten builds, eight O1/O2 traces, eight wrong results and 24 actual release/observer faults pass per host. Largest charged peak is 458,704 bytes above baseline, during tokenization; evaluation allocates nothing. [Tables and complete records](measurements/parser-heap-events-2026-11-09/README.md). |
+| Parser process accounting | `6d1608c4f` / `42673573956`, attempt 3 | Both hosts pass six parser tests, snapshots and seven corruption controls. Earlier attempts failed internally before jobs. [Kernel policy, RSS and mapping scopes](measurements/parser-process-accounting-2026-11-09/README.md). |
+| Service allocation profiles | `c0ac432fc` / `42664664795`; audit `f3f023820` / `42669442687` | Both native profiles and all 954 command records pass. [Payloads, metadata and actual missing releases](measurements/weak-callback-profiles-2026-11-09/README.md). |
 
-[Candidate study](measurements/structured-array-callbacks-2026-11-08/README.md):
-14 cases, 256 gradients per process, four sessions in `42510222540`; all jobs and
-source/binary/evidence-rejection audits pass. Both ARM sessions meet the 10%
-primary target (about 91% and 85% less computation). AMD copy noise fails the
-original rule; combined timing acceptance stays open. Counts, cleanup and peak
-storage meet their bounds. At 129 inputs, requests fall 1,284→260 for neighbors
-and 518→260 for independent loss. Compiler, stack and RSS tradeoffs are explicit.
-Report files join the implementation in this publication.
-`scripts/check-structured-callback-report.py` reconstructs retained timings and
-checks storage, primary image hashes and stack reports in documentation CI.
+Documentation passes for all five rows. Complete native logs have no outstanding
+compiler/debugger warnings. Receipts retain original failures and exact job/artifact
+IDs, including the service ARM link repair and parser debugger repairs.
 
-Implementation reuses bounded known-function worker specialization for array
-callbacks. It removes only a closed function argument, preserving other captures
-and resource identities. Numeric-input selection now accepts nonresource data
-bindings without moving their original evaluation scopes. No analysis budgets,
-arithmetic rules or lifetime guarantees are relaxed.
+[Weak lookup timings](measurements/weak-operation-time-2026-11-09/README.md) and
+[the allocation census](measurements/weak-operation-census-2026-11-09/README.md)
+separate a temporary 16-byte successful-lookup result from target/weak metadata.
+[Buffer phases](measurements/returned-buffer-time-2026-11-09/README.md) retain both
+sessions and all original noisy cases. ARC-operation counts, maximum dynamic
+stack and a universal allocator-internal peak remain unmeasured. Failed mapped
+remap followed by copy is a reader model, not native evidence.
 
-[Earlier failures and repairs](measurements/structured-array-callback-first-2026-11-08/README.md)
-retain the first missed allocation limit and incorrect resource test fixture.
-Source `3203b635a` still allocated two derivative inputs per edge; the new numeric
-proof fixes that underlying cause. A later formatting failure was repaired
-exactly; formatting now runs independently of native checks. The result checksum
-was also fixed so even repeat counts cannot cancel an altered result.
+## Compiler repair and final delivery
 
-## Checks and active jobs
+The consuming parser worker and owning function entry both released its input.
+The entry now follows `rc::consumes_arg`. Source `ee30d13b0`, run `42645911091`,
+passes both Linux hosts, six parser tests, primitive inventory and actual extra-drop
+controls. Regressions cover caller aliases, parse errors and allocation failure.
+[Repair evidence](measurements/parser-entry-cleanup-2026-11-09/README.md).
+Remaining platforms require the final exact-head gates.
 
-Focused run `42508330680`, source
-`e085e2306d3a938e7253d2f9f3586252e54057eb`, differs from PR head only in handoff.
-All three jobs pass: AMD GCC `128815743055`, ARM GCC `128815743093`, macOS Clang
-`128815743162`. Eight specialization and eleven numeric-proof tests, mixed owners,
-32 exact gradient outputs, callback order, unwinding, nested AD, F128, allocation
-limits, physical release and deliberate observer faults pass. Reviewed logs:
-`/tmp/fwp-array-final-{amd,arm,mac}.log`.
+Source comparisons confirm no production/compiler or service timing-source changes
+since `069e76ed8`, and no generated fwp heap-observer source changes since
+`823791751`. The stricter heap reader adds a useful missing-allocation diagnostic;
+all original fault streams still fail for their intended causes. Earlier
+[passing production head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
+does not verify this later batch.
 
-Measurement jobs: ARM1 `128821483731`, ARM2 `128821483673`, AMD1 `128821483738`,
-AMD2 `128821483759`. Complete logs reviewed; no unexpected diagnostics.
-Reports preserve every noisy observation. Original archives remain in GitHub;
-small report/sample/source/image entries were read with HTTP ranges and ZIP CRC
-checks while disk was low. No local whole-archive digest check is claimed.
+## Local verification and resources
 
-Superseded production `42508955007`: benchmark `128817627716` and Windows AMD64
-`128817627957` pass. Cancellation was requested for the seven unfinished jobs
-when the complete report was ready, freeing runners for the final commit.
-Review their completed targets for unexpected diagnostics once logs are available.
-Docs `42508954924`, job
-`128817627196`, pass. Reviewed docs diagnostics are deliberate negative controls;
-Windows panic messages are named lifetime-test controls. Local logs:
-`/tmp/fwp-pr272-{bench,docs,windows-amd}.log`. Full final-head audit is pending.
-
-Report-review docs `42515588460` / `128837762893` reproduce all saved timings,
-storage, primary binary hashes and stack reports. Documentation/control tests
-pass, but the shortened handoff omitted the required status column; the restored
-column keeps the existing audit unchanged. Later docs targets were skipped.
-Complete log: `/tmp/fwp-pr272-report-docs.log`.
-Corrected report/docs run `42516046373`, job `128839176998`, passes at `4bf18f4f2`.
-It checks all retained measurements, tutorials, immutable references and evidence
-controls. Run `42515982996` was cancelled while queued after a renamed benchmark
-heading needed its incoming link updated. Final publication adds only the
-remaining-container explanation, service-load plan details and this receipt.
-
-## Local limits and resume
-
-Free disk is about 15 GiB, below the required 64 GiB. Local validation, builds
-and large downloads remain paused. Do not raise or bypass the guard. Continue
-source/docs edits, small report inspection and remote verification. Use
-`python3 scripts/local-guard.py COMMAND...` when the reserve is restored.
-The guard refused the new report check: `local-guard: stopped: less than 64 GiB
-free disk`; no local report-check pass is claimed.
-
-Earlier guarded tutorial checks passed in raw interpretation and Clang O2
-(3.29 seconds, 1.46 CPU); receipt `/tmp/fwp-structured-tutorial/checks.json`.
-The full native matrix covers the tutorial again. Seven statistical controls,
-workflow syntax and the then-current 395 Markdown link sets passed before disk
-fell; newer docs still require their final remote audit.
-
-Small report extracts: `/tmp/fwp-callback-reports/`.
-Current PR description file: `/tmp/fwp-structured-gradient-pr.md`.
-One-off HTTP-range reader: `/tmp/fwp-read-artifact-report.py` (inspection only).
+- Through `python3 scripts/local-guard.py`: eight native-allocator reader tests,
+  five fwp heap-reader tests, Python syntax checks and 433 documentation link sets,
+  106 immutable preparation pairs and all five roadmap rows pass.
+- All retained positive traces reconstruct. All 61 fwp command records and 24 fault
+  causes per host are checked. A bounded download stopped before one duplicate
+  generated C file; source reconstruction matches its original native hash.
+  Complete compact records are retained without raising any limits.
+- No local fwp compiler build, full suite or benchmark ran. Native execution stays
+  on GitHub. Preserve 64 GiB free disk, 2 GiB target data, 1 GiB workload RSS and
+  the guard's 180-second limit. Last observed disk free space: about 126 GiB.
+- Keep the numerical dispatcher below 512,000 bytes; it is currently 502,158.

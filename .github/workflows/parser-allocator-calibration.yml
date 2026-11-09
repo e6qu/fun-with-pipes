@@ -1,0 +1,52 @@
+name: Native parser allocator boundary calibration
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Immutable source tag for the calibration
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  calibration:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Matched installed allocator, debugger symbols and distro source
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc gdb libc6-dev libc6-dbg glibc-source python3 binutils
+      - name: Reject incomplete resize observations
+        run: python3 scripts/test-parser-allocator-observation.py
+      - name: Observe actual moving and nonmoving allocator paths
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/check-parser-allocator-calibration.py
+          --cc gcc --gdb gdb --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
+          --arch "${{ matrix.arch }}" --c-arch "${{ matrix.c_arch }}"
+          --output parser-allocator-calibration
+      - name: Retain successes, missing-debug failures and raw events
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-allocator-calibration-${{ matrix.arch }}
+          path: parser-allocator-calibration/
+          if-no-files-found: error

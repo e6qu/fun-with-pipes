@@ -95,7 +95,8 @@ it has none. Resource-local indices are remapped after removing its anchor.
 Unknown or captured function arguments and oversized workers remain unchanged.
 Only original workers are visited; copies do not recursively expand the pass.
 The [active proof and measurement contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks)
-records candidate verification; implementation is not yet delivery acceptance.
+records its original acceptance limits. [PR #272 passes all delivery gates](measurements/structured-callback-delivery-2026-11-09/README.md);
+the original noisy timing targets remain open.
 
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or
@@ -294,7 +295,11 @@ function values and external entries prevent ordinary borrowing selection. Every
 live caller must keep the relevant owner for a later use; another field's use
 is insufficient. Temporary aliases can forward that same borrow through bindings
 and matches. Generic entries still protect and consume their ordinary arguments
-when calling a specialized borrowing worker.
+when calling a specialized borrowing worker. An owning entry releases only the
+arguments its worker borrows; a consuming worker releases or transfers its own
+arguments. C generation uses the shared direct-call ownership contract for this
+decision, including region and numeric-array workers. Dropping both would free a
+caller's surviving alias ([regression and verification](measurements/parser-entry-cleanup-2026-11-09/README.md)).
 
 The [gradient-storage group](measurements/gradient-call-storage.md) adds a
 private direct entry for known `ad.scope` callbacks returning arrays. It keeps

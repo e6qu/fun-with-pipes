@@ -9,6 +9,22 @@ import re
 import statistics
 
 
+def check_peer_controls(observed):
+    controls = {'multiply': (7, 45), 'negative': (1, -7), 'minimum': (1, -9223372036854775808),
+                'missing': None, 'trailing': None, 'invalid': None, 'add-overflow': None, 'mul-overflow': None}
+    assert set(observed) == set(controls)
+    for name, expected in controls.items():
+        assert set(observed[name]) == {'c', 'rust'}
+        for language, result in observed[name].items():
+            if expected is None:
+                status = 101 if language == 'rust' or name.endswith('-overflow') else 92
+                assert result['status'] == status and result['stdout'] == '', (name, language, result)
+            else:
+                assert result['status'] == 0 and result['stderr'] == ''
+                value = json.loads(result['stdout'])
+                assert (value['nodes'], value['result']) == expected
+
+
 def expected_blocks(depth, left):
     # Independently reconstruct parser construction order: two children precede
     # their parent. Leaves need 16 bytes; operators need 24, all aligned to 8.
@@ -148,18 +164,7 @@ def audit(directory, source):
         frozen = dict(row, samples=[])
         frozen.pop('ratios', None)
         assert json.loads((directory / f'budget-{name}.json').read_text()) == frozen
-    controls = {'multiply': (7, 45), 'negative': (1, -7), 'minimum': (1, -9223372036854775808),
-                'missing': None, 'trailing': None, 'invalid': None, 'add-overflow': None, 'mul-overflow': None}
-    assert set(report['peerControls']) == set(controls)
-    for name, expected in controls.items():
-        assert set(report['peerControls'][name]) == {'c', 'rust'}
-        for result in report['peerControls'][name].values():
-            if expected is None:
-                assert result['status'] != 0
-            else:
-                assert result['status'] == 0 and result['stderr'] == ''
-                value = json.loads(result['stdout'])
-                assert (value['nodes'], value['result']) == expected
+    check_peer_controls(report['peerControls'])
     assert report['analysis'] == json.loads((directory / 'analysis.json').read_text())
     assert [row['roots'] for row in report['analysis']] == [16, 32, 64]
     for row in report['analysis']:

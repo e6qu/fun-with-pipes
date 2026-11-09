@@ -1,0 +1,116 @@
+{
+  "scope": "Focused Apple Clang O2 diagnostic using retained emitted source; not a rebuilt-compiler or GCC pass",
+  "emittedSource": "8848e837c6e2d708060459c563788a0bba25352d",
+  "artifact": 13685148043,
+  "host": {
+    "system": "Darwin",
+    "node": "Adrians-MacBook-Pro.local",
+    "release": "24.6.0",
+    "version": "Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:40 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6041",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "files": {
+    "/tmp/fwp-weak-census-source/weak-operation-phases/original.c": "ab187008baf8772f8d8f674036ca5f2527e9a473763415d3696b77f48d551c7d",
+    "/tmp/fwp-local-weak-census/factory.c": "af69571d4e184e74b03385b2c1bb9cf11776600c4d2be952dcedaeef09f15ba6",
+    "scripts/weak_operation_census.py": "fb780a06da1bc6dd43d2d46b08255da54f6157955ae21a0430f8182eef4d416b",
+    "tests/fixtures/weak_operation_census.c": "93da2b1b4855ff31dcf7264d205a3206cb621c56ffa3b4b168f9e63ebd0a3a1c",
+    "tests/fixtures/weak_operation_census.h": "2c7ff980f6b42ff2045409f66ea542e90a359fa156594c4ab96937c034e5cf26"
+  },
+  "commands": [
+    {
+      "command": [
+        "clang",
+        "-std=gnu11",
+        "-O2",
+        "-ffp-contract=off",
+        "-fno-lto",
+        "-DREFERENCE_FWP=1",
+        "-DREFERENCE_DIAGNOSTIC=1",
+        "-I",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/recording-capacity-gate/tests/fixtures",
+        "-w",
+        "-c",
+        "/tmp/fwp-local-weak-census/factory.c",
+        "-o",
+        "/tmp/fwp-local-weak-census/factory.o"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "clang",
+        "-std=gnu11",
+        "-O2",
+        "-ffp-contract=off",
+        "-fno-lto",
+        "-DREFERENCE_FWP=1",
+        "-DREFERENCE_DIAGNOSTIC=1",
+        "-I",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/recording-capacity-gate/tests/fixtures",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-c",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/recording-capacity-gate/tests/fixtures/weak_operation_census.c",
+        "-o",
+        "/tmp/fwp-local-weak-census/caller.o"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "clang",
+        "-fno-lto",
+        "/tmp/fwp-local-weak-census/factory.o",
+        "/tmp/fwp-local-weak-census/caller.o",
+        "-lm",
+        "-lpthread",
+        "-ldl",
+        "-o",
+        "/tmp/fwp-local-weak-census/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/fwp-local-weak-census/program",
+        "64",
+        "16",
+        "ordinary"
+      ],
+      "status": 0,
+      "stdout": "{\"population\":64,\"lookups\":16,\"live\":1024,\"expired\":0,\"phases\":[{\"allocations\":64,\"slotBytes\":6144,\"someAllocations\":0,\"someSlotBytes\":0,\"liveBytes\":6144,\"peakLiveBytes\":6144},{\"allocations\":64,\"slotBytes\":1024,\"someAllocations\":0,\"someSlotBytes\":0,\"liveBytes\":7168,\"peakLiveBytes\":7168},{\"allocations\":1024,\"slotBytes\":16384,\"someAllocations\":1024,\"someSlotBytes\":16384,\"liveBytes\":7168,\"peakLiveBytes\":7184},{\"allocations\":0,\"slotBytes\":0,\"someAllocations\":0,\"someSlotBytes\":0,\"liveBytes\":1024,\"peakLiveBytes\":7168},{\"allocations\":0,\"slotBytes\":0,\"someAllocations\":0,\"someSlotBytes\":0,\"liveBytes\":1024,\"peakLiveBytes\":1024},{\"allocations\":0,\"slotBytes\":0,\"someAllocations\":0,\"someSlotBytes\":0,\"liveBytes\":0,\"peakLiveBytes\":1024}]}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/fwp-local-weak-census/program",
+        "64",
+        "16",
+        "extra-allocation"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "allocation observer control failed\n"
+    },
+    {
+      "command": [
+        "/tmp/fwp-local-weak-census/program",
+        "64",
+        "16",
+        "omit-free"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "allocation observer control failed\n"
+    }
+  ]
+}

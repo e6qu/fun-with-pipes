@@ -1,0 +1,42 @@
+[
+  {
+    "architecture": "arm64",
+    "source": "5c40c2a9f3a227534305fbbe80ab9b08af702180",
+    "run": 42520124080,
+    "job": 128851586715,
+    "artifact": 13633456991,
+    "bytes": 12136639,
+    "sha256": "c5b3534573108c52dbb244ecada23df70e04ae2875ecb53408721886bca4c70c",
+    "accepted": false
+  },
+  {
+    "architecture": "amd64",
+    "source": "5c40c2a9f3a227534305fbbe80ab9b08af702180",
+    "run": 42520124080,
+    "job": 128851586733,
+    "artifact": 13633602594,
+    "bytes": 14507823,
+    "sha256": "a837bc7161a904eb1710a829f06d5d74c345f2a8ab2881e1b43f147ef4b8f978",
+    "accepted": false
+  },
+  {
+    "architecture": "arm64",
+    "source": "4c6cda41fc2739569cdeda241da85b2a7310b89c",
+    "run": 42522747197,
+    "job": 128859624064,
+    "artifact": 13634607494,
+    "bytes": 14085969,
+    "sha256": "d33f8754c409614e0548f3b4a816a75b97f1757c8530e26296465b3303f8af90",
+    "accepted": true
+  },
+  {
+    "architecture": "amd64",
+    "source": "4c6cda41fc2739569cdeda241da85b2a7310b89c",
+    "run": 42522747197,
+    "job": 128859624152,
+    "artifact": 13635210263,
+    "bytes": 16854184,
+    "sha256": "4ee0d8098adef779655e94a57c00b044d698977ef48a81c9a2aa3851c7bd6522",
+    "accepted": true
+  }
+]

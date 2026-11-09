@@ -1,0 +1,4828 @@
+{
+  "amd": {
+    "source": "6d1608c4f9f7368cf509ba83c6c0e23316f6487d",
+    "cases": {
+      "small": {
+        "c": {
+          "rssKiB": [
+            1768,
+            1768,
+            1768
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1744
+              ],
+              "proportionalKiB": [
+                161,
+                161
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                104,
+                104
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1744
+              ],
+              "proportionalKiB": [
+                161,
+                161
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                104,
+                104
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1744
+              ],
+              "proportionalKiB": [
+                161,
+                161
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                104,
+                104
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1744
+              ],
+              "proportionalKiB": [
+                161,
+                161
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                104,
+                104
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1744
+              ],
+              "proportionalKiB": [
+                161,
+                161
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                104,
+                104
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            2232,
+            2232,
+            2232
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2232,
+                2232
+              ],
+              "proportionalKiB": [
+                505,
+                505
+              ],
+              "privateKiB": [
+                444,
+                444
+              ],
+              "anonymousKiB": [
+                128,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2236
+              ],
+              "proportionalKiB": [
+                509,
+                509
+              ],
+              "privateKiB": [
+                448,
+                448
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2236
+              ],
+              "proportionalKiB": [
+                509,
+                509
+              ],
+              "privateKiB": [
+                448,
+                448
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2236
+              ],
+              "proportionalKiB": [
+                509,
+                509
+              ],
+              "privateKiB": [
+                448,
+                448
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2236
+              ],
+              "proportionalKiB": [
+                509,
+                509
+              ],
+              "privateKiB": [
+                448,
+                448
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            2060,
+            1804,
+            1804
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                1944,
+                1948
+              ],
+              "proportionalKiB": [
+                240,
+                241
+              ],
+              "privateKiB": [
+                192,
+                192
+              ],
+              "anonymousKiB": [
+                144,
+                144
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2360,
+                2364
+              ],
+              "proportionalKiB": [
+                288,
+                289
+              ],
+              "privateKiB": [
+                220,
+                220
+              ],
+              "anonymousKiB": [
+                172,
+                172
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2384,
+                2384
+              ],
+              "proportionalKiB": [
+                309,
+                309
+              ],
+              "privateKiB": [
+                240,
+                240
+              ],
+              "anonymousKiB": [
+                192,
+                192
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2384,
+                2384
+              ],
+              "proportionalKiB": [
+                309,
+                309
+              ],
+              "privateKiB": [
+                240,
+                240
+              ],
+              "anonymousKiB": [
+                192,
+                192
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2384,
+                2384
+              ],
+              "proportionalKiB": [
+                309,
+                309
+              ],
+              "privateKiB": [
+                240,
+                240
+              ],
+              "anonymousKiB": [
+                192,
+                192
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "medium": {
+        "c": {
+          "rssKiB": [
+            1768,
+            1764,
+            1896
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1748
+              ],
+              "proportionalKiB": [
+                161,
+                165
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                104,
+                108
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1752,
+                1756
+              ],
+              "proportionalKiB": [
+                169,
+                173
+              ],
+              "privateKiB": [
+                124,
+                128
+              ],
+              "anonymousKiB": [
+                112,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1764,
+                1768
+              ],
+              "proportionalKiB": [
+                181,
+                185
+              ],
+              "privateKiB": [
+                136,
+                140
+              ],
+              "anonymousKiB": [
+                124,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1764,
+                1768
+              ],
+              "proportionalKiB": [
+                181,
+                185
+              ],
+              "privateKiB": [
+                136,
+                140
+              ],
+              "anonymousKiB": [
+                124,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1764,
+                1768
+              ],
+              "proportionalKiB": [
+                181,
+                185
+              ],
+              "privateKiB": [
+                136,
+                140
+              ],
+              "anonymousKiB": [
+                124,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            2296,
+            2232,
+            2232
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2240
+              ],
+              "proportionalKiB": [
+                509,
+                513
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2244,
+                2248
+              ],
+              "proportionalKiB": [
+                517,
+                521
+              ],
+              "privateKiB": [
+                456,
+                460
+              ],
+              "anonymousKiB": [
+                140,
+                144
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2256,
+                2260
+              ],
+              "proportionalKiB": [
+                529,
+                533
+              ],
+              "privateKiB": [
+                468,
+                472
+              ],
+              "anonymousKiB": [
+                152,
+                156
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2256,
+                2260
+              ],
+              "proportionalKiB": [
+                529,
+                533
+              ],
+              "privateKiB": [
+                468,
+                472
+              ],
+              "anonymousKiB": [
+                152,
+                156
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2256,
+                2260
+              ],
+              "proportionalKiB": [
+                529,
+                533
+              ],
+              "privateKiB": [
+                468,
+                472
+              ],
+              "anonymousKiB": [
+                152,
+                156
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            1804,
+            1804,
+            1804
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                1948,
+                2340
+              ],
+              "proportionalKiB": [
+                241,
+                265
+              ],
+              "privateKiB": [
+                192,
+                196
+              ],
+              "anonymousKiB": [
+                144,
+                148
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2000,
+                2392
+              ],
+              "proportionalKiB": [
+                293,
+                317
+              ],
+              "privateKiB": [
+                244,
+                248
+              ],
+              "anonymousKiB": [
+                196,
+                200
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2428,
+                2432
+              ],
+              "proportionalKiB": [
+                353,
+                357
+              ],
+              "privateKiB": [
+                284,
+                288
+              ],
+              "anonymousKiB": [
+                236,
+                240
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2428,
+                2432
+              ],
+              "proportionalKiB": [
+                353,
+                357
+              ],
+              "privateKiB": [
+                284,
+                288
+              ],
+              "anonymousKiB": [
+                236,
+                240
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2428,
+                2432
+              ],
+              "proportionalKiB": [
+                353,
+                357
+              ],
+              "privateKiB": [
+                284,
+                288
+              ],
+              "anonymousKiB": [
+                236,
+                240
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "large": {
+        "c": {
+          "rssKiB": [
+            2020,
+            2020,
+            2020
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1760,
+                1760
+              ],
+              "proportionalKiB": [
+                177,
+                177
+              ],
+              "privateKiB": [
+                132,
+                132
+              ],
+              "anonymousKiB": [
+                120,
+                120
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2832,
+                2832
+              ],
+              "residentKiB": [
+                1952,
+                1952
+              ],
+              "proportionalKiB": [
+                369,
+                369
+              ],
+              "privateKiB": [
+                324,
+                324
+              ],
+              "anonymousKiB": [
+                312,
+                312
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                520,
+                520
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3028,
+                3028
+              ],
+              "residentKiB": [
+                2176,
+                2176
+              ],
+              "proportionalKiB": [
+                593,
+                593
+              ],
+              "privateKiB": [
+                548,
+                548
+              ],
+              "anonymousKiB": [
+                536,
+                536
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                716,
+                716
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3028,
+                3028
+              ],
+              "residentKiB": [
+                2176,
+                2176
+              ],
+              "proportionalKiB": [
+                593,
+                593
+              ],
+              "privateKiB": [
+                548,
+                548
+              ],
+              "anonymousKiB": [
+                536,
+                536
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                716,
+                716
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1856,
+                1856
+              ],
+              "proportionalKiB": [
+                273,
+                273
+              ],
+              "privateKiB": [
+                228,
+                228
+              ],
+              "anonymousKiB": [
+                216,
+                216
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            2484,
+            2480,
+            2548
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2252,
+                2256
+              ],
+              "proportionalKiB": [
+                525,
+                529
+              ],
+              "privateKiB": [
+                464,
+                468
+              ],
+              "anonymousKiB": [
+                148,
+                152
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3372,
+                3372
+              ],
+              "residentKiB": [
+                2444,
+                2448
+              ],
+              "proportionalKiB": [
+                717,
+                721
+              ],
+              "privateKiB": [
+                656,
+                660
+              ],
+              "anonymousKiB": [
+                340,
+                344
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                552,
+                552
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3568,
+                3568
+              ],
+              "residentKiB": [
+                2668,
+                2672
+              ],
+              "proportionalKiB": [
+                941,
+                945
+              ],
+              "privateKiB": [
+                880,
+                884
+              ],
+              "anonymousKiB": [
+                564,
+                568
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                748,
+                748
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3568,
+                3568
+              ],
+              "residentKiB": [
+                2668,
+                2672
+              ],
+              "proportionalKiB": [
+                941,
+                945
+              ],
+              "privateKiB": [
+                880,
+                884
+              ],
+              "anonymousKiB": [
+                564,
+                568
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                748,
+                748
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2348,
+                2352
+              ],
+              "proportionalKiB": [
+                621,
+                625
+              ],
+              "privateKiB": [
+                560,
+                564
+              ],
+              "anonymousKiB": [
+                244,
+                248
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            2696,
+            2444,
+            2444
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                1980,
+                1984
+              ],
+              "proportionalKiB": [
+                273,
+                277
+              ],
+              "privateKiB": [
+                224,
+                228
+              ],
+              "anonymousKiB": [
+                176,
+                180
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2480,
+                2872
+              ],
+              "proportionalKiB": [
+                773,
+                797
+              ],
+              "privateKiB": [
+                724,
+                728
+              ],
+              "anonymousKiB": [
+                676,
+                680
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2664,
+                3056
+              ],
+              "proportionalKiB": [
+                957,
+                981
+              ],
+              "privateKiB": [
+                908,
+                912
+              ],
+              "anonymousKiB": [
+                860,
+                864
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2664,
+                3056
+              ],
+              "proportionalKiB": [
+                957,
+                981
+              ],
+              "privateKiB": [
+                908,
+                912
+              ],
+              "anonymousKiB": [
+                860,
+                864
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2664,
+                3056
+              ],
+              "proportionalKiB": [
+                957,
+                981
+              ],
+              "privateKiB": [
+                908,
+                912
+              ],
+              "anonymousKiB": [
+                860,
+                864
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "left": {
+        "c": {
+          "rssKiB": [
+            1768,
+            1768,
+            1704
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1748
+              ],
+              "proportionalKiB": [
+                161,
+                165
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                104,
+                108
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1744,
+                1748
+              ],
+              "proportionalKiB": [
+                161,
+                165
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                104,
+                108
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1752,
+                1752
+              ],
+              "proportionalKiB": [
+                169,
+                169
+              ],
+              "privateKiB": [
+                124,
+                124
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1752,
+                1752
+              ],
+              "proportionalKiB": [
+                169,
+                169
+              ],
+              "privateKiB": [
+                124,
+                124
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2700,
+                2700
+              ],
+              "residentKiB": [
+                1752,
+                1752
+              ],
+              "proportionalKiB": [
+                169,
+                169
+              ],
+              "privateKiB": [
+                124,
+                124
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                0,
+                0
+              ],
+              "accountableMappingKiB": [
+                388,
+                388
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            2232,
+            2232,
+            2288
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2232,
+                2240
+              ],
+              "proportionalKiB": [
+                508,
+                513
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2232,
+                2240
+              ],
+              "proportionalKiB": [
+                508,
+                513
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2244
+              ],
+              "proportionalKiB": [
+                512,
+                517
+              ],
+              "privateKiB": [
+                452,
+                456
+              ],
+              "anonymousKiB": [
+                136,
+                140
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2244
+              ],
+              "proportionalKiB": [
+                512,
+                517
+              ],
+              "privateKiB": [
+                452,
+                456
+              ],
+              "anonymousKiB": [
+                136,
+                140
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3240,
+                3240
+              ],
+              "residentKiB": [
+                2236,
+                2244
+              ],
+              "proportionalKiB": [
+                512,
+                517
+              ],
+              "privateKiB": [
+                452,
+                456
+              ],
+              "anonymousKiB": [
+                136,
+                140
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                4,
+                4
+              ],
+              "accountableMappingKiB": [
+                420,
+                420
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            1932,
+            1932,
+            1932
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                1948,
+                2332
+              ],
+              "proportionalKiB": [
+                241,
+                257
+              ],
+              "privateKiB": [
+                188,
+                192
+              ],
+              "anonymousKiB": [
+                140,
+                144
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                1984,
+                2368
+              ],
+              "proportionalKiB": [
+                277,
+                293
+              ],
+              "privateKiB": [
+                224,
+                228
+              ],
+              "anonymousKiB": [
+                176,
+                180
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2056,
+                2440
+              ],
+              "proportionalKiB": [
+                349,
+                365
+              ],
+              "privateKiB": [
+                296,
+                300
+              ],
+              "anonymousKiB": [
+                248,
+                252
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2056,
+                2440
+              ],
+              "proportionalKiB": [
+                349,
+                365
+              ],
+              "privateKiB": [
+                296,
+                300
+              ],
+              "anonymousKiB": [
+                248,
+                252
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266812,
+                68266812
+              ],
+              "residentKiB": [
+                2056,
+                2440
+              ],
+              "proportionalKiB": [
+                349,
+                365
+              ],
+              "privateKiB": [
+                296,
+                300
+              ],
+              "anonymousKiB": [
+                248,
+                252
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211132,
+                67211132
+              ],
+              "accountableMappingKiB": [
+                1049168,
+                1049168
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "checkedFiles": 559,
+    "kernels": [
+      "7.0.0-1017-azure"
+    ],
+    "policies": [
+      {
+        "overcommit_memory": 0,
+        "overcommit_ratio": 50,
+        "overcommit_kbytes": 0
+      }
+    ],
+    "rawSnapshotsVerified": 195
+  },
+  "arm": {
+    "source": "6d1608c4f9f7368cf509ba83c6c0e23316f6487d",
+    "cases": {
+      "small": {
+        "c": {
+          "rssKiB": [
+            1384,
+            1384,
+            1388
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            1632,
+            1632,
+            1632
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1872,
+                1872
+              ],
+              "proportionalKiB": [
+                475,
+                475
+              ],
+              "privateKiB": [
+                428,
+                428
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1876,
+                1876
+              ],
+              "proportionalKiB": [
+                479,
+                479
+              ],
+              "privateKiB": [
+                432,
+                432
+              ],
+              "anonymousKiB": [
+                116,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1876,
+                1876
+              ],
+              "proportionalKiB": [
+                479,
+                479
+              ],
+              "privateKiB": [
+                432,
+                432
+              ],
+              "anonymousKiB": [
+                116,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1876,
+                1876
+              ],
+              "proportionalKiB": [
+                479,
+                479
+              ],
+              "privateKiB": [
+                432,
+                432
+              ],
+              "anonymousKiB": [
+                116,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1876,
+                1876
+              ],
+              "proportionalKiB": [
+                479,
+                479
+              ],
+              "privateKiB": [
+                432,
+                432
+              ],
+              "anonymousKiB": [
+                116,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            1420,
+            1420,
+            1420
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1548,
+                1552
+              ],
+              "proportionalKiB": [
+                211,
+                211
+              ],
+              "privateKiB": [
+                172,
+                172
+              ],
+              "anonymousKiB": [
+                128,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1576,
+                1580
+              ],
+              "proportionalKiB": [
+                239,
+                239
+              ],
+              "privateKiB": [
+                200,
+                200
+              ],
+              "anonymousKiB": [
+                156,
+                156
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1596,
+                1600
+              ],
+              "proportionalKiB": [
+                259,
+                259
+              ],
+              "privateKiB": [
+                220,
+                220
+              ],
+              "anonymousKiB": [
+                176,
+                176
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1600,
+                2024
+              ],
+              "proportionalKiB": [
+                259,
+                311
+              ],
+              "privateKiB": [
+                220,
+                220
+              ],
+              "anonymousKiB": [
+                176,
+                176
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1600,
+                2024
+              ],
+              "proportionalKiB": [
+                259,
+                311
+              ],
+              "privateKiB": [
+                220,
+                220
+              ],
+              "anonymousKiB": [
+                176,
+                176
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "medium": {
+        "c": {
+          "rssKiB": [
+            1372,
+            1384,
+            1388
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1348,
+                1352
+              ],
+              "proportionalKiB": [
+                131,
+                135
+              ],
+              "privateKiB": [
+                96,
+                100
+              ],
+              "anonymousKiB": [
+                88,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1356,
+                1360
+              ],
+              "proportionalKiB": [
+                139,
+                143
+              ],
+              "privateKiB": [
+                104,
+                108
+              ],
+              "anonymousKiB": [
+                96,
+                100
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1368,
+                1372
+              ],
+              "proportionalKiB": [
+                151,
+                155
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                108,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1368,
+                1372
+              ],
+              "proportionalKiB": [
+                151,
+                155
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                108,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1368,
+                1372
+              ],
+              "proportionalKiB": [
+                151,
+                155
+              ],
+              "privateKiB": [
+                116,
+                120
+              ],
+              "anonymousKiB": [
+                108,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            1760,
+            1760,
+            1760
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1860,
+                1872
+              ],
+              "proportionalKiB": [
+                475,
+                479
+              ],
+              "privateKiB": [
+                428,
+                432
+              ],
+              "anonymousKiB": [
+                112,
+                116
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1868,
+                1880
+              ],
+              "proportionalKiB": [
+                483,
+                487
+              ],
+              "privateKiB": [
+                436,
+                440
+              ],
+              "anonymousKiB": [
+                120,
+                124
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1880,
+                1892
+              ],
+              "proportionalKiB": [
+                495,
+                499
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1880,
+                1892
+              ],
+              "proportionalKiB": [
+                495,
+                499
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1880,
+                1892
+              ],
+              "proportionalKiB": [
+                495,
+                499
+              ],
+              "privateKiB": [
+                448,
+                452
+              ],
+              "anonymousKiB": [
+                132,
+                136
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            1536,
+            1548,
+            1548
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1556,
+                1980
+              ],
+              "proportionalKiB": [
+                215,
+                267
+              ],
+              "privateKiB": [
+                176,
+                176
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2032,
+                2032
+              ],
+              "proportionalKiB": [
+                319,
+                319
+              ],
+              "privateKiB": [
+                228,
+                228
+              ],
+              "anonymousKiB": [
+                184,
+                184
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2072,
+                2072
+              ],
+              "proportionalKiB": [
+                359,
+                359
+              ],
+              "privateKiB": [
+                268,
+                268
+              ],
+              "anonymousKiB": [
+                224,
+                224
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2072,
+                2072
+              ],
+              "proportionalKiB": [
+                359,
+                359
+              ],
+              "privateKiB": [
+                268,
+                268
+              ],
+              "anonymousKiB": [
+                224,
+                224
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2072,
+                2072
+              ],
+              "proportionalKiB": [
+                359,
+                359
+              ],
+              "privateKiB": [
+                268,
+                268
+              ],
+              "anonymousKiB": [
+                224,
+                224
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "large": {
+        "c": {
+          "rssKiB": [
+            1644,
+            1644,
+            1644
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1360,
+                1368
+              ],
+              "proportionalKiB": [
+                151,
+                151
+              ],
+              "privateKiB": [
+                116,
+                116
+              ],
+              "anonymousKiB": [
+                108,
+                108
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2404,
+                2404
+              ],
+              "residentKiB": [
+                1552,
+                1560
+              ],
+              "proportionalKiB": [
+                343,
+                343
+              ],
+              "privateKiB": [
+                308,
+                308
+              ],
+              "anonymousKiB": [
+                300,
+                300
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                500,
+                500
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2600,
+                2600
+              ],
+              "residentKiB": [
+                1776,
+                1784
+              ],
+              "proportionalKiB": [
+                567,
+                567
+              ],
+              "privateKiB": [
+                532,
+                532
+              ],
+              "anonymousKiB": [
+                524,
+                524
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                696,
+                696
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2600,
+                2600
+              ],
+              "residentKiB": [
+                1776,
+                1784
+              ],
+              "proportionalKiB": [
+                567,
+                567
+              ],
+              "privateKiB": [
+                532,
+                532
+              ],
+              "anonymousKiB": [
+                524,
+                524
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                696,
+                696
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1456,
+                1464
+              ],
+              "proportionalKiB": [
+                247,
+                247
+              ],
+              "privateKiB": [
+                212,
+                212
+              ],
+              "anonymousKiB": [
+                204,
+                204
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            2144,
+            2144,
+            2132
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1876,
+                1892
+              ],
+              "proportionalKiB": [
+                495,
+                495
+              ],
+              "privateKiB": [
+                448,
+                448
+              ],
+              "anonymousKiB": [
+                132,
+                132
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2944,
+                2944
+              ],
+              "residentKiB": [
+                2068,
+                2084
+              ],
+              "proportionalKiB": [
+                687,
+                687
+              ],
+              "privateKiB": [
+                640,
+                640
+              ],
+              "anonymousKiB": [
+                324,
+                324
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                540,
+                540
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3140,
+                3140
+              ],
+              "residentKiB": [
+                2292,
+                2308
+              ],
+              "proportionalKiB": [
+                911,
+                911
+              ],
+              "privateKiB": [
+                864,
+                864
+              ],
+              "anonymousKiB": [
+                548,
+                548
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                736,
+                736
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                3140,
+                3140
+              ],
+              "residentKiB": [
+                2292,
+                2308
+              ],
+              "proportionalKiB": [
+                911,
+                911
+              ],
+              "privateKiB": [
+                864,
+                864
+              ],
+              "anonymousKiB": [
+                548,
+                548
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                736,
+                736
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1972,
+                1988
+              ],
+              "proportionalKiB": [
+                591,
+                591
+              ],
+              "privateKiB": [
+                544,
+                544
+              ],
+              "anonymousKiB": [
+                228,
+                228
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            2060,
+            2060,
+            2060
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1584,
+                2008
+              ],
+              "proportionalKiB": [
+                243,
+                295
+              ],
+              "privateKiB": [
+                204,
+                204
+              ],
+              "anonymousKiB": [
+                160,
+                160
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2088,
+                2512
+              ],
+              "proportionalKiB": [
+                747,
+                799
+              ],
+              "privateKiB": [
+                708,
+                708
+              ],
+              "anonymousKiB": [
+                664,
+                664
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2272,
+                2696
+              ],
+              "proportionalKiB": [
+                931,
+                983
+              ],
+              "privateKiB": [
+                892,
+                892
+              ],
+              "anonymousKiB": [
+                848,
+                848
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2272,
+                2696
+              ],
+              "proportionalKiB": [
+                931,
+                983
+              ],
+              "privateKiB": [
+                892,
+                892
+              ],
+              "anonymousKiB": [
+                848,
+                848
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2272,
+                2696
+              ],
+              "proportionalKiB": [
+                931,
+                983
+              ],
+              "privateKiB": [
+                892,
+                892
+              ],
+              "anonymousKiB": [
+                848,
+                848
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      },
+      "left": {
+        "c": {
+          "rssKiB": [
+            1388,
+            1388,
+            1388
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1336,
+                1352
+              ],
+              "proportionalKiB": [
+                135,
+                135
+              ],
+              "privateKiB": [
+                100,
+                100
+              ],
+              "anonymousKiB": [
+                92,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1336,
+                1352
+              ],
+              "proportionalKiB": [
+                135,
+                135
+              ],
+              "privateKiB": [
+                100,
+                100
+              ],
+              "anonymousKiB": [
+                92,
+                92
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1340,
+                1356
+              ],
+              "proportionalKiB": [
+                139,
+                139
+              ],
+              "privateKiB": [
+                104,
+                104
+              ],
+              "anonymousKiB": [
+                96,
+                96
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1340,
+                1356
+              ],
+              "proportionalKiB": [
+                139,
+                139
+              ],
+              "privateKiB": [
+                104,
+                104
+              ],
+              "anonymousKiB": [
+                96,
+                96
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2272,
+                2272
+              ],
+              "residentKiB": [
+                1340,
+                1356
+              ],
+              "proportionalKiB": [
+                139,
+                139
+              ],
+              "privateKiB": [
+                104,
+                104
+              ],
+              "anonymousKiB": [
+                96,
+                96
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                76,
+                76
+              ],
+              "accountableMappingKiB": [
+                368,
+                368
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "rs": {
+          "rssKiB": [
+            1624,
+            1624,
+            1632
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1864,
+                1872
+              ],
+              "proportionalKiB": [
+                475,
+                475
+              ],
+              "privateKiB": [
+                428,
+                428
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1864,
+                1872
+              ],
+              "proportionalKiB": [
+                475,
+                475
+              ],
+              "privateKiB": [
+                428,
+                428
+              ],
+              "anonymousKiB": [
+                112,
+                112
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1872,
+                1880
+              ],
+              "proportionalKiB": [
+                483,
+                483
+              ],
+              "privateKiB": [
+                436,
+                436
+              ],
+              "anonymousKiB": [
+                120,
+                120
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1872,
+                1880
+              ],
+              "proportionalKiB": [
+                483,
+                483
+              ],
+              "privateKiB": [
+                436,
+                436
+              ],
+              "anonymousKiB": [
+                120,
+                120
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            },
+            {
+              "mappedKiB": [
+                2812,
+                2812
+              ],
+              "residentKiB": [
+                1872,
+                1880
+              ],
+              "proportionalKiB": [
+                483,
+                483
+              ],
+              "privateKiB": [
+                436,
+                436
+              ],
+              "anonymousKiB": [
+                120,
+                120
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                144,
+                144
+              ],
+              "accountableMappingKiB": [
+                408,
+                408
+              ],
+              "noReserveMappingKiB": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "fwp": {
+          "rssKiB": [
+            1548,
+            1536,
+            1548
+          ],
+          "phases": [
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                1552,
+                1976
+              ],
+              "proportionalKiB": [
+                211,
+                263
+              ],
+              "privateKiB": [
+                172,
+                172
+              ],
+              "anonymousKiB": [
+                128,
+                128
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2012,
+                2012
+              ],
+              "proportionalKiB": [
+                299,
+                299
+              ],
+              "privateKiB": [
+                208,
+                208
+              ],
+              "anonymousKiB": [
+                164,
+                164
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2076,
+                2076
+              ],
+              "proportionalKiB": [
+                363,
+                363
+              ],
+              "privateKiB": [
+                272,
+                272
+              ],
+              "anonymousKiB": [
+                228,
+                228
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2076,
+                2076
+              ],
+              "proportionalKiB": [
+                363,
+                363
+              ],
+              "privateKiB": [
+                272,
+                272
+              ],
+              "anonymousKiB": [
+                228,
+                228
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            },
+            {
+              "mappedKiB": [
+                68266448,
+                68266448
+              ],
+              "residentKiB": [
+                2076,
+                2076
+              ],
+              "proportionalKiB": [
+                363,
+                363
+              ],
+              "privateKiB": [
+                272,
+                272
+              ],
+              "anonymousKiB": [
+                228,
+                228
+              ],
+              "swapKiB": [
+                0,
+                0
+              ],
+              "noAccessKiB": [
+                67211268,
+                67211268
+              ],
+              "accountableMappingKiB": [
+                1049152,
+                1049152
+              ],
+              "noReserveMappingKiB": [
+                67149888,
+                67149888
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "checkedFiles": 559,
+    "kernels": [
+      "7.0.0-1017-azure"
+    ],
+    "policies": [
+      {
+        "overcommit_memory": 0,
+        "overcommit_ratio": 50,
+        "overcommit_kbytes": 0
+      }
+    ],
+    "rawSnapshotsVerified": 195
+  }
+}

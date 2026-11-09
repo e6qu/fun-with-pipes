@@ -1,0 +1,92 @@
+{
+  "storage-amd-report.json.gz": {
+    "bytes": 404519,
+    "sha256": "7e418280541c9807c2e5f7c55b1f450b14d5a6edd05d1f8061f677a2ed891d49",
+    "compressedSha256": "2454a5f4903b56cec29000e47a6057e227f87feab320bfd0429d99e6c3e19519"
+  },
+  "storage-arm-report.json.gz": {
+    "bytes": 377786,
+    "sha256": "83f4ea4a6042ff53cbceebd117fa4ee49922eb48bfb55eec56acc89c639da981",
+    "compressedSha256": "74a932e0e527313e880a0054a0e3bbe4b0ff35cece4927ef9774b2128bb62d49"
+  },
+  "reuse-amd-report.json.gz": {
+    "bytes": 16045,
+    "sha256": "189d7fa3011f15a64e94e59bb3b432e370e47975f3629a821270724463af9e15",
+    "compressedSha256": "b7f991ec2322cf7d28b886b2904a52ad200f90520b3d3eaa9b3be986c1ba7cf0"
+  },
+  "reuse-arm-report.json.gz": {
+    "bytes": 15270,
+    "sha256": "427560e157ea28ea9a0f41aa0ff1652240069b582334625a9197320e04b55d12",
+    "compressedSha256": "4a339d9e817a2ee0b1b815080c104efc7b55f7828f45ec2865aec04295db267f"
+  },
+  "phases-amd-report.json.gz": {
+    "bytes": 33695,
+    "sha256": "6e638640d93965711f98d03f3456eb27541867c605a4926f172c4931930adea7",
+    "compressedSha256": "cc1124e49526c4e367426713071a6103900fcdfa2a48e72247022c32bd9ac234"
+  },
+  "phases-arm-report.json.gz": {
+    "bytes": 33721,
+    "sha256": "2b1e7fb59b8482a5f31b701f6b2d3e3a906acbb8b8ee682ea9d3f0263a2bfe9b",
+    "compressedSha256": "ac499cba8501948c423a2693570be548153bbec99f750b111094c283059c8fa5"
+  },
+  "peers-amd-report.json.gz": {
+    "bytes": 10915,
+    "sha256": "9a2f313bbf803454753d861c1ab91111a8b91d791bc65013d3bb8e85f75662b3",
+    "compressedSha256": "789c534611e9769249598d7067520300b8c1797a5d3c90180918c2e2d9c40ec4"
+  },
+  "peers-arm-report.json.gz": {
+    "bytes": 10923,
+    "sha256": "0c91ca3c2db134947dc21d8677668b4c6abe73e5ff912c4ebebcb3ac88a76a95",
+    "compressedSha256": "42b17c6a6dfa77fcfcea004bca7c6cbe22a0e4e01b3a666922feb43387cab2fd"
+  },
+  "swift-amd-report.json.gz": {
+    "bytes": 8298,
+    "sha256": "851ad2ff9e990884aed9117740c7ad03d6dcd79aaf51fbcf04bf8881fbb5b49c",
+    "compressedSha256": "8edbb9f0168afec82d733471a3ba2c2504adce96200a2f73b7d5e83c6dcd37df"
+  },
+  "swift-arm-report.json.gz": {
+    "bytes": 9748,
+    "sha256": "58d6b432d9ef5cf30b6b4fa3f629fd60420e5b7e46132944e41ed0e7c7bc8a82",
+    "compressedSha256": "5175759eb55771c57d8430481743c39e9605343b18bfd47dad7d798ca520150d"
+  },
+  "storage-amd-job.log.gz": {
+    "bytes": 321565,
+    "sha256": "d72f264bc5769725dce494f0ee2fcfa816d2da60ffa3945636318292eb887f8b",
+    "compressedSha256": "2e495c5c3b1027ac4d57faef5a943e5b7f9ed32aa37dc1b99897424c9d23eb26"
+  },
+  "storage-arm-job.log.gz": {
+    "bytes": 322794,
+    "sha256": "74bf0a5b61ff411a87dabb78fcea847eef16a856ff08cffc043da0342e9dbd0c",
+    "compressedSha256": "808bdfb6b09cee83face6b600984610059b92d24ed6f9bbecf5a0cd290e92f25"
+  },
+  "reuse-amd-job.log.gz": {
+    "bytes": 280221,
+    "sha256": "45aad8012d316dd0d8e4b7aaa33d5cd5ab2f0d632b0b5bfbc5e371a2004406d8",
+    "compressedSha256": "85ebb571d1504d8eb234a464649d6c33d9f01afb44cec731b982c4118a38078f"
+  },
+  "reuse-arm-job.log.gz": {
+    "bytes": 280394,
+    "sha256": "dc2e8d8184ccff3abfd14e23222ce3806accc1925166a925b283eaa8b56f2aff",
+    "compressedSha256": "c36c5292823946850f2128793e28563726a95a3371825ccb81eee12b8ec79abc"
+  },
+  "combined-amd-job.log.gz": {
+    "bytes": 290988,
+    "sha256": "ba2186dcc457da40d4566410a7a7355c9f6a2c4c5d063dc4885997b88e334b17",
+    "compressedSha256": "07effddbf41d3b0050b6f6d7a51e8ec7a75ccadfbd6deea7b945a9f05c3c577e"
+  },
+  "combined-arm-job.log.gz": {
+    "bytes": 293625,
+    "sha256": "bbf6441e674562a4d6d450dc87260664a1e83d08e697a4dc04f57d2c9fff1dce",
+    "compressedSha256": "83f636d987ec1ee54b874457c3e98e6279524052635b7782b387f4a06dd229ce"
+  },
+  "combined-docs.log.gz": {
+    "bytes": 439720,
+    "sha256": "2e962db3a4d312184c7e8aae84784be65d5f27c98482f30bfc1894bb9d788e01",
+    "compressedSha256": "44da0ab0f0ba1f69b97c06562cff1bb281b3fca190c46d316cb887e7884f2b32"
+  },
+  "storage-docs.log.gz": {
+    "bytes": 440059,
+    "sha256": "e97a436be5cd409292b172d660654e163b7e317244efe84123f5451f3c5ddd0a",
+    "compressedSha256": "bba0fced7896e3cf1746974e8ee76f150c165f2dad5d204829735321002cfc6c"
+  }
+}

@@ -9,16 +9,44 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
+now separate construction, reading, release and RSS. ARM64 shows lower overall
+time on some large cases but slower reading and costly empty-array churn. Many
+AMD64 comparisons remain inconclusive under the unchanged copy controls.
+
 [Structured-gradient methods](structured-gradient-methods-2026-11-08/README.md)
 compares reverse, forward, local and tensor AD across three objective shapes.
 All four sessions pass correctness/storage audits; noisy timing controls remain
 inconclusive. [Known array callback results](structured-array-callbacks-2026-11-08/README.md)
 now verify fewer derivative-object allocations and 85–91% less large-case
 computation in both ARM64 sessions. AMD64 timing acceptance remains open because
-copy controls fail. Full platform delivery is pending.
+copy controls fail. [Full platform delivery passes](structured-callback-delivery-2026-11-09/README.md).
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
-## Latest delivery
+[Weak phases, storage and actual target reuse now pass](weak-operation-verification-2026-11-09/README.md)
+on Linux ARM64/AMD64. [Weak timings](weak-operation-time-2026-11-09/README.md)
+show substantial C/Rust lookup gaps and mixed Swift results. The
+[fwp census](weak-operation-census-2026-11-09/README.md) verifies a temporary
+16-byte result allocation per successful lookup in this caller.
+[Queued-service results and cleanup](weak-callback-service-2026-11-09/README.md)
+and [native service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
+pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) now passes
+both sessions on both hosts: large full delivery takes 18.65–20.23× C's time and
+5.12–6.70× Swift's, with less process RSS than Swift but more than C/Rust.
+[Parser process memory](parser-process-memory.md) exposed
+[an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
+the memory observations pass on both Linux hosts. [Actual parser accounting](parser-process-accounting-2026-11-09/README.md)
+now separates accountable address ranges from resident pages. [Actual C/Rust
+resize overlap](parser-native-allocator-2026-11-09/README.md) and [fwp heap/region
+events](parser-heap-events-2026-11-09/README.md) now pass. The largest fwp charged
+peak occurs during tokenization; evaluation allocates nothing. [Arena retry
+and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
+
+## Latest deliveries
+
+Merged #272 delivers known array callback specialization and structured-gradient
+comparisons. [All final gates pass](structured-callback-delivery-2026-11-09/README.md);
+its original timing-control limits remain explicit.
 
 Merged #271 delivers [captured scalar array-map reuse](captured-array-maps.md);
 [all final gates pass](captured-map-delivery-2026-11-08/README.md).
@@ -54,6 +82,15 @@ Older reports below retain their own sources and decisions; “current” in a d
 experiment names its measured variant, not the latest compiler.
 
 ## Ownership costs
+
+- [Scalar Swift closure allocations](swift-scalar-closures-2026-11-09/README.md): one 24-byte native request per closure on both architectures; actual omitted-release and unwinder controls. ARC operations remain unmeasured.
+
+- [Matched four-language buffers](four-language-buffers-2026-11-09/README.md): 840 native cases, 42 interpreter checks and 24 real barrier-fault builds per host; no timing claim.
+
+- [Native weak registrations](weak-peer-checks-2026-11-09/README.md): C/Rust/Swift cancellation, active-owner lifetime and expiration; six actual fault builds per host. No time or ARC-count claim.
+
+- [First ownership peer checks](ownership-peer-checks-2026-11-08/README.md): Swift/C/Rust buffer correctness, C/Rust parser allocation lifetimes and native stack frames on ARM64/AMD64. Includes the repaired observer failure; no new peer timing claim.
+- [Returned-buffer phases and storage](returned-buffer-phases-2026-11-09/README.md): four-language phase correctness and native C/Rust/Swift allocation/release checks on both architectures. Separates Swift metadata from array storage and retains all initial failures; timings remain uncollected.
 
 - [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; audited ARM64/AMD64 profiles and allocation/release controls; individual ARC counts remain unmeasured.
 

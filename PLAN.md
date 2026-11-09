@@ -48,46 +48,66 @@ implementation; do not invent a universal language-overhead target.
 | 1 | Shared loop/array costs and complete documentation refresh | Attribute the checked-loop and array/derivative gaps; deliver a reusable improvement selected from those costs, under the [shared-cost contract](docs/measurements/shared-loop-array-costs.md). Review all tracked docs and 24 tutorials, remove stale directions/repetition, repair navigation, and pass the final production/docs/audit gates in the same PR. |
 | 2 | Broader ownership and representation coverage | Extend a common lifetime or representation proof to at least two distinct application patterns exposed by milestone 1. Cover local/escaping closures, records and shared inputs as appropriate. Preserve trap/cancellation cleanup and count necessary sharing; report time, allocations, live memory and compiler scaling. |
 | 3 | Structured autodiff usable beyond one objective | Compare ordinary reverse AD, local forward AD and existing tensor operations on a neighboring-pair objective, independent per-element loss, and a dense coupled objective. Specify supported operations and effects. Add a public structured operation only with correctness, lifetime and measured-benefit evidence; preserve general `grad`, nested differentiation and F128 precision. |
-| 4 | Complete ownership and peer comparisons | Update relevant Swift/C/Rust comparisons for buffers, returned functions, weak subscriptions and parser workspaces. Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
+| 4 | Complete ownership and peer comparisons | Complete the [buffer, returned-function, weak-registration and parser comparisons](docs/measurements/ownership-peers.md). Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
 | 5 | Language/tooling usability and compiler cost | Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#remaining-service-load-measurements). Add syntax only for a demonstrated need. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: structured autodiff
+## Current work: ownership comparisons
 
 #270 delivered the documentation refresh and fresh F64 stores. #271 extended
-array ownership to runtime sensor calibration and pixel adjustment. Both pass
-all delivery gates; [#271's receipt](docs/measurements/captured-map-delivery-2026-11-08/README.md)
-records the tested/merged tree. Their original noisy or unmet timing targets
-remain open. Do not repeat unchanged timings to obtain a pass or treat fewer
-allocations as proof of a timing target.
+array ownership to runtime sensor calibration and pixel adjustment. #272 added
+known array callback specialization and compared structured gradients across
+neighboring, independent and densely coupled objectives.
+[All #272 delivery gates pass](docs/measurements/structured-callback-delivery-2026-11-09/README.md).
+The original noisy or unmet timing targets for milestones 1–3 remain open; do not
+repeat unchanged measurements to obtain qualification.
 
-Milestone 3 now compares complete gradients for three functions:
+Milestone 4 now fills four concrete comparison gaps:
 
-- **Neighbors:** each term depends on two adjacent inputs. Local forward AD can
-  visit just the terms that affect a coordinate.
-- **Independent loss:** each term uses one input; existing `derivative` and
-  `array.map` already express this without another wrapper.
-- **Dense coupling:** every matrix row uses every input. Locality offers no
-  equivalent shortcut; retain general reverse and forward AD.
+1. **Buffers:** matched barriers and [separate returned-array lifetimes](docs/measurements/returned-buffer-checks-2026-11-09/README.md)
+   now pass in fwp/C/Rust/Swift. [Phase callers and native C/Rust/Swift storage checks](docs/measurements/returned-buffer-phases-2026-11-09/README.md)
+   also pass on both architectures. [Phase timings and process memory](docs/measurements/returned-buffer-time-2026-11-09/README.md)
+   are recorded for both sessions on both hosts. Many AMD64 copy controls remain
+   inconclusive; retain them without unchanged reruns.
+2. **Returned functions:** [scalar Swift allocation attribution now passes](docs/measurements/swift-scalar-closures-2026-11-09/README.md).
+   Retain separate construction/call/release measurements and prior timing misses;
+   do not equate native allocation bytes with fwp payload-only counters.
+3. **Weak registrations:** cancellation, active-call ownership, expiration and
+   [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
+   [Queued cleanup, actual reuse and native backing-storage release now pass](docs/measurements/weak-operation-verification-2026-11-09/README.md).
+   [Weak-operation timings](docs/measurements/weak-operation-time-2026-11-09/README.md)
+   now show substantial C/Rust lookup gaps and mixed Swift comparisons; the
+   [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
+   temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
+   and fwp physical release pass. [Native service allocations](docs/measurements/weak-callback-profiles-2026-11-09/README.md)
+   and their complete journal audit pass. [Complete service timings](docs/measurements/weak-callback-time-2026-11-09/README.md)
+   now pass both sessions: large full delivery takes 18.65–20.23× C's time and
+   5.12–6.70× Swift's. Attribute queue, payload, effect and channel costs before
+   choosing a shared improvement; weak-reference counts alone do not explain it.
+4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
+   and RSS/checkpoint observations pass on both Linux hosts. [Resize calibration](docs/measurements/parser-allocator-calibration-2026-11-09/README.md)
+   and [mapping accounting controls](docs/measurements/parser-mapping-accounting-2026-11-09/README.md)
+   also pass. [Actual parser accounting snapshots now pass](docs/measurements/parser-process-accounting-2026-11-09/README.md),
+   separating accountable address ranges from resident pages. [Actual C/Rust
+   allocation events](docs/measurements/parser-native-allocator-2026-11-09/README.md)
+   now expose 30% more peak requested storage than endpoint capacities for the
+   largest input. [fwp heap/region observations also pass](docs/measurements/parser-heap-events-2026-11-09/README.md):
+   the largest charged peak is during tokenization, and evaluation allocates
+   nothing. [Mapped-resize and arena-retry controls also pass](docs/measurements/parser-allocator-paths-2026-11-09/README.md).
+   Retain explicit limits for allocator paths that did not execute.
+   Preserve the new C/Rust allocation-event
+   and native frame checks without treating them as whole-process memory.
 
-[The comparison contract](docs/measurements/structured-autodiff.md) defines the
-formulas, method limits, input/output boundaries, correctness and measurement
-requirements. The [four-session diagnosis](docs/measurements/structured-gradient-methods-2026-11-08/README.md)
-identifies indirect array callbacks and temporary derivative records as a
-shared cost in independent and neighboring objectives. PR #272 extends existing
-bounded callback specialization to `array.map` and `array.generate`; focused
-GCC/Clang safety checks and all four measurement audits pass.
-[Candidate results](docs/measurements/structured-array-callbacks-2026-11-08/README.md)
-meet allocation/cleanup limits and both ARM64 timing targets. AMD64 copy noise
-leaves combined timing acceptance open under the
-[frozen rule](docs/measurements/structured-autodiff.md#selected-change-known-array-callbacks).
-Finish the report, tutorials and final production/docs/audit gates in this PR.
-Keep the local-pair helper experimental; no new public operation is needed for
-independent losses. Preserve general `grad`, nested AD and F128. Then proceed to
-milestone 4 while retaining every unmet timing target explicitly.
+[The scope](docs/measurements/ownership-peers.md) defines matched work, representation
+differences and remaining controls. [First native checks](docs/measurements/ownership-peer-checks-2026-11-08/README.md)
+verify Swift buffer results and C/Rust parser storage on ARM64/AMD64. The
+[four-language follow-up](docs/measurements/four-language-buffers-2026-11-09/README.md)
+now includes fwp and matched barriers; neither establishes a new peer timing result. Freeze each complete protocol before collecting timings.
+Keep the experimental local-pair helper and ordinary public gradient API unchanged
+unless representative evidence justifies a replacement.
 
 ## Earlier contracts
 

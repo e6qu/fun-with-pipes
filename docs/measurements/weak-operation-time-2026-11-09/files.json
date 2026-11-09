@@ -1,0 +1,47 @@
+{
+  "amd-report.json.gz": {
+    "bytes": 548502,
+    "sha256": "7a85e2ee34268834f59d466bac5e6dc0ebb2ea997cf77a479a65eb6bbdeee73f",
+    "compressedSha256": "6ef330d5cb7789aba2a84272e177994f3ac66e10a81a5ea47ed676005c82a2e0"
+  },
+  "amd-commands.jsonl.gz": {
+    "bytes": 821168,
+    "sha256": "2d0d6e66a226f4fc65aaa17618ee9c9439085fcf7bfc406dc5114e52892fc4e3",
+    "compressedSha256": "e79dd350edc3464a467ff02a01853cd0a3af32f4237b5246c175345bce6c1b8b"
+  },
+  "amd-phase-checks.json.gz": {
+    "bytes": 33774,
+    "sha256": "7afa7382b345bf960f295925bc02ce6b245d99966024ef072baaa2bd025e13e0",
+    "compressedSha256": "60c626ec78b59cf1977f83f8f3223909a0103180acfcd94fc2e0a2ad3e6585ea"
+  },
+  "amd-job.log.gz": {
+    "bytes": 316525,
+    "sha256": "a133680d67d25e4c5b1d3aac6a54749068103e9f2698f21ef6c369f98db65272",
+    "compressedSha256": "9fe9920e891da03056b94e95fd6392860857d567aa3dd84363fe57a6be63b262"
+  },
+  "arm-report.json.gz": {
+    "bytes": 547238,
+    "sha256": "7a12b0bf249db10a70e8f34e89f2717de61808e6eecad925dfc1eca64d2f619b",
+    "compressedSha256": "9ec97660c062f37576cee08a2066aad337a7a71f66e17a2c91bb22e126091f21"
+  },
+  "arm-commands.jsonl.gz": {
+    "bytes": 849361,
+    "sha256": "8595c48d56411e767962062a0ea20a5e46d74fddf2d867baf336c97661f1bd2f",
+    "compressedSha256": "f43f130a52f9775b7b5d97f4e73d934ff217ad882edf4a4168e43e57c412fdae"
+  },
+  "arm-phase-checks.json.gz": {
+    "bytes": 33800,
+    "sha256": "7a69de6eb793df24d3d882439a3a13d694ffbbc84dc5215ba3d8521c68a937da",
+    "compressedSha256": "a3e5eb4f1c99eb0a86d03d2e74c713dc0f6b8a638b0407969c48713a543d3e45"
+  },
+  "arm-job.log.gz": {
+    "bytes": 316718,
+    "sha256": "a53633ab10506b2ad7913b1d4b44fd8e72f7abe0397fb287ee134180bf910c8b",
+    "compressedSha256": "292e707d37ed718fde38d186139ac407425c9bfb90cac79fb38e5c8af45c8d4d"
+  },
+  "docs-job.log.gz": {
+    "bytes": 441155,
+    "sha256": "b6bc5825dfc766ad679b501b8f08e409c8a0670e7274013f56a0e8914979b706",
+    "compressedSha256": "99717d1a8014576444e91ccaecdc6aad38779a1566be56c3bfb8fd0e9dd9b865"
+  }
+}

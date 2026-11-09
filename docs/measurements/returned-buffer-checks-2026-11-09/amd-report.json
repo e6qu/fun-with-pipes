@@ -1,0 +1,6590 @@
+{
+  "source": "9d8bbb79a8c087b3c63c98d05aa515975ba9bfd1",
+  "architecture": "x86_64",
+  "host": {
+    "system": "Linux",
+    "node": "65537ca48b8a",
+    "release": "7.0.0-1017-azure",
+    "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+    "machine": "x86_64",
+    "processor": "x86_64"
+  },
+  "settings": {
+    "cc": "gcc",
+    "rustc": "rustc",
+    "swiftc": "swiftc",
+    "source": "9d8bbb79a8c087b3c63c98d05aa515975ba9bfd1",
+    "arch": "x86_64",
+    "c_arch": "x86-64",
+    "rust_cpu": "x86-64",
+    "target": "x86_64-unknown-linux-gnu",
+    "compiler": "target/debug/fwp",
+    "output": "returned-buffer-checks"
+  },
+  "scope": "Returned-buffer correctness; no timing or native allocation/ARC count claims",
+  "compilerSha256": "e25d3ef41119bab15309b949ceeda4ee56bf6185a611951ef5f857d4bd4956ef",
+  "versions": {
+    "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+    "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n"
+  },
+  "builds": [
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "8700cc5beec3b15fd7b0a6a32307575808478d01db8ec64884f76be5117f2ec3"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "c990e502e3f1df8634c4fb4a43cf8403494bb267c75e3435a413a71d71b36c0d"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 1,
+      "variant": "release-observed",
+      "binarySha256": "9c363535eb535b71c979cf9e3b160fe70b2f0da33b937d48a6e165a0f0c21710"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 1,
+      "variant": "omitted-release",
+      "binarySha256": "756b0a82f1be7d6d3e461d1ae6a16cee60e866a6a1606cd6340026633095cf7e"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "e26de5a259206e11462a97caa886795a0dcaf83dd890ae8a4c8867cf89c06978"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "450af6e46817355c3ee19f5fca4655d4b04920298080faf6ee32fa86403ec55b"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 2,
+      "variant": "release-observed",
+      "binarySha256": "970da36c518c42b29f6c0cbf261e345daa650203793aff8cec6e50d71cb4a12b"
+    },
+    {
+      "language": "c",
+      "shared": 0,
+      "level": 2,
+      "variant": "omitted-release",
+      "binarySha256": "184cfbab25c8b26f30c473df4288d706f46489ad1d874b445f53b51e7715a7fd"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "c6ddf168a743fb50a6a53588ab61abc7f3c78bfa3f2102ca1942baafd083e4f0"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "3f4f9ea4de0d5f7b29cb8e46dfd4397946ab17f8fb9187549a82cb666b1fd14e"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 1,
+      "variant": "release-observed",
+      "binarySha256": "30dae117013115f0c6f2c728ae87d9e791cce5e58146db3fa06417b181005776"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 1,
+      "variant": "omitted-release",
+      "binarySha256": "67c25901316082146f1229c4922549fe1f73f27efbee6dc8636dadb46b729928"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "84e0f565579c0abc55d4616081c0f5c16bef3511cdd02ccdc95176f098de2143"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "5a8abac43dbf2992fd4e07560bcbbf859646f3599937425e4732c1211aacf64d"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 2,
+      "variant": "release-observed",
+      "binarySha256": "692c3b9e7943d5908761b5a9bee15e35519eebe480a9ccc5bdcc0a115371900f"
+    },
+    {
+      "language": "c",
+      "shared": 1,
+      "level": 2,
+      "variant": "omitted-release",
+      "binarySha256": "db2dba0e0d22227c451d08c86a6030558cddae7cb8825f2d0e382a1cf5f7c433"
+    },
+    {
+      "language": "rs",
+      "shared": 0,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "2f840a22fc84b4966d88db20fe469114ea3b33d970df9c971300010ff7d49bfe"
+    },
+    {
+      "language": "rs",
+      "shared": 0,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "d9ec6c63a75698290cd7d441e8606a4ff13b30ca02546f1c814252a1a3ef6f00"
+    },
+    {
+      "language": "rs",
+      "shared": 0,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "4c92a7a09e5cef58540c6f7d15ffce19d82be7644896bcccaedfc1e1c454e984"
+    },
+    {
+      "language": "rs",
+      "shared": 0,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "7adfeaa7a66126d1318ee1ab7af3345cea785eef24ff522c6309e41cf6929d1a"
+    },
+    {
+      "language": "rs",
+      "shared": 1,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "eb187411b97174c2b95b99fceba0cb458e6cac6203c399839ec883d186c04397"
+    },
+    {
+      "language": "rs",
+      "shared": 1,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "589fc0fb0d4b5fb5a3db29d8e3e24068f9d6b542e9fb72ead4df5027fe77c665"
+    },
+    {
+      "language": "rs",
+      "shared": 1,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "72b663ecfc6999180da2297d1e2b0b951f9a1bba6ae595653a88e8f98d29defa"
+    },
+    {
+      "language": "rs",
+      "shared": 1,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "3399d2b6701a2e768a5731ba4648be4b4c18ff749258578b1962bc9b5445a43b"
+    },
+    {
+      "language": "swift",
+      "shared": 0,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "fb941aa54af72b48fac0c61bd0e2beb5a4ef68a96efc37af990c04a53f82d860"
+    },
+    {
+      "language": "swift",
+      "shared": 0,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "0755e6324cfef8497f8f9d559cfb0da585209f00f8161100acc31f77387d561f"
+    },
+    {
+      "language": "swift",
+      "shared": 0,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "231409aa2a81099ab0f4530cb06c060b977bcefa7152c318cbbcc9fbb8005107"
+    },
+    {
+      "language": "swift",
+      "shared": 0,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "c3fa5dfe5ba3f8cd89ed96ff1b55e0591439768f98d39c75f8aad941c8371658"
+    },
+    {
+      "language": "swift",
+      "shared": 1,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "67e7ea0b643d953b65a2045e69dd58c806e2406ff2ad90309596c6e3b75e0a4b"
+    },
+    {
+      "language": "swift",
+      "shared": 1,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "29ad7755552375d60a2d203c9a9e186917e01e7386fcefd5d9014033db9af63f"
+    },
+    {
+      "language": "swift",
+      "shared": 1,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "df8c8cbe84f2dd71e83af04abde559d9ff65ff6c5856f68991584584d612c59b"
+    },
+    {
+      "language": "swift",
+      "shared": 1,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "2815567634ebd1dcc77e4c0003a14883d9ab2e4571918fbbd9835f65e5c5bbdb"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "a64ea7293b6c65a273cc8586be782757931c1ad111ae7863d5c664121efc8e26"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "46e278582d7443e1ba671ed72f22a75a4c3d183dc6e1c805af8faec58a1f5ebd"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 1,
+      "variant": "release-observed",
+      "binarySha256": "61e3b3c621ecae06e00d1be3bf88d7f33b407200623d8989041097db16af0725"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 1,
+      "variant": "omitted-release",
+      "binarySha256": "982a0826fe9f0bf6db25a8720ffa4245b177c308a44f4e10e260c96171a8e4ca"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "c9b9a25aaa17ef45637d2d546dcd96019c3c4d8d7bb80086aca74d0536ad817e"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "7c70f3fc2dd8befb8620c48e412c72172b2981520aa3d199feb93668e441a3b8"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 2,
+      "variant": "release-observed",
+      "binarySha256": "e84de4891736188263c5c590388b2fefc4ee3cf3e60a536994adf5395394c7af"
+    },
+    {
+      "language": "fwp",
+      "shared": 0,
+      "level": 2,
+      "variant": "omitted-release",
+      "binarySha256": "a4f254d8a0c45f15ac45806af5a4ee6e817596389f79bbdc0d582ae6de1d812b"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 1,
+      "variant": "ordinary",
+      "binarySha256": "08c5521b61f8211f846f2018cfc517302819f1f6bc4ac22fc00474724729c714"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 1,
+      "variant": "wrong-scan",
+      "binarySha256": "ff98cf2da5867afd222cf19c68c73513d15151737565dfb066b33dda22994838"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 1,
+      "variant": "release-observed",
+      "binarySha256": "e5a7b055a27926880872e34fef01c23e55278ed9e9500e6cb827a18132a17941"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 1,
+      "variant": "omitted-release",
+      "binarySha256": "8b3dc0ed0bf60161ea4b9f73a0805eb6b0c3be248d598f7afd303fc28992f5c1"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 2,
+      "variant": "ordinary",
+      "binarySha256": "2ce9a182b4470d9990d3995fe1e0a325980f5a258df810c0cb107e2c476a47ed"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 2,
+      "variant": "wrong-scan",
+      "binarySha256": "17d5355634f27dc998099d93bddf8c1ca56a6a3411c4d9332a60b4eaa15390cb"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 2,
+      "variant": "release-observed",
+      "binarySha256": "ae07470cfa9fcddda586b2edfd693a39a07ab5efde5bbf2a51f8fe4e412659b0"
+    },
+    {
+      "language": "fwp",
+      "shared": 1,
+      "level": 2,
+      "variant": "omitted-release",
+      "binarySha256": "a1d895cd9d7e7d411fd72f573615303a113694458606c8d6964bd733f9b56802"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-1-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-0-2-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-1-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/c-1-2-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-0-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/rs-1-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-0-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/swift-1-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-1-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "25159680\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "103078821888\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-0-2-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-1-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "-9223372036854775808",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "-1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "16",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "240\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "4096",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "16773120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "262144",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "68719214592\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "1",
+        "extra"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "expected length repeats\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "+",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        " 1",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "1x",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "9223372036854775808",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "-9223372036854775809",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "262145",
+        "1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "length exceeds experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "-1"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "65"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "repeats outside experiment bound\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-ordinary/program",
+        "0",
+        "1.0"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "invalid integer\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-wrong-scan/program",
+        "16",
+        "1"
+      ],
+      "status": 4,
+      "stdout": "",
+      "stderr": "incorrect result\n",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "-9223372036854775808",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "-1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "0",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "1",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "16",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "720\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "4096",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "50319360\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-release-observed/program",
+        "262144",
+        "3"
+      ],
+      "status": 0,
+      "stdout": "206157643776\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fwp-1-2-omitted-release/program",
+        "16",
+        "1"
+      ],
+      "status": 79,
+      "stdout": "",
+      "stderr": "buffer release check failed\n",
+      "fwpNoOpt": null
+    }
+  ],
+  "interpreter": [
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "-9223372036854775808"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "-9223372036854775808"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "-1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "-1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "0"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "0"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "16"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "16"
+      ],
+      "status": 0,
+      "stdout": "120\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "4096"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "4096"
+      ],
+      "status": 0,
+      "stdout": "8386560\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "262144"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": null
+    },
+    {
+      "command": [
+        "/__w/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "exec",
+        "--interp",
+        "/__w/fun-with-pipes/fun-with-pipes/returned-buffer-checks/fixtures/returned_buffer_peer.fwp",
+        "buffer-check",
+        "262144"
+      ],
+      "status": 0,
+      "stdout": "34359607296\n",
+      "stderr": "",
+      "fwpNoOpt": "1"
+    }
+  ],
+  "failures": [],
+  "files": {
+    "c-0-1-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "c-0-1-omitted-release/caller.o": "2cbccfe08d3e12c94cd667cda54c0ee108e205b65bc3da38c95e9b5d9014c593",
+    "c-0-1-omitted-release/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-1-omitted-release/factory.o": "fce1659302a621adec22bc0b46cab1add78cf636b0096a139a0cf125a20cff64",
+    "c-0-1-omitted-release/program": "756b0a82f1be7d6d3e461d1ae6a16cee60e866a6a1606cd6340026633095cf7e",
+    "c-0-1-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-1-ordinary/caller.o": "a2a4afa3f387cd2e0a28cb4224ada4bb93ecddb26971095cb566abb24fd9a43a",
+    "c-0-1-ordinary/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-1-ordinary/factory.o": "6627787526c756fb18d874841d43f7c19e9d37e7840b5837998aadaff03622d5",
+    "c-0-1-ordinary/program": "8700cc5beec3b15fd7b0a6a32307575808478d01db8ec64884f76be5117f2ec3",
+    "c-0-1-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-1-release-observed/caller.o": "4615c0236466cfd1b1cedc97682b43908e3f02caca725e10ff0576d860e52315",
+    "c-0-1-release-observed/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-1-release-observed/factory.o": "fce1659302a621adec22bc0b46cab1add78cf636b0096a139a0cf125a20cff64",
+    "c-0-1-release-observed/program": "9c363535eb535b71c979cf9e3b160fe70b2f0da33b937d48a6e165a0f0c21710",
+    "c-0-1-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-1-wrong-scan/caller.o": "a2a4afa3f387cd2e0a28cb4224ada4bb93ecddb26971095cb566abb24fd9a43a",
+    "c-0-1-wrong-scan/factory.c": "5860cbc86fad2502103b290aa5a8e827e3bae53f1e4b56f980f95df712b19dba",
+    "c-0-1-wrong-scan/factory.o": "2ff581b02b9e4428c1ac77ce3df5c501a2b04e6cbc3554bf40b1c2ca0a368e3d",
+    "c-0-1-wrong-scan/program": "c990e502e3f1df8634c4fb4a43cf8403494bb267c75e3435a413a71d71b36c0d",
+    "c-0-2-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "c-0-2-omitted-release/caller.o": "a69fe747c248b4a72686ba8b2c6cbdfd250f92272b01524ebf46f8c12588d2ad",
+    "c-0-2-omitted-release/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-2-omitted-release/factory.o": "3f6e1972396ae919097fb16aa8e7194e90bdbe8c2056bd41115408918c8e413f",
+    "c-0-2-omitted-release/program": "184cfbab25c8b26f30c473df4288d706f46489ad1d874b445f53b51e7715a7fd",
+    "c-0-2-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-2-ordinary/caller.o": "5a834c376188ad28ff0538c8f28613f1b965cd4e33a70e700c0cedd27f16223b",
+    "c-0-2-ordinary/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-2-ordinary/factory.o": "ddb3e8dc3f9d0f0de59e14a332b833a83a0c4d6c273e6731e0b0ed2ccb04d5f2",
+    "c-0-2-ordinary/program": "e26de5a259206e11462a97caa886795a0dcaf83dd890ae8a4c8867cf89c06978",
+    "c-0-2-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-2-release-observed/caller.o": "a64e5d2cea593a84713ce40663c424d7f8097ab9ef95f77ef11c537eb4af7ded",
+    "c-0-2-release-observed/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-0-2-release-observed/factory.o": "3f6e1972396ae919097fb16aa8e7194e90bdbe8c2056bd41115408918c8e413f",
+    "c-0-2-release-observed/program": "970da36c518c42b29f6c0cbf261e345daa650203793aff8cec6e50d71cb4a12b",
+    "c-0-2-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-0-2-wrong-scan/caller.o": "5a834c376188ad28ff0538c8f28613f1b965cd4e33a70e700c0cedd27f16223b",
+    "c-0-2-wrong-scan/factory.c": "5860cbc86fad2502103b290aa5a8e827e3bae53f1e4b56f980f95df712b19dba",
+    "c-0-2-wrong-scan/factory.o": "81d0d5fc8ac858f58f8418b5e11c5138ccc0a63a705cd541e58b772ab3688ade",
+    "c-0-2-wrong-scan/program": "450af6e46817355c3ee19f5fca4655d4b04920298080faf6ee32fa86403ec55b",
+    "c-1-1-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "c-1-1-omitted-release/caller.o": "fe61073b7b92baff4ed0b44d9c9266046358adc956ca280b36d925a0d679a739",
+    "c-1-1-omitted-release/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-1-omitted-release/factory.o": "a4fc98058e52eeb228fbe27ad7bca34b1e47d9e8507d9fe181a93e8034cee328",
+    "c-1-1-omitted-release/program": "67c25901316082146f1229c4922549fe1f73f27efbee6dc8636dadb46b729928",
+    "c-1-1-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-1-ordinary/caller.o": "c65f2aac9709ee1035d0c24cf0f79a2e72eed709e60a737b7a8efb61a48fe71b",
+    "c-1-1-ordinary/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-1-ordinary/factory.o": "56166d64eb70f70e7043d678f830c7b06c01d95f5494c9d33443719127ac8390",
+    "c-1-1-ordinary/program": "c6ddf168a743fb50a6a53588ab61abc7f3c78bfa3f2102ca1942baafd083e4f0",
+    "c-1-1-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-1-release-observed/caller.o": "4686f14110a69a958de4baf6a8e172a86e5185de30361d0818b94a8c2127fb96",
+    "c-1-1-release-observed/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-1-release-observed/factory.o": "a4fc98058e52eeb228fbe27ad7bca34b1e47d9e8507d9fe181a93e8034cee328",
+    "c-1-1-release-observed/program": "30dae117013115f0c6f2c728ae87d9e791cce5e58146db3fa06417b181005776",
+    "c-1-1-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-1-wrong-scan/caller.o": "c65f2aac9709ee1035d0c24cf0f79a2e72eed709e60a737b7a8efb61a48fe71b",
+    "c-1-1-wrong-scan/factory.c": "5860cbc86fad2502103b290aa5a8e827e3bae53f1e4b56f980f95df712b19dba",
+    "c-1-1-wrong-scan/factory.o": "2fecd3e73b226872eca254a77bff00aa2b5080857b40517de988bc88763c85d3",
+    "c-1-1-wrong-scan/program": "3f4f9ea4de0d5f7b29cb8e46dfd4397946ab17f8fb9187549a82cb666b1fd14e",
+    "c-1-2-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "c-1-2-omitted-release/caller.o": "3469946803129171a0b105641706073b94745a1dd2c90db6d61d85ff5210509b",
+    "c-1-2-omitted-release/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-2-omitted-release/factory.o": "a7723f9b195d51af93ade6f3ce9d9991547d1c1b4c9243ee46cd227e04ceead6",
+    "c-1-2-omitted-release/program": "db2dba0e0d22227c451d08c86a6030558cddae7cb8825f2d0e382a1cf5f7c433",
+    "c-1-2-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-2-ordinary/caller.o": "80d108f83e6ba8d80501aecc4449a47e9a21fd1d09b8b1b033e10794eca41d22",
+    "c-1-2-ordinary/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-2-ordinary/factory.o": "ca37d9bd525d304cea1147bda08cfa0caf6587cf690c6c65a5d3fd79ed9dad78",
+    "c-1-2-ordinary/program": "84e0f565579c0abc55d4616081c0f5c16bef3511cdd02ccdc95176f098de2143",
+    "c-1-2-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-2-release-observed/caller.o": "78de81a896b91e49719325b49e2b685b25f426e4c97a76c4a44ff00e476b0198",
+    "c-1-2-release-observed/factory.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "c-1-2-release-observed/factory.o": "a7723f9b195d51af93ade6f3ce9d9991547d1c1b4c9243ee46cd227e04ceead6",
+    "c-1-2-release-observed/program": "692c3b9e7943d5908761b5a9bee15e35519eebe480a9ccc5bdcc0a115371900f",
+    "c-1-2-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "c-1-2-wrong-scan/caller.o": "80d108f83e6ba8d80501aecc4449a47e9a21fd1d09b8b1b033e10794eca41d22",
+    "c-1-2-wrong-scan/factory.c": "5860cbc86fad2502103b290aa5a8e827e3bae53f1e4b56f980f95df712b19dba",
+    "c-1-2-wrong-scan/factory.o": "067693b122f586f7854c8347c9b6d8e2d09aa80d5685d0f00266615b12015967",
+    "c-1-2-wrong-scan/program": "5a8abac43dbf2992fd4e07560bcbbf859646f3599937425e4732c1211aacf64d",
+    "commands.jsonl": "ace59ce427ebedfbd72f65fe9009641a377b02ef85c1fe4b0300028c40413aad",
+    "fixtures/returned_buffer_caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fixtures/returned_buffer_caller.rs": "599b6174dc36e568c8c8728e62738167e92d1ca9b992d23c0221eeac22567d31",
+    "fixtures/returned_buffer_caller.swift": "857745e96136821587953bddb00d1d3a6eda43fa64e6d208c5ff41eff6692b51",
+    "fixtures/returned_buffer_peer.c": "78f4a4a58afee0c9730b0abf7c9700fbcdc16e82a14185a096ddd41c2f7bb59d",
+    "fixtures/returned_buffer_peer.fwp": "19140010c0051d5a611f09e25d1224de23b77457796b96a52c9e6909e101550f",
+    "fixtures/returned_buffer_peer.h": "0397e8b7d6466db2e723dae0c4f59a6b2197c7c15054d3c8e95ef3a34faa4d28",
+    "fixtures/returned_buffer_peer.rs": "f75f6cb7bb9ece968810051b2378e08c32bff1dd144bb3c776acf32ff0c7103c",
+    "fixtures/returned_buffer_peer.swift": "12efd7d43b77f90b03dae3cd01c495b17b437400f72a87bf3761a85edb48ba5b",
+    "fwp-0-1-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "fwp-0-1-omitted-release/caller.o": "5bac13d331afeed869e7cd55c1bd86f062b8d37ad50949750ba6e84bd0126dbe",
+    "fwp-0-1-omitted-release/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-1-omitted-release/factory.o": "0061f993b5186850a0b03595a75fb8cfb8762a793a52790811b81322cef5cc8b",
+    "fwp-0-1-omitted-release/program": "982a0826fe9f0bf6db25a8720ffa4245b177c308a44f4e10e260c96171a8e4ca",
+    "fwp-0-1-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-1-ordinary/caller.o": "efb5940a655c45ba9852c080e4f267d1313b233df0ac66d57738c2e0733f024b",
+    "fwp-0-1-ordinary/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-1-ordinary/factory.o": "d6d61b1a3e0861d6420ac532a74e0f93fb57747881930c2047fbcd15f9daa4a4",
+    "fwp-0-1-ordinary/program": "a64ea7293b6c65a273cc8586be782757931c1ad111ae7863d5c664121efc8e26",
+    "fwp-0-1-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-1-release-observed/caller.o": "5a92439b65d727bfc4d457a6104a624cbf9cbd5a5f67544f1b150d020adfaeeb",
+    "fwp-0-1-release-observed/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-1-release-observed/factory.o": "0061f993b5186850a0b03595a75fb8cfb8762a793a52790811b81322cef5cc8b",
+    "fwp-0-1-release-observed/program": "61e3b3c621ecae06e00d1be3bf88d7f33b407200623d8989041097db16af0725",
+    "fwp-0-1-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-1-wrong-scan/caller.o": "efb5940a655c45ba9852c080e4f267d1313b233df0ac66d57738c2e0733f024b",
+    "fwp-0-1-wrong-scan/factory.c": "9e7d622de9eafefc7fcdf77990c63b23051ccd14e9452b99a3eacf276c21b4c9",
+    "fwp-0-1-wrong-scan/factory.o": "8dacd1476ce6dcbfb99c9150fc486bd81d4d1245379bd72a6d4f0c65575e79cb",
+    "fwp-0-1-wrong-scan/program": "46e278582d7443e1ba671ed72f22a75a4c3d183dc6e1c805af8faec58a1f5ebd",
+    "fwp-0-2-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "fwp-0-2-omitted-release/caller.o": "07252ba2c9197969adc233c4184c0929858ea01edb91fe2f17526c588988f09c",
+    "fwp-0-2-omitted-release/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-2-omitted-release/factory.o": "a432e516a607ce20bd780e42ff81fbc4c118e3f3f8c4bd481f8e7100eb3de9d6",
+    "fwp-0-2-omitted-release/program": "a4f254d8a0c45f15ac45806af5a4ee6e817596389f79bbdc0d582ae6de1d812b",
+    "fwp-0-2-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-2-ordinary/caller.o": "bc79cf9ec76044305e94cdfaec351d5983be488e3cae550fdf9cd99674e9fe00",
+    "fwp-0-2-ordinary/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-2-ordinary/factory.o": "4a805348e6af7da53a90b7cd06ef3dc87e86822cfe5fd970b207c5db16cf5aca",
+    "fwp-0-2-ordinary/program": "c9b9a25aaa17ef45637d2d546dcd96019c3c4d8d7bb80086aca74d0536ad817e",
+    "fwp-0-2-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-2-release-observed/caller.o": "42d06023ba5977c936d06006d7bb2649cf7bda91f56573f0ce9944aa777cabe4",
+    "fwp-0-2-release-observed/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-0-2-release-observed/factory.o": "a432e516a607ce20bd780e42ff81fbc4c118e3f3f8c4bd481f8e7100eb3de9d6",
+    "fwp-0-2-release-observed/program": "e84de4891736188263c5c590388b2fefc4ee3cf3e60a536994adf5395394c7af",
+    "fwp-0-2-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-0-2-wrong-scan/caller.o": "bc79cf9ec76044305e94cdfaec351d5983be488e3cae550fdf9cd99674e9fe00",
+    "fwp-0-2-wrong-scan/factory.c": "9e7d622de9eafefc7fcdf77990c63b23051ccd14e9452b99a3eacf276c21b4c9",
+    "fwp-0-2-wrong-scan/factory.o": "997110f4d18205efc600497d87102f3700c678bd819ab9ec6f65e83f57e5d85c",
+    "fwp-0-2-wrong-scan/program": "7c70f3fc2dd8befb8620c48e412c72172b2981520aa3d199feb93668e441a3b8",
+    "fwp-1-1-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "fwp-1-1-omitted-release/caller.o": "3c7b3ae1baa1e23d2ad32d97167de64bc7bee2b9b433f266fe63a9ef15c3a84b",
+    "fwp-1-1-omitted-release/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-1-omitted-release/factory.o": "2e3e7831ff7ec846b81e141e99afa6ccb6f4ace692ea0cc4566182b4e081625c",
+    "fwp-1-1-omitted-release/program": "8b3dc0ed0bf60161ea4b9f73a0805eb6b0c3be248d598f7afd303fc28992f5c1",
+    "fwp-1-1-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-1-ordinary/caller.o": "2721862c15a3c36bc956c7ee9731c8a779b24170f43251ac7f944a1065e3dd6a",
+    "fwp-1-1-ordinary/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-1-ordinary/factory.o": "ffa4af6ca1f261a04deb5b60c958618698580710e3359fd676123439e3f7bbee",
+    "fwp-1-1-ordinary/program": "08c5521b61f8211f846f2018cfc517302819f1f6bc4ac22fc00474724729c714",
+    "fwp-1-1-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-1-release-observed/caller.o": "82f90e73d078a33aa740296eed4a57b6d133ad4628bdf0bbeda280e3e2f357c9",
+    "fwp-1-1-release-observed/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-1-release-observed/factory.o": "2e3e7831ff7ec846b81e141e99afa6ccb6f4ace692ea0cc4566182b4e081625c",
+    "fwp-1-1-release-observed/program": "e5a7b055a27926880872e34fef01c23e55278ed9e9500e6cb827a18132a17941",
+    "fwp-1-1-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-1-wrong-scan/caller.o": "2721862c15a3c36bc956c7ee9731c8a779b24170f43251ac7f944a1065e3dd6a",
+    "fwp-1-1-wrong-scan/factory.c": "9e7d622de9eafefc7fcdf77990c63b23051ccd14e9452b99a3eacf276c21b4c9",
+    "fwp-1-1-wrong-scan/factory.o": "305c70379c1cd81d3d315349d575de3671794ce64fadf203892600522dbc3b27",
+    "fwp-1-1-wrong-scan/program": "ff98cf2da5867afd222cf19c68c73513d15151737565dfb066b33dda22994838",
+    "fwp-1-2-omitted-release/caller.c": "9d5feb997e31b8d9fc3c6d1ae1ddfc125065434311d111796587a224f1276388",
+    "fwp-1-2-omitted-release/caller.o": "c25df811a0b1513be3e54484dd9e067f06cee8869dd8e9e466020fa969ccdc4c",
+    "fwp-1-2-omitted-release/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-2-omitted-release/factory.o": "58b81ba459c43b1d56422d9c853270c1097af7ab8af5df0cc48c4603f93edf30",
+    "fwp-1-2-omitted-release/program": "a1d895cd9d7e7d411fd72f573615303a113694458606c8d6964bd733f9b56802",
+    "fwp-1-2-ordinary/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-2-ordinary/caller.o": "3e2e9f7d08450a9a82a13a8d56ed232486189c530c7d98f61133b2feb24fa8c3",
+    "fwp-1-2-ordinary/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-2-ordinary/factory.o": "a9d0b5ba6e24e7a8f73d57f8037d3ccc79b66b35a2cbd035e9c3832d7fc9b0bf",
+    "fwp-1-2-ordinary/program": "2ce9a182b4470d9990d3995fe1e0a325980f5a258df810c0cb107e2c476a47ed",
+    "fwp-1-2-release-observed/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-2-release-observed/caller.o": "50816be86df43667767d4c07f7020c951d400d1afa4420a6c6ff9f6f22f5f8d9",
+    "fwp-1-2-release-observed/factory.c": "4b2e82364481263c29dfdb145ddd110d7f028fdc8ab4de43d8682620adc21229",
+    "fwp-1-2-release-observed/factory.o": "58b81ba459c43b1d56422d9c853270c1097af7ab8af5df0cc48c4603f93edf30",
+    "fwp-1-2-release-observed/program": "ae07470cfa9fcddda586b2edfd693a39a07ab5efde5bbf2a51f8fe4e412659b0",
+    "fwp-1-2-wrong-scan/caller.c": "96a976dba6549ddc36ce30fd893566061a95735f0a4a2c03b50bbe71beb50ba9",
+    "fwp-1-2-wrong-scan/caller.o": "3e2e9f7d08450a9a82a13a8d56ed232486189c530c7d98f61133b2feb24fa8c3",
+    "fwp-1-2-wrong-scan/factory.c": "9e7d622de9eafefc7fcdf77990c63b23051ccd14e9452b99a3eacf276c21b4c9",
+    "fwp-1-2-wrong-scan/factory.o": "1bfbdfd4b5be36c2b49bdcddd0ecb06cc5656afbad73865f6f86dcace0e1ee80",
+    "fwp-1-2-wrong-scan/program": "17d5355634f27dc998099d93bddf8c1ca56a6a3411c4d9332a60b4eaa15390cb",
+    "original.c": "16911d62437ec3f65c8fa99298f94705adfcd9974dc279cffb3b91f6b610bf65",
+    "rs-0-1-ordinary/factory.rs": "f75f6cb7bb9ece968810051b2378e08c32bff1dd144bb3c776acf32ff0c7103c",
+    "rs-0-1-ordinary/libreturned_buffer.rlib": "16228a25a62afd3b4b340f83f8d892eba7e2cb4207cd9921dd47dd015839c31c",
+    "rs-0-1-ordinary/program": "2f840a22fc84b4966d88db20fe469114ea3b33d970df9c971300010ff7d49bfe",
+    "rs-0-1-wrong-scan/factory.rs": "863db0a5634162803970e0470f3006a1c9c5f9a05012393e9f51db80c0971eaf",
+    "rs-0-1-wrong-scan/libreturned_buffer.rlib": "ec06ba6b1a27e5d95c45fa4ff7a029f673bf2aa3f5c8951cd055b8f2e02f2340",
+    "rs-0-1-wrong-scan/program": "d9ec6c63a75698290cd7d441e8606a4ff13b30ca02546f1c814252a1a3ef6f00",
+    "rs-0-2-ordinary/factory.rs": "f75f6cb7bb9ece968810051b2378e08c32bff1dd144bb3c776acf32ff0c7103c",
+    "rs-0-2-ordinary/libreturned_buffer.rlib": "4cc96cce204fd3755b400012573cedc3bbc120d8863aad10192ab8ed58a5ca8c",
+    "rs-0-2-ordinary/program": "4c92a7a09e5cef58540c6f7d15ffce19d82be7644896bcccaedfc1e1c454e984",
+    "rs-0-2-wrong-scan/factory.rs": "863db0a5634162803970e0470f3006a1c9c5f9a05012393e9f51db80c0971eaf",
+    "rs-0-2-wrong-scan/libreturned_buffer.rlib": "827ce37b6565e0d9cff35f216fa2c900b95c716b3e6f44d69ab3f1c4c4afaa62",
+    "rs-0-2-wrong-scan/program": "7adfeaa7a66126d1318ee1ab7af3345cea785eef24ff522c6309e41cf6929d1a",
+    "rs-1-1-ordinary/factory.rs": "f75f6cb7bb9ece968810051b2378e08c32bff1dd144bb3c776acf32ff0c7103c",
+    "rs-1-1-ordinary/libreturned_buffer.rlib": "e4efcb247b03d7760c7899ff2123c16f3ed39e89ca2344e28f3b8d766f7ae8d4",
+    "rs-1-1-ordinary/program": "eb187411b97174c2b95b99fceba0cb458e6cac6203c399839ec883d186c04397",
+    "rs-1-1-wrong-scan/factory.rs": "863db0a5634162803970e0470f3006a1c9c5f9a05012393e9f51db80c0971eaf",
+    "rs-1-1-wrong-scan/libreturned_buffer.rlib": "993109ce4eba04799d2ff7aab462a37f0b63477610ccf010d9f7f4581fd68983",
+    "rs-1-1-wrong-scan/program": "589fc0fb0d4b5fb5a3db29d8e3e24068f9d6b542e9fb72ead4df5027fe77c665",
+    "rs-1-2-ordinary/factory.rs": "f75f6cb7bb9ece968810051b2378e08c32bff1dd144bb3c776acf32ff0c7103c",
+    "rs-1-2-ordinary/libreturned_buffer.rlib": "31befba0b3db99b44d817301164bf50d1f996286edbd84a125f2aede53761bcb",
+    "rs-1-2-ordinary/program": "72b663ecfc6999180da2297d1e2b0b951f9a1bba6ae595653a88e8f98d29defa",
+    "rs-1-2-wrong-scan/factory.rs": "863db0a5634162803970e0470f3006a1c9c5f9a05012393e9f51db80c0971eaf",
+    "rs-1-2-wrong-scan/libreturned_buffer.rlib": "830616608eb7fe78b237066a5bb72d4ff643fb30c1d5d26890b0bebc307980a9",
+    "rs-1-2-wrong-scan/program": "3399d2b6701a2e768a5731ba4648be4b4c18ff749258578b1962bc9b5445a43b",
+    "swift-0-1-ordinary/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-0-1-ordinary/ReturnedBuffer.swiftmodule": "81997c80e670a5d47772939389718ea2c34dce803335c8c6949ddc20a4090790",
+    "swift-0-1-ordinary/ReturnedBuffer.swiftsourceinfo": "36b023a6fd4c26889e6641f03762c5dc434ea879fad614c800f795b3c37dbf2e",
+    "swift-0-1-ordinary/factory.o": "d1891bd335399e69b891aaa95f717e824193439fea4225d0319039cce274629c",
+    "swift-0-1-ordinary/factory.swift": "12efd7d43b77f90b03dae3cd01c495b17b437400f72a87bf3761a85edb48ba5b",
+    "swift-0-1-ordinary/program": "fb941aa54af72b48fac0c61bd0e2beb5a4ef68a96efc37af990c04a53f82d860",
+    "swift-0-1-wrong-scan/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-0-1-wrong-scan/ReturnedBuffer.swiftmodule": "81997c80e670a5d47772939389718ea2c34dce803335c8c6949ddc20a4090790",
+    "swift-0-1-wrong-scan/ReturnedBuffer.swiftsourceinfo": "cbcd6394d2662277f3a7a2495944a85d3ea824e38a6f990fdf178a5a13c19251",
+    "swift-0-1-wrong-scan/factory.o": "a3d0b327083ae3f390b728f4edfa6daa4b9967dac3653fac4a7eb3429db65346",
+    "swift-0-1-wrong-scan/factory.swift": "f8b233a61bbf579d54599cfdeb213613cb0922763f110ec79caff5ebce9de68c",
+    "swift-0-1-wrong-scan/program": "0755e6324cfef8497f8f9d559cfb0da585209f00f8161100acc31f77387d561f",
+    "swift-0-2-ordinary/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-0-2-ordinary/ReturnedBuffer.swiftmodule": "4ca6b5ba1216766fd8d2d89d9118053cf951f0ecc92d2107d85870138d93f446",
+    "swift-0-2-ordinary/ReturnedBuffer.swiftsourceinfo": "b182b1fb286d9910673060b5eed7da6d558f48f330a7106e925f3c944433295a",
+    "swift-0-2-ordinary/factory.o": "6288ea0da1f824a506bd72ce7577eef8304e6a5b3b0cf0390cf6cffbcd31a73c",
+    "swift-0-2-ordinary/factory.swift": "12efd7d43b77f90b03dae3cd01c495b17b437400f72a87bf3761a85edb48ba5b",
+    "swift-0-2-ordinary/program": "231409aa2a81099ab0f4530cb06c060b977bcefa7152c318cbbcc9fbb8005107",
+    "swift-0-2-wrong-scan/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-0-2-wrong-scan/ReturnedBuffer.swiftmodule": "4ca6b5ba1216766fd8d2d89d9118053cf951f0ecc92d2107d85870138d93f446",
+    "swift-0-2-wrong-scan/ReturnedBuffer.swiftsourceinfo": "dd2e816a691bfd8e81d561d3ae3fdbcc0fd56e44bb66e140403210e4b04ea213",
+    "swift-0-2-wrong-scan/factory.o": "c5c3dbad67c6300348ff95827c40a96f45658fca39e5d84b480c7d3cdfdef79f",
+    "swift-0-2-wrong-scan/factory.swift": "f8b233a61bbf579d54599cfdeb213613cb0922763f110ec79caff5ebce9de68c",
+    "swift-0-2-wrong-scan/program": "c3fa5dfe5ba3f8cd89ed96ff1b55e0591439768f98d39c75f8aad941c8371658",
+    "swift-1-1-ordinary/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-1-1-ordinary/ReturnedBuffer.swiftmodule": "81997c80e670a5d47772939389718ea2c34dce803335c8c6949ddc20a4090790",
+    "swift-1-1-ordinary/ReturnedBuffer.swiftsourceinfo": "0d378f70bf8eeb0bc6c256226aa1697c1dd11d29e63c13a332bc3f6e5860ac3a",
+    "swift-1-1-ordinary/factory.o": "af05641c36480f7942064437d903093289fd95d386f9658063a0fdc0ed664c89",
+    "swift-1-1-ordinary/factory.swift": "12efd7d43b77f90b03dae3cd01c495b17b437400f72a87bf3761a85edb48ba5b",
+    "swift-1-1-ordinary/program": "67e7ea0b643d953b65a2045e69dd58c806e2406ff2ad90309596c6e3b75e0a4b",
+    "swift-1-1-wrong-scan/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-1-1-wrong-scan/ReturnedBuffer.swiftmodule": "81997c80e670a5d47772939389718ea2c34dce803335c8c6949ddc20a4090790",
+    "swift-1-1-wrong-scan/ReturnedBuffer.swiftsourceinfo": "da6bec86086c38c409d36f381582b52853c2ed10715372f3f3f658d288c30ebc",
+    "swift-1-1-wrong-scan/factory.o": "2f89cd10a162081b20108745c858ae0a13275cae8c5eeda8c529bdc93307f9cb",
+    "swift-1-1-wrong-scan/factory.swift": "f8b233a61bbf579d54599cfdeb213613cb0922763f110ec79caff5ebce9de68c",
+    "swift-1-1-wrong-scan/program": "29ad7755552375d60a2d203c9a9e186917e01e7386fcefd5d9014033db9af63f",
+    "swift-1-2-ordinary/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-1-2-ordinary/ReturnedBuffer.swiftmodule": "4ca6b5ba1216766fd8d2d89d9118053cf951f0ecc92d2107d85870138d93f446",
+    "swift-1-2-ordinary/ReturnedBuffer.swiftsourceinfo": "677fbdf47d04918c0cde6bfe8354ccc628d841b9e90908cdbe66aca8618a14e8",
+    "swift-1-2-ordinary/factory.o": "eb3deacbb60312b6108f39fdac86073edd96f5f6315df8f648f828bb453774ba",
+    "swift-1-2-ordinary/factory.swift": "12efd7d43b77f90b03dae3cd01c495b17b437400f72a87bf3761a85edb48ba5b",
+    "swift-1-2-ordinary/program": "df8c8cbe84f2dd71e83af04abde559d9ff65ff6c5856f68991584584d612c59b",
+    "swift-1-2-wrong-scan/ReturnedBuffer.swiftdoc": "a6428f274cd9cd5e05481a9dccc535d2580355d040c461a1ace40ca5d8fad746",
+    "swift-1-2-wrong-scan/ReturnedBuffer.swiftmodule": "4ca6b5ba1216766fd8d2d89d9118053cf951f0ecc92d2107d85870138d93f446",
+    "swift-1-2-wrong-scan/ReturnedBuffer.swiftsourceinfo": "2a12af93a28d10aedb2a27ed94ce8710eb1bd732c1547e62fb9157acce1f33a9",
+    "swift-1-2-wrong-scan/factory.o": "2e58218f29373303b5a5a7db964ae66fa398507da8c42a8c238938db228f15b6",
+    "swift-1-2-wrong-scan/factory.swift": "f8b233a61bbf579d54599cfdeb213613cb0922763f110ec79caff5ebce9de68c",
+    "swift-1-2-wrong-scan/program": "2815567634ebd1dcc77e4c0003a14883d9ab2e4571918fbbd9835f65e5c5bbdb"
+  }
+}

@@ -5,8 +5,12 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
+import shlex
+import subprocess
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -15,6 +19,50 @@ SPEC = importlib.util.spec_from_file_location('package_evidence', Path(__file__)
 PACKAGE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PACKAGE)
 SOURCE = 'a' * 40
+ROOT = Path(__file__).resolve().parent.parent
+
+
+class CancellationPackaging(unittest.TestCase):
+    def test_actual_workflow_commands_preserve_evidence_and_only_skip_early_cancellation(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        parts = workflow.split('      - name: Package and verify ownership evidence\n')[1:]
+        self.assertEqual(len(parts), 3)
+        self.assertEqual(workflow.count(
+            "if: always() && steps.ownership_package.outputs.attempted != 'false'"), 6)
+        revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+        git_dir = subprocess.check_output(['git', 'rev-parse', '--absolute-git-dir'], cwd=ROOT, text=True).strip()
+        for index, part in enumerate(parts):
+            step = part.split('\n      - name:', 1)[0]
+            self.assertIn('        id: ownership_package\n        if: always()\n        shell: bash\n', step)
+            script = textwrap.dedent(step.split('        run: |\n', 1)[1])
+            script = script.replace('${{ runner.os }}', 'Linux').replace('${{ runner.arch }}', 'ARM64')
+            script = script.replace('${{ github.event.pull_request.head.sha || github.sha }}', revision)
+            script = script.replace('scripts/package-evidence.py', shlex.quote(str(ROOT / 'scripts/package-evidence.py')))
+            for status in ('success', 'failure', 'cancelled'):
+                for evidence in ('absent', 'present', 'invalid'):
+                    with self.subTest(step=index, status=status, evidence=evidence), tempfile.TemporaryDirectory() as directory:
+                        base = Path(directory)
+                        output = base / 'outputs'
+                        if evidence != 'absent':
+                            folder = base / 'ownership-evidence'
+                            folder.mkdir()
+                            if evidence == 'present':
+                                (folder / 'partial.log').write_text('completed test record\n')
+                            else:
+                                # Preserve the real packager's rejection of unsafe input.
+                                (folder / 'bad-link').symlink_to(base / 'missing')
+                        result = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c',
+                            script.replace('${{ job.status }}', status)],
+                            cwd=base, env=dict(os.environ, GIT_DIR=git_dir, GITHUB_OUTPUT=str(output)),
+                            capture_output=True, text=True, timeout=30)
+                        skipped = status == 'cancelled' and evidence == 'absent'
+                        self.assertEqual(output.read_text(), f'attempted={str(not skipped).lower()}\n')
+                        self.assertEqual(result.returncode == 0, skipped or evidence == 'present', result.stderr)
+                        archives = list(base.glob('ownership-evidence-*.zip'))
+                        self.assertEqual(len(archives), int(evidence == 'present'))
+                        if archives:
+                            with zipfile.ZipFile(archives[0]) as archive:
+                                self.assertEqual(archive.read('partial.log'), b'completed test record\n')
 
 
 class Evidence(unittest.TestCase):

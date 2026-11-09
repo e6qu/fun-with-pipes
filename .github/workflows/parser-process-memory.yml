@@ -1,0 +1,126 @@
+name: Parser process memory
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Immutable parser-memory preparation tag
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  memory:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-parser-memory-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Native compilers and memory tools
+        run: sudo apt-get update && sudo apt-get install -y gcc g++ python3 binutils libssl-dev pkg-config time
+      - name: Exact native source and frozen tag
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: |
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_TAG")" = "$GITHUB_SHA"
+          cat /etc/os-release
+      - name: Build current compiler
+        id: compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir parser-memory-setup
+          cargo fetch --locked 2>&1 | tee parser-memory-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee parser-memory-setup/build.log
+      - name: Mapping reader and child cleanup controls
+        id: reader
+        run: |
+          python3 scripts/test-parser-process-memory.py
+          python3 scripts/test-parser-mapping-accounting.py
+      - name: Native parser owned entries, aliases and failure cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        shell: bash
+        env:
+          FWP_ARC_ARTIFACTS: parser-owned-entry-probes
+        run: |
+          python3 scripts/run-native-tests.py --targets parser_workspace \
+            --idle-timeout 600 --logs parser-owned-entry-logs
+      - name: Frozen primitive contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json \
+            --output parser-memory-setup/primitive-inventory.json
+      - name: Preserve allocation-transition and frame checks
+        if: ${{ !cancelled() }}
+        run: >-
+          python3 scripts/check-parser-peer-storage.py --cc gcc --rustc rustc --objcopy objcopy
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --output parser-memory-storage
+      - name: Ordinary RSS and diagnostic phase checkpoints
+        id: observations
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && steps.reader.outcome == 'success' }}
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/measure-parser-process-memory.py collect --compiler target/debug/fwp
+          --cc gcc --ar ar --rustc rustc --readelf readelf --time /usr/bin/time
+          --source "$GITHUB_SHA" --tag "$SOURCE_TAG" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output parser-memory-evidence
+      - name: Reconstruct memory reports from retained commands and snapshots
+        id: audit
+        if: ${{ !cancelled() && steps.observations.outcome == 'success' }}
+        run: >-
+          python3 scripts/measure-parser-process-memory.py audit --input parser-memory-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+      - name: Reject corrupted sources, checkpoints, controls and RSS
+        if: ${{ !cancelled() && steps.audit.outcome == 'success' }}
+        run: >-
+          python3 scripts/check-parser-memory-audit.py --input parser-memory-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output parser-memory-audit-controls
+      - name: Preserve complete and failed observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-process-memory-${{ matrix.arch }}
+          path: |
+            parser-memory-setup/
+            parser-memory-storage/
+            parser-memory-evidence/
+            parser-memory-audit-controls/
+            parser-owned-entry-probes/
+            parser-owned-entry-logs/
+          if-no-files-found: error

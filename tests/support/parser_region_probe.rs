@@ -1,7 +1,13 @@
 //! Instrument actual generated parser nodes and every count operation.
 use fwp::cgen::Target;
 
-pub fn instrument(code: &str, name: &str, target: Target) -> String {
+pub enum Entry {
+    Direct,
+    Owned,
+    ExtraOwnedDrop,
+}
+
+pub fn instrument(code: &str, name: &str, target: Target, entry_kind: Entry) -> String {
     let (argument, storage, depths, save_counts, check_counts) = match target {
         Target::Native => ("v", "fwp_heap.live", "5, 9, 13", "", ""),
         Target::Wasi => (
@@ -61,9 +67,23 @@ pub fn instrument(code: &str, name: &str, target: Target) -> String {
         assert_eq!(measured.matches(old).count(), 1, "{old}");
         measured = measured.replace(old, new);
     }
+    let call = match entry_kind {
+        Entry::Direct => format!("f{entry}(input)"),
+        Entry::Owned | Entry::ExtraOwnedDrop => {
+            let owned_call = format!("    V result = f{entry}(a[0]);");
+            assert_eq!(measured.matches(&owned_call).count(), 1, "{owned_call}");
+            if matches!(entry_kind, Entry::ExtraOwnedDrop) {
+                measured = measured.replace(
+                    &owned_call,
+                    &format!("{owned_call}\n    fwp_arg_drop{entry}(a, 0, 1);"),
+                );
+            }
+            format!("fwp_owned_entry{entry}((V[]){{input}})")
+        }
+    };
     measured.push_str(
         &main
-            .replace("@entry@", &format!("f{entry}"))
+            .replace("@call@", &call)
             .replace("@storage@", storage)
             .replace("@depths@", depths)
             .replace("@save_counts@", save_counts)

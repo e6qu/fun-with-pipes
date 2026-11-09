@@ -61,11 +61,24 @@ static int64_t evaluate(const Arena *a, size_t index) {
                      __builtin_mul_overflow(left, right, &value)) exit(101);
     return value;
 }
+static size_t positive_argument(const char *text) {
+    const char *digits = text + (*text == '+');
+    if (*digits < '0' || *digits > '9') exit(90);
+    char *end;
+    errno = 0;
+    unsigned long long value = strtoull(text, &end, 10);
+    if (errno || *end || !value || (unsigned long long)(size_t)value != value) exit(90);
+    return (size_t)value;
+}
 int main(int argc, char **argv) {
     if (argc != 5) return 90;
-    size_t rounds = strtoull(argv[2], NULL, 10), expected_nodes = strtoull(argv[4], NULL, 10);
-    int64_t expected = strtoll(argv[3], NULL, 10);
-    if (!rounds || !expected_nodes) return 90;
+    size_t rounds = positive_argument(argv[2]), expected_nodes = positive_argument(argv[4]);
+    const char *digits = argv[3] + (argv[3][0] == '+' || argv[3][0] == '-');
+    if (*digits < '0' || *digits > '9') return 90;
+    char *end;
+    errno = 0;
+    int64_t expected = strtoll(argv[3], &end, 10);
+    if (errno || *end) return 90;
     FILE *file = fopen(argv[1], "rb");
     if (!file || fseek(file, 0, SEEK_END)) return 90;
     long size = ftell(file);

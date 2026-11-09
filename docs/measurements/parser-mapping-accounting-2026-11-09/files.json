@@ -1,0 +1,37 @@
+{
+  "amd-evidence.tar.gz": {
+    "bytes": 1382400,
+    "sha256": "03f6eeb365be9d5ae4f3bb42c8f0144fbc12089071d120221c1e38e9cc07be43",
+    "compressedSha256": "7d3e63a180a01b4c22862e61f3010f9113a43079704056b5a09d2c938c3f90a7"
+  },
+  "amd-report.json.gz": {
+    "bytes": 58228,
+    "sha256": "a2f36269be624741d12f8b0fe1e77efac9d7e357f6001ef4eda09fb3b4c15c48",
+    "compressedSha256": "8a44ae6c5cc0e1ef5056de81c2f5c734eb735b01c1937f51fa8f30fa8295e330"
+  },
+  "amd-job.log.gz": {
+    "bytes": 214176,
+    "sha256": "be147b021fe3026da182c30624547ff9cd4ce9299edbf8b2fc762924f6ad5389",
+    "compressedSha256": "42822f6fb740a1174521a1d0dca7fc8b733eb68051bf0af104472cf9382e6b08"
+  },
+  "arm-evidence.tar.gz": {
+    "bytes": 1126400,
+    "sha256": "1c2ab532219fdb959fb7b6f9ea010e4236cf62e419c0a3f93e268d31ba814e83",
+    "compressedSha256": "e0db8332ea2907809cf84625b3361d5f32fa7b7eade788ed74326bc57860343f"
+  },
+  "arm-report.json.gz": {
+    "bytes": 57991,
+    "sha256": "c6b21362fb40cc4dc52042661fdd87f6e7989e7b3fb18ebb37218cd1405fc3a5",
+    "compressedSha256": "2fb1a7a580b4667d8de5d0fb63a185457af79d32434f3ca2e601a1a5f7c46b24"
+  },
+  "arm-job.log.gz": {
+    "bytes": 213848,
+    "sha256": "977bd5cac17483ed91c8329bd2b65e41b33010e3a9ffe9f27a67cd5500c40b16",
+    "compressedSha256": "5bddfd89a2e71774c3410be42abecb35075f4ead0f31627f5ca697c9c702b330"
+  },
+  "repair-docs-job.log.gz": {
+    "bytes": 443696,
+    "sha256": "77eea0fc88731572e42e324d1c0299a45fe82652dec2a5850ccde0ad7a5d0a09",
+    "compressedSha256": "f98efb22ca5df38bb7cdd48d63b2d800b463e94a9518d9f4e1e2da9d0b2a6b82"
+  }
+}
