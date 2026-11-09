@@ -77,7 +77,9 @@ Milestone 5 follows the [application/compiler/load protocol](docs/measurements/a
    queued callbacks through raw/optimized interpretation, native O1/O2, REPL,
    notebook edits/save/reopen, debugger inspection and retained O0–O3 C/code
    reports. The [walkthroughs](docs/application-workflows.md) and focused tests
-   are prepared. Repair every native/browser finding before claiming support.
+   pass on both Linux architectures, with browser checks on AMD64.
+   [Retained results](docs/measurements/application-workflows-2026-11-09/README.md)
+   record the repairs and inspection scope.
 2. **Expose real compiler phases:** source loading/parsing, macro expansion,
    inference, specialization, optimization, ownership, C emission and external
    compilation. Account for nested work without double-counting. Ordinary and

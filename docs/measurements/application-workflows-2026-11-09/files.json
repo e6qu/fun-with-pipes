@@ -1,0 +1,98 @@
+{
+  "amd-original-job.log.gz": {
+    "bytes": 18746,
+    "sha256": "0eea8a743f30bf40728ca570a8f0f628bfc06ffd15ab7ecfa8a4d317a00c2aff"
+  },
+  "original-doc-failure.log.gz": {
+    "bytes": 996,
+    "sha256": "2ae0d89d6239dbddfc3f7e6742474515c4f2d477fe7d34911ed7eec2e05a5fcf"
+  },
+  "audit.json": {
+    "bytes": 668,
+    "sha256": "d0b94531ec701e33fac4dad59e556758aa2e358dcc8f4ef0b6ccbb1382be15d2"
+  },
+  "arm-original-job.log.gz": {
+    "bytes": 14308,
+    "sha256": "2018ecc14888d2f3060f540d5b316ec846ec5cc54a02f1d178ff6f4d520dc300"
+  },
+  "original-compiler-diagnostics.json": {
+    "bytes": 3789,
+    "sha256": "1668bb57739c9cbd22ead43ebef4bfb31f702a3fceb4c0051ad123768890e9ee"
+  },
+  "amd/application-code.log": {
+    "bytes": 254,
+    "sha256": "65e9af89abc4c2e473b8fb3a3292bd1f0d2457eef208c7ae7010240c57e14ff7"
+  },
+  "amd/browser.log": {
+    "bytes": 145,
+    "sha256": "a25394951ed0299c93c1cc3f6577d953c285bd7ce8afa91e0bc5bae3be41e81f"
+  },
+  "amd/application-tests.log": {
+    "bytes": 565,
+    "sha256": "28a4be6cdc34e0bcfb83d1298cb25382a7bbdbb9c9f6dde7e62e735b5262ae52"
+  },
+  "amd/application-source.txt": {
+    "bytes": 41,
+    "sha256": "515b587cd7bdaa448cb8e274bebf6dcef276189f55f00c2ad85062c30fbab98d"
+  },
+  "amd/application-toolchain.txt": {
+    "bytes": 541,
+    "sha256": "1fa256501397f970f712f542f19be11f606440ab7f4969ee9efa7bcd09ddd9bf"
+  },
+  "amd/code-summary.json": {
+    "bytes": 5481,
+    "sha256": "281c13063e0f7c74d5eaa3da1e14a071c0309e5b1ccd98524eed206ceae8906b"
+  },
+  "amd/job.json": {
+    "bytes": 5016,
+    "sha256": "aa1b859daf7d30236f1252c8a9a629ead91c73c3a42d858798eb4e35798074c0"
+  },
+  "amd/job.log.gz": {
+    "bytes": 19563,
+    "sha256": "e48670bb21abde65c9a52609541dc707236db555bf0ea781da48fa4b2fa144d8"
+  },
+  "amd/artifact.json": {
+    "bytes": 805,
+    "sha256": "5dad0774fbebc1d7c53d879fe4196bb6353d6d16fe8031a14551ec8cf9e844d4"
+  },
+  "arm/application-code.log": {
+    "bytes": 254,
+    "sha256": "65e9af89abc4c2e473b8fb3a3292bd1f0d2457eef208c7ae7010240c57e14ff7"
+  },
+  "arm/application-tests.log": {
+    "bytes": 565,
+    "sha256": "1b06b4b36c72996aa9cc5d497c357fcc5445598e4694d10d96c9cc31b73e1941"
+  },
+  "arm/application-source.txt": {
+    "bytes": 41,
+    "sha256": "515b587cd7bdaa448cb8e274bebf6dcef276189f55f00c2ad85062c30fbab98d"
+  },
+  "arm/application-toolchain.txt": {
+    "bytes": 574,
+    "sha256": "416c977d5ed4abaa73b93a2414953c88d011cae78cbd8e30cbb7c8364963ae12"
+  },
+  "arm/code-summary.json": {
+    "bytes": 5566,
+    "sha256": "a70c64dd20d32c6e1ceed1a121d3f102e74646e11f6df82f44c983df6855de60"
+  },
+  "arm/job.json": {
+    "bytes": 5022,
+    "sha256": "92d48185638b43004359ca7f8a903d5e4a3fc21c00dfca20410b0256b6209d4b"
+  },
+  "arm/job.log.gz": {
+    "bytes": 16544,
+    "sha256": "acf47e85f24b48e39d4527adb54a39c83719892463883b45508cb07097070484"
+  },
+  "arm/artifact.json": {
+    "bytes": 808,
+    "sha256": "42ca37e8d931591a73ee7a2609ba4af94041860a218ff921d124bd1b2e28b176"
+  },
+  "arm/application-integers.log.gz": {
+    "bytes": 514,
+    "sha256": "0680c7b33aec2279f2298bfdda282271de027cbb8f659a0a1bd376ea88aaf38e"
+  },
+  "amd/application-integers.log.gz": {
+    "bytes": 515,
+    "sha256": "a1c9873280bdd95ea3d54d7066f997bd904e7517ea86bdf32eff65432f0e3fe6"
+  }
+}

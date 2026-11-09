@@ -98,6 +98,9 @@ pub const COMPTIME_EFFECTS: &[&str] = &["IO", "FileIO", "Alloc", "Error"];
 type IResult<T> = Result<T, Diagnostic>;
 
 pub fn check_program(env: &mut Env, out: &mut Typed) {
+    let phase = crate::compile_profile::phase("type-check");
+    phase.count("bindings", env.bindings.len());
+    phase.count("types", env.types.len());
     check_superclasses(env, out);
     let order = binding_order(env);
     for group in order {

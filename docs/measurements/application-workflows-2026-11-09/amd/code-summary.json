@@ -1,0 +1,87 @@
+{
+  "host": "x86_64",
+  "system": "Linux",
+  "compiler_target": "x86_64-linux-gnu",
+  "executed": false,
+  "applications": {
+    "words": [
+      {
+        "level": "O0",
+        "instructions": 68770,
+        "binary_sha256": "9cf6f7f8bcdecf846549e8ae21043998c84728436058cf7f899e608ce6c7d860",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 8205,
+        "binary_sha256": "fa4515a65b6d4f08191fec7ec60ba96b1b519f59e987c9ffa488f06e0b016f07",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 9114,
+        "binary_sha256": "c6910f0f214bbf68639a9263e922e4dc2e5ed3512bf925fac88578647c190def",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 12025,
+        "binary_sha256": "a7bd1f4b4ba027a98534567446c3d490109fa5cb77214c640275d10af9525931",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ],
+    "numerical": [
+      {
+        "level": "O0",
+        "instructions": 71379,
+        "binary_sha256": "278a8fefaf8ab2d22354025b438f2815d6bbcc7b52b3fc47602e1d4610ab60cc",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 6823,
+        "binary_sha256": "8149bfd9f4e415217fec2938aa3f92ea3cb0560938bf46b54f5baf33b6dd16ba",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 7498,
+        "binary_sha256": "773f58529c8cb0d1a27e5ead9ac6b944c34d571956ec9e9018fcc45a94a9253f",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 10285,
+        "binary_sha256": "78ab0b8e88f0a5812b658c972df8e79c438319fc5575f85f97a5b4b0f5c9c471",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ],
+    "callbacks": [
+      {
+        "level": "O0",
+        "instructions": 84430,
+        "binary_sha256": "5f72c26db84eebe58e81b9edd39d40b10acf53ba55625d7d06848b5db4ee089d",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 21798,
+        "binary_sha256": "f4bda21fd5aef18e813b761b8f378f0c54d0034eaf33a83319ef45a75bae7137",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 23764,
+        "binary_sha256": "898496d447a6ba5e79cbc624f43259f47cfb353d47748a0a2e91a55dcc04871c",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 25489,
+        "binary_sha256": "2dd716ddd7792429ae19a87870dbc538bdc9d1816699706daaf9afd06ce36d39",
+        "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ]
+  },
+  "issues": []
+}

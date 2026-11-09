@@ -12,6 +12,7 @@ pub mod asyncify;
 pub mod cgen;
 pub mod cli;
 pub mod cli_gen;
+pub mod compile_profile;
 pub mod csv;
 pub mod diag;
 pub mod driver;

@@ -38,10 +38,12 @@ pub fn parse_module_recover(
     file: u32,
     next_id: &mut NodeId,
 ) -> (Module, Vec<Diagnostic>) {
+    let phase = crate::compile_profile::phase("parse-module");
     let toks = match lex(text, file) {
         Ok(t) => t,
         Err(d) => return (Module::default(), vec![d]),
     };
+    phase.count("tokens_including_eof", toks.len());
     let mut p = Parser {
         toks,
         pos: 0,
@@ -49,7 +51,9 @@ pub fn parse_module_recover(
         next_id,
         rec_sigs: Vec::new(),
     };
-    p.module()
+    let result = p.module();
+    phase.count("declarations", result.0.decls.len());
+    result
 }
 
 /// Parse a standalone expression, including syntax values decoded by macros.

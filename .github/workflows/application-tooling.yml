@@ -36,6 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -88,7 +90,16 @@ jobs:
       - name: Source formatting
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
+          cargo fmt --all -- --check
           "$FWP_TEST_BIN" fmt --check examples/wordfreq.fwp tests/run/wordfreq.fwp
+      - name: Compiler observation lint
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo clippy --lib --bin fwp --test compiler_options --test integer_output -- -D warnings
+      - name: Compiler observation command contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --test compiler_options 2>&1 | tee application-compiler-options.log
       - name: Three applications through native and interactive tools
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
@@ -130,6 +141,7 @@ jobs:
             application-toolchain.txt
             application-tests.log
             application-integers.log
+            application-compiler-options.log
             previous-application-diagnostics.json
             application-code.log
             application-code/

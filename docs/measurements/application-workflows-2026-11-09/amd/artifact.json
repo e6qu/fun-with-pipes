@@ -1,0 +1,20 @@
+{
+  "id": 13715201175,
+  "node_id": "MDg6QXJ0aWZhY3QxMzcxNTIwMTE3NQ==",
+  "name": "application-tooling-ubuntu-latest",
+  "size_in_bytes": 15375751,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13715201175",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13715201175/zip",
+  "expired": false,
+  "digest": "sha256:06a6779c4abbebda834af183241da062598880c27c154ad347c5dcb73c77e6ce",
+  "created_at": "2026-11-09T22:06:42Z",
+  "updated_at": "2026-11-09T22:06:42Z",
+  "expires_at": "2027-02-07T22:00:16Z",
+  "workflow_run": {
+    "id": 42707776942,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "application-tooling-costs",
+    "head_sha": "cafc157a0076bec270324b9c2c116f5fc376f889"
+  }
+}

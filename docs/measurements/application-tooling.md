@@ -42,18 +42,11 @@ For each application, deliver a short walkthrough and executable checks:
 The [walkthroughs](../application-workflows.md) and
 [application tests](../../sdk/python/tests/test_applications.py) now cover the
 three calculations through raw/optimized interpretation, native O1/O2, the REPL,
-notebook input edits/errors and debugger stops. Their first native run exposed
-the preparation failures listed below. The browser checks also exercise
-all three applications, stale/error states, explicit effects and source-only
-save/reopen. The [inspection script](../../scripts/check-application-disassembly.py)
-retains generated C and actual O0/O1/O2/O3 objects for all three. The focused
-`application-tooling` workflow runs the SDK and inspection checks on both native
-Linux architectures and the browser on AMD64. Execution of these new checks is
-in repair: the first run passes the browser workflows but rejects missing
-scripted-REPL settings, source formatting and an O3 integer-format diagnostic.
-The historical word-count audit also needs to use its recorded source rather
-than today's example. These checks are not compiler-cost or service-throughput
-measurements.
+notebook input edits/errors and debugger stops. [Both native Linux jobs now pass](application-workflows-2026-11-09/README.md), including all eight integer-output
+checks and O0–O3 C/object inspection. AMD64 browser checks pass all three
+applications, stale/error states, explicit effects and source-only save/reopen.
+The receipt preserves the first failures and their repairs. These are workflow
+and code-inspection checks, not compiler-cost or service-throughput measurements.
 
 Use the existing [SDK tests](../../sdk/python/tests/test_tools.py),
 [terminal checks](../../sdk/python/tests/test_repl_terminal.py) and
@@ -64,9 +57,10 @@ the walkthroughs must explain. None uses JIT compilation.
 
 ## Compiler phases and growth
 
-Whole `fwp emit-c` time cannot identify an expensive compiler stage. Add explicit
-measurement settings to the actual compilation path; do not build a second
-compiler pipeline just for this experiment.
+Whole `fwp emit-c` time cannot identify an expensive compiler stage.
+[Compiler phase reporting](../compiler-pipeline.md#observe-compiler-phases) is
+implemented on the actual build worker; native verification is pending. It
+records nested spans without creating a second compiler pipeline.
 
 | Measurement | Boundary to expose |
 |---|---|

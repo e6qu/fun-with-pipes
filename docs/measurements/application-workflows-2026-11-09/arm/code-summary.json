@@ -1,0 +1,87 @@
+{
+  "host": "aarch64",
+  "system": "Linux",
+  "compiler_target": "aarch64-linux-gnu",
+  "executed": false,
+  "applications": {
+    "words": [
+      {
+        "level": "O0",
+        "instructions": 71387,
+        "binary_sha256": "bd6786cd5c31f42d061323737c44c1acc4e9056e8f2dd72b7a58bb0a0c02bf58",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 8301,
+        "binary_sha256": "da043cd185f50fd56a2858b0a5a33608ac83ffbd19d69007ea5b6a7657a48c2c",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 8542,
+        "binary_sha256": "3c38ac09d2658e2ee1bae385792b7b2649b135e50304380be8417ed350ccf8fc",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 11077,
+        "binary_sha256": "46d72fc8b991970e333630c132b2f8e105fb3feccf71722c54692836618e4ec1",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ],
+    "numerical": [
+      {
+        "level": "O0",
+        "instructions": 73957,
+        "binary_sha256": "630378176eb0e7df2482ce1e9b63a961b1defe90d2e319ecfd6ae5439f4193a9",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 7319,
+        "binary_sha256": "7622ffa5a21465e2c2befae9a5dca4eb9e39a02e040eb0d63aed346cc6eda922",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 7377,
+        "binary_sha256": "f6530a30eb6abc4a8baed9000e154dc48d81f3d269e36ff2e26940a1bd4781d2",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 9483,
+        "binary_sha256": "ddc54a91711b671062be7aafa049a5345e808687d03c0116884e7400d496c9e3",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ],
+    "callbacks": [
+      {
+        "level": "O0",
+        "instructions": 85739,
+        "binary_sha256": "157af599a00e0efad0db84f4229d4a584ff300baf10336349744d7daf5c4720f",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O1",
+        "instructions": 23431,
+        "binary_sha256": "1ad18d21021fbe6b6e3218e14c59a72e274c4ebe6a1f943ce0d7d7556ef0fe72",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O2",
+        "instructions": 22680,
+        "binary_sha256": "074ffc277a726e07b1b780df79dfd4c81d8721936bba9823f14722718a53584d",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      },
+      {
+        "level": "O3",
+        "instructions": 24310,
+        "binary_sha256": "626c1b7431269740149c6acfbee2da03cfb690d30ebcad795a39df9053b502a9",
+        "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+      }
+    ]
+  },
+  "issues": []
+}

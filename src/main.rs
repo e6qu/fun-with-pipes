@@ -21,6 +21,7 @@ usage:
             [--wasm-async jspi|asyncify]
             [--staticlib|--cdylib] [--link lib-or-source]...
             [--service m[=addr]]...
+            [--profile-compile new-report.json]
                                  compile `main` (or an exported function) to a
                                  native executable or a WebAssembly module;
                                  --cli makes every exported function exposed
@@ -481,6 +482,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut path = None;
     let mut out = None;
     let mut emit_c = false;
+    let mut compile_profile: Option<std::path::PathBuf> = None;
     let mut func: Option<String> = None;
     let mut cli = false;
     let mut rest = false;
@@ -561,6 +563,17 @@ fn build(args: &[String]) -> ExitCode {
                 out = Some(value.clone());
             }
             "--emit-c" => emit_c = true,
+            "--profile-compile" => {
+                i += 1;
+                let Some(value) = args.get(i).filter(|value| !value.starts_with('-')) else {
+                    eprintln!("fwp build: --profile-compile needs a value");
+                    return ExitCode::from(2);
+                };
+                if compile_profile.replace(value.into()).is_some() {
+                    eprintln!("fwp build: choose one --profile-compile report");
+                    return ExitCode::from(2);
+                }
+            }
             "--fat" => fat = true,
             "--staticlib" => lib = Some(fwp::cgen::LibKind::Static),
             "--cdylib" => lib = Some(fwp::cgen::LibKind::Shared),
@@ -655,6 +668,10 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: missing file");
         return ExitCode::from(2);
     };
+    if compile_profile.is_some() && (IN_WASM || fat || pgo || !services.is_empty()) {
+        eprintln!("fwp build: --profile-compile requires the native compiler and one ordinary build (not --fat, --pgo or --service)");
+        return ExitCode::from(2);
+    }
     if !sizes.is_empty() && memory.is_none() {
         eprintln!(
             "fwp build: {} sets a part of static memory: add --memory static",
@@ -805,126 +822,146 @@ fn build(args: &[String]) -> ExitCode {
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
-        let compiled = if rest {
-            fwp::rest::compile(&src)
-        } else if mcp {
-            fwp::mcp::compile(&src)
-        } else {
-            fwp::driver::compile_file(&src, roots)
-        };
-        let (c, prog) = match compiled {
-            Ok(r) => r,
-            Err(f) => {
-                eprint!("{}", f.rendered);
+        let compile = || {
+            let compiled = if rest {
+                fwp::rest::compile(&src)
+            } else if mcp {
+                fwp::mcp::compile(&src)
+            } else {
+                fwp::driver::compile_file(&src, roots)
+            };
+            let (c, prog) = match compiled {
+                Ok(r) => r,
+                Err(f) => {
+                    eprint!("{}", f.rendered);
+                    return 1;
+                }
+            };
+            eprint!("{}", c.render_warnings());
+            if let Err(e) = fwp::cgen::check_target(&prog, target) {
+                eprintln!("fwp build: {}", e);
                 return 1;
             }
-        };
-        eprint!("{}", c.render_warnings());
-        if let Err(e) = fwp::cgen::check_target(&prog, target) {
-            eprintln!("fwp build: {}", e);
-            return 1;
-        }
-        if let Some(kind) = lib {
-            let name = out
-                .file_stem()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or_default();
-            let built = fwp::cgen::generate_library(&prog, &name, &callbacks).and_then(|(c, h)| {
-                if emit_c {
-                    std::fs::write(out.with_extension("c"), &c).map_err(|e| e.to_string())?;
-                    if c.contains(fwp::float_codegen::MARK) {
-                        fwp::float_codegen::emit_sources(&out.with_extension("c"))?;
+            if let Some(kind) = lib {
+                let name = out
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                let built =
+                    fwp::cgen::generate_library(&prog, &name, &callbacks).and_then(|(c, h)| {
+                        if emit_c {
+                            std::fs::write(out.with_extension("c"), &c)
+                                .map_err(|e| e.to_string())?;
+                            if c.contains(fwp::float_codegen::MARK) {
+                                fwp::float_codegen::emit_sources(&out.with_extension("c"))?;
+                            }
+                            std::fs::write(out.with_extension("h"), h).map_err(|e| e.to_string())
+                        } else {
+                            fwp::cgen::compile_library(&c, &h, &out, &opt, kind)
+                        }
+                    });
+                return match built {
+                    Ok(()) => 0,
+                    Err(e) => {
+                        eprintln!("fwp build: {}", e);
+                        1
                     }
-                    std::fs::write(out.with_extension("h"), h).map_err(|e| e.to_string())
-                } else {
-                    fwp::cgen::compile_library(&c, &h, &out, &opt, kind)
+                };
+            }
+            let generated = match &func {
+                None if cli => {
+                    let stem = out.file_stem().unwrap_or_default().to_string_lossy();
+                    let name = stem.strip_suffix(".wasm").unwrap_or(&stem).to_string();
+                    fwp::cgen::generate_cli(&prog, &name)
                 }
-            });
-            return match built {
+                None => fwp::cgen::generate(&prog),
+                Some(name) => match prog.exports.iter().find(|(n, _)| n == name) {
+                    Some((_, fid)) => fwp::cgen::generate_exec(&prog, *fid, name),
+                    None => Err(format!("`{}` is not an exported function", name)),
+                },
+            };
+            let csrc = match generated {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("fwp build: {}", e);
+                    return 1;
+                }
+            };
+            if emit_c {
+                let cpath = out.with_extension("c");
+                if let Err(e) = std::fs::write(&cpath, &csrc) {
+                    eprintln!("fwp build: cannot write {}: {}", cpath.display(), e);
+                    return 1;
+                }
+                if csrc.contains(fwp::float_codegen::MARK) {
+                    if let Err(e) = fwp::float_codegen::emit_sources(&cpath) {
+                        eprintln!("fwp build: {e}");
+                        return 1;
+                    }
+                }
+                return 0;
+            }
+            if fat && target.is_wasm() {
+                eprintln!("fwp build: --fat applies to native executables only");
+                return 2;
+            }
+            // tasks without JSPI: the module goes through Asyncify (programs
+            // without tasks need nothing)
+            let asyncify = target.is_wasm()
+                && wasm_async == fwp::asyncify::WasmAsync::Asyncify
+                && fwp::cgen::uses_async(&prog);
+            if asyncify && fwp::asyncify::wasm_opt().is_none() {
+                eprintln!("fwp build: --wasm-async=asyncify needs binaryen's wasm-opt (`npm install -g binaryen`, or set FWP_WASM_OPT)");
+                return 1;
+            }
+            let csrc = if asyncify {
+                format!("{}{}", fwp::asyncify::ASYNCIFY_MARK, csrc)
+            } else {
+                csrc
+            };
+            let compiled = if fat {
+                fwp::cgen::compile_fat(&csrc, &out, &opt)
+            } else if pgo {
+                pgo_build(
+                    &csrc,
+                    &out,
+                    &opt,
+                    static_link,
+                    &pgo_args,
+                    pgo_input.as_deref(),
+                )
+            } else {
+                fwp::cgen::compile_for(&csrc, &out, &opt, target).and_then(|_| {
+                    if asyncify {
+                        fwp::asyncify::apply(&out, &opt)
+                    } else {
+                        Ok(())
+                    }
+                })
+            };
+            match compiled {
                 Ok(()) => 0,
                 Err(e) => {
                     eprintln!("fwp build: {}", e);
                     1
                 }
-            };
-        }
-        let generated = match &func {
-            None if cli => {
-                let stem = out.file_stem().unwrap_or_default().to_string_lossy();
-                let name = stem.strip_suffix(".wasm").unwrap_or(&stem).to_string();
-                fwp::cgen::generate_cli(&prog, &name)
-            }
-            None => fwp::cgen::generate(&prog),
-            Some(name) => match prog.exports.iter().find(|(n, _)| n == name) {
-                Some((_, fid)) => fwp::cgen::generate_exec(&prog, *fid, name),
-                None => Err(format!("`{}` is not an exported function", name)),
-            },
-        };
-        let csrc = match generated {
-            Ok(s) => s,
-            Err(e) => {
-                eprintln!("fwp build: {}", e);
-                return 1;
             }
         };
-        if emit_c {
-            let cpath = out.with_extension("c");
-            if let Err(e) = std::fs::write(&cpath, &csrc) {
-                eprintln!("fwp build: cannot write {}: {}", cpath.display(), e);
-                return 1;
+        match compile_profile {
+            Some(path) => {
+                let outputs = [
+                    out.clone(),
+                    out.with_extension("c"),
+                    out.with_extension("h"),
+                    out.with_extension("float.c"),
+                    out.with_extension("float.cpp"),
+                ];
+                fwp::compile_profile::record(&path, &outputs, compile).unwrap_or_else(|error| {
+                    eprintln!("fwp build: {error}");
+                    1
+                })
             }
-            if csrc.contains(fwp::float_codegen::MARK) {
-                if let Err(e) = fwp::float_codegen::emit_sources(&cpath) {
-                    eprintln!("fwp build: {e}");
-                    return 1;
-                }
-            }
-            return 0;
-        }
-        if fat && target.is_wasm() {
-            eprintln!("fwp build: --fat applies to native executables only");
-            return 2;
-        }
-        // tasks without JSPI: the module goes through Asyncify (programs
-        // without tasks need nothing)
-        let asyncify = target.is_wasm()
-            && wasm_async == fwp::asyncify::WasmAsync::Asyncify
-            && fwp::cgen::uses_async(&prog);
-        if asyncify && fwp::asyncify::wasm_opt().is_none() {
-            eprintln!("fwp build: --wasm-async=asyncify needs binaryen's wasm-opt (`npm install -g binaryen`, or set FWP_WASM_OPT)");
-            return 1;
-        }
-        let csrc = if asyncify {
-            format!("{}{}", fwp::asyncify::ASYNCIFY_MARK, csrc)
-        } else {
-            csrc
-        };
-        let compiled = if fat {
-            fwp::cgen::compile_fat(&csrc, &out, &opt)
-        } else if pgo {
-            pgo_build(
-                &csrc,
-                &out,
-                &opt,
-                static_link,
-                &pgo_args,
-                pgo_input.as_deref(),
-            )
-        } else {
-            fwp::cgen::compile_for(&csrc, &out, &opt, target).and_then(|_| {
-                if asyncify {
-                    fwp::asyncify::apply(&out, &opt)
-                } else {
-                    Ok(())
-                }
-            })
-        };
-        match compiled {
-            Ok(()) => 0,
-            Err(e) => {
-                eprintln!("fwp build: {}", e);
-                1
-            }
+            None => compile(),
         }
     });
     ExitCode::from(code)

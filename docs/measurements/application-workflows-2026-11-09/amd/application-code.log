@@ -1,0 +1,4 @@
+words: retained generated C and four native object listings
+numerical: retained generated C and four native object listings
+callbacks: retained generated C and four native object listings
+Application disassembly checks passed; objects were not executed.

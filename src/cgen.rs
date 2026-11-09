@@ -10789,6 +10789,8 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Result<Vec<bool>, String>
 }
 
 fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
+    let _generation = crate::compile_profile::phase("code-generation");
+    let representation = crate::compile_profile::phase("representation-and-ownership");
     let mut entry_program = std::borrow::Cow::Borrowed(prog);
     if let Mode::Exec(commands, _) = &mut mode {
         for command in commands {
@@ -10967,6 +10969,9 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         record_folds: Vec::new(),
         owned_right_fold_callbacks: Vec::new(),
     };
+    representation.count("functions", prog.funcs.len());
+    drop(representation);
+    let emission = crate::compile_profile::phase("c-emission");
     if let Mode::Exec(cmds, _) = &mode {
         for command in cmds {
             if prog.funcs[command.fid].arity > 0 {
@@ -11881,6 +11886,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_NATIVE_HEAP\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n#ifdef FWP_RETAINED_CALLBACKS\n    fwp_callback_runtime_finish();\n#endif\n    fwp_lib_ready = 0;\n#ifdef FWP_GCTX_OWNERS\n    g_connections_finish();\n#endif\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    /* Ownership observation point: before runtime teardown. */\n    fwp_tape_finish();\n    fwp_heap_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
+        emission.count("c_bytes", out.len());
         return Ok(out);
     }
     let exit_code = matches!(&main_ty, MT::Con(n, _) if n == "std::I32");
@@ -12060,6 +12066,7 @@ int main(int argc, char **argv) {{
         init = g.const_init,
         run = run
     );
+    emission.count("c_bytes", out.len());
     Ok(out)
 }
 
@@ -12302,6 +12309,7 @@ pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> 
 }
 
 fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
+    let _phase = crate::compile_profile::phase("c-toolchain-process");
     let res = cmd
         .output()
         .map_err(|e| format!("cannot run C compiler `{}`: {}", cc, e))?;
@@ -12512,6 +12520,8 @@ pub fn compile_library(
     opt: &str,
     kind: LibKind,
 ) -> Result<(), String> {
+    let phase = crate::compile_profile::phase("native-library-build");
+    phase.count("c_bytes", c_source.len());
     let dir = TempDir::new("fwp-build")?;
     let c_path = dir.join("library.c");
     let obj = dir.join("library.o");
@@ -12595,6 +12605,8 @@ pub fn compile_for(
     opt: &str,
     target: Target,
 ) -> Result<(), String> {
+    let phase = crate::compile_profile::phase("native-build");
+    phase.count("c_bytes", c_source.len());
     let dir = TempDir::new("fwp-build")?;
     let stem = output
         .file_name()

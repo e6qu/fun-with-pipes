@@ -98,7 +98,13 @@ struct Loader {
 impl Loader {
     /// Parse a file, recording every syntax error. Returns the
     /// declarations that parsed when there was no error.
-    fn parse(&mut self, name: &str, text: &str) -> Option<Module> {
+    fn parse(&mut self, name: &str, text: &str, library: bool) -> Option<Module> {
+        let phase = crate::compile_profile::phase(if library {
+            "parse-library"
+        } else {
+            "parse-input"
+        });
+        phase.count("source_bytes", text.len());
         let file = self.sm.add(name.to_string(), text.to_string());
         let (m, errors) = parse_module_recover(text, file, &mut self.next_id);
         let ok = errors.is_empty();
@@ -141,8 +147,12 @@ impl Loader {
         }
         self.loaded.insert(name.to_string(), canonical);
         if let Some(path) = path {
-            if let Ok(text) = std::fs::read_to_string(&path) {
-                if let Some(m) = self.parse(&path.to_string_lossy(), &text) {
+            let source = {
+                let _phase = crate::compile_profile::phase("load-import");
+                std::fs::read_to_string(&path)
+            };
+            if let Ok(text) = source {
+                if let Some(m) = self.parse(&path.to_string_lossy(), &text, false) {
                     let sub = path.parent().map(Path::to_path_buf);
                     self.add_module(name, m, sub.as_deref());
                 }
@@ -213,6 +223,7 @@ fn check_source_options(
     extra: Option<(&str, &str)>,
     interactive_root: Option<String>,
 ) -> Result<Compilation, Failure> {
+    let _phase = crate::compile_profile::phase("front-end");
     let mut ld = Loader {
         sm: SourceMap::default(),
         next_id: 0,
@@ -222,19 +233,22 @@ fn check_source_options(
     };
     let mut std_decls = Vec::new();
     for (n, src) in STD_SOURCES {
-        if let Some(m) = ld.parse(n, src) {
+        if let Some(m) = ld.parse(n, src, true) {
             std_decls.extend(m.decls);
         }
     }
-    let generated = crate::stdgen::numeric_impls();
-    if let Some(m) = ld.parse("<std>/numeric-impls.fwp", &generated) {
+    let generated = {
+        let _phase = crate::compile_profile::phase("generate-library-declarations");
+        crate::stdgen::numeric_impls()
+    };
+    if let Some(m) = ld.parse("<std>/numeric-impls.fwp", &generated, true) {
         std_decls.extend(m.decls);
     }
     ld.modules.push(("std".into(), HashSet::new(), std_decls));
     let root = ld.sm.files.len() as u32;
-    if let Some(mut m) = ld.parse(name, text) {
+    if let Some(mut m) = ld.parse(name, text, false) {
         if let Some((xname, xtext)) = extra {
-            if let Some(x) = ld.parse(xname, xtext) {
+            if let Some(x) = ld.parse(xname, xtext, false) {
                 m.decls.extend(x.decls);
             }
         }
@@ -280,6 +294,7 @@ fn check_source_options(
 }
 
 pub fn check_file(path: &Path) -> Result<Compilation, Failure> {
+    let load = crate::compile_profile::phase("load-root");
     let text = std::fs::read_to_string(path).map_err(|e| {
         let d = Diagnostic::error(
             Span::DUMMY,
@@ -287,6 +302,7 @@ pub fn check_file(path: &Path) -> Result<Compilation, Failure> {
         );
         Failure::new(vec![d], &SourceMap::default(), u32::MAX)
     })?;
+    drop(load);
     check_source(&path.to_string_lossy(), &text, path.parent())
 }
 

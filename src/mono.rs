@@ -2066,7 +2066,13 @@ fn fun_of(params: Vec<MT>, result: MT) -> MT {
 
 /// Lower a checked program to optimized IR.
 pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
-    let mut prog = Mono::new(env, typed).run(roots)?;
+    let lowering = crate::compile_profile::phase("lowering");
+    let mut prog = {
+        let phase = crate::compile_profile::phase("specialization");
+        let prog = Mono::new(env, typed).run(roots)?;
+        phase.count("functions", prog.funcs.len());
+        prog
+    };
     // in debug builds (the tests), every pass keeps the locals' types
     let check = |prog: &Program, after: &str| {
         if cfg!(debug_assertions) {
@@ -2076,9 +2082,13 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         }
     };
     check(&prog, "lowering");
-    crate::resource::preserve_frames(&mut prog);
+    {
+        let _phase = crate::compile_profile::phase("preserve-resources");
+        crate::resource::preserve_frames(&mut prog);
+    }
     check(&prog, "resource frames");
     if std::env::var("FWP_NO_OPT").is_err() {
+        let _phase = crate::compile_profile::phase("optimization");
         crate::fuse::specialize_matrices(&mut prog);
         check(&prog, "matrix specialization");
         crate::opt::optimize(&mut prog);
@@ -2096,6 +2106,7 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
     // In debug builds, check the reference-count insertion also used by native
     // code generation before passing the program to an execution backend.
     if cfg!(debug_assertions) {
+        let _phase = crate::compile_profile::phase("debug-ownership-verification");
         for (f, rc) in prog.funcs.iter().zip(crate::rc::insert(&prog)) {
             if let Some((body, locals)) = rc {
                 if let Err(e) = crate::rc::check(&prog, f, &body, &locals) {
@@ -2125,5 +2136,6 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
             }
         }
     }
+    lowering.count("functions_after_optimization", prog.funcs.len());
     Ok(prog)
 }

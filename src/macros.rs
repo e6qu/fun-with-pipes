@@ -276,6 +276,7 @@ pub fn expand(
     next_id: &mut NodeId,
     sm: &crate::diag::SourceMap,
 ) -> Result<Modules, Vec<Diagnostic>> {
+    let _phase = crate::compile_profile::phase("macro-expansion");
     let macros = macro_names(&modules);
     for round in 0..MAX_ROUNDS {
         let pending = modules

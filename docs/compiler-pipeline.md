@@ -41,6 +41,52 @@ must themselves be compiled before they can generate the final program. Thus
 “macros run before type checking” means before checking the final expanded user
 program, not that macro implementations are untyped.
 
+## Observe compiler phases
+
+`--profile-compile` records the actual build path without changing the generated
+program. Select a new report file explicitly; an existing file is rejected.
+For example, on a native host with GCC installed:
+
+```sh
+CC=gcc FWP_LTO=0 fwp build examples/wordfreq.fwp -O2 -o wordfreq --profile-compile compiler.json
+```
+
+The JSON report records phase start/end times in nanoseconds, parent phase IDs,
+source/token/declaration counts where available, function counts and emitted C
+bytes. It also records the build status, including ordinary compilation errors.
+Invalid command-line settings fail before observation starts.
+
+- **Inclusive time** includes nested work. **Exclusive time** subtracts direct
+  children. For example, an illustrative 20 ms macro phase containing 14 ms of
+  checking/lowering has 6 ms exclusive time. Adding 20 and 14 would double-count
+  that nested work; these numbers are an explanation, not a measured result.
+- Bundled-library parsing and input/import parsing have separate parent phases.
+  `parse-module` includes lexing and counts the end-of-file token explicitly.
+- `optimization` covers the existing ordered passes. Debug builds additionally
+  report `debug-ownership-verification`; release benchmarks must not silently
+  mix that work into a comparison with release compilation.
+- `representation-and-ownership` ends after entry lifetime checks and code
+  generator setup. `c-emission` includes on-demand helper analysis while producing
+  C; it is not a measurement of string formatting alone.
+- `native-build` includes temporary source/library preparation and external C
+  compilation/linking. `c-toolchain-process` records child commands run through
+  the C driver; other work remains in the enclosing phase's exclusive time.
+- Exclusive phase times plus `unassigned_ns` equal the observed build action's
+  `wall_ns`. That interval excludes observer setup, report serialization, process
+  startup and compilation-worker creation. Measure complete child-process time
+  separately when comparing compiler overhead.
+
+The reporter runs on the compilation worker and uses no clock reads when it is
+disabled. It does not measure per-phase CPU time, peak memory or runtime program
+performance. Whole-process RSS and observer overhead require the separate
+[compiler-cost protocol](measurements/application-tooling.md#compiler-phases-and-growth).
+The native compiler supports one ordinary build, including `--emit-c`; profiling
+rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
+Cross-target output from a native compiler remains a build of that selected
+target, not execution on its hardware.
+
+## Lowering and execution details
+
 Self-tail analysis follows fusion, before native reference-count insertion.
 It marks eligible functions without changing their expression trees: native
 representation selection still sees their original record/variant fields and

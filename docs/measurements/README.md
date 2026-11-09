@@ -12,6 +12,7 @@ identities. Do not edit observations to make an old experiment describe new code
 [The complete ownership comparison passes all delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
 [Milestone 5](application-tooling.md) now checks application workflows and prepares
 compiler-phase and sustained-load measurements; it has no new timing results yet.
+[Application workflows pass on both Linux architectures](application-workflows-2026-11-09/README.md).
 
 [Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
 now separate construction, reading, release and RSS. ARM64 shows lower overall
@@ -45,9 +46,6 @@ resize overlap](parser-native-allocator-2026-11-09/README.md) and [fwp heap/regi
 events](parser-heap-events-2026-11-09/README.md) now pass. The largest fwp charged
 peak occurs during tokenization; evaluation allocates nothing. [Arena retry
 and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
-
-[Milestone 5 preparation](application-tooling.md) specifies the three application
-workflows and missing compiler/load measurements. It contains no new results.
 
 ## Latest deliveries
 
