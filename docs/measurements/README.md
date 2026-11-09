@@ -62,6 +62,7 @@ experiment names its measured variant, not the latest compiler.
 - [Native weak registrations](weak-peer-checks-2026-11-09/README.md): C/Rust/Swift cancellation, active-owner lifetime and expiration; six actual fault builds per host. No time or ARC-count claim.
 
 - [First ownership peer checks](ownership-peer-checks-2026-11-08/README.md): Swift/C/Rust buffer correctness, C/Rust parser allocation lifetimes and native stack frames on ARM64/AMD64. Includes the repaired observer failure; no new peer timing claim.
+- [Returned-buffer phases and storage](returned-buffer-phases-2026-11-09/README.md): four-language phase correctness and native C/Rust/Swift allocation/release checks on both architectures. Separates Swift metadata from array storage and retains all initial failures; timings remain uncollected.
 
 - [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; audited ARM64/AMD64 profiles and allocation/release controls; individual ARC counts remain unmeasured.
 

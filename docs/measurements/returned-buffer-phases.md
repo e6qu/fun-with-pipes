@@ -1,8 +1,8 @@
 # Returned buffers: phase measurement protocol
 
-**Preparation; no timings collected.** This extends the
+**Correctness and native storage verified; no timings collected.** This extends the
 [returned-buffer correctness checks](ownership-peers.md#returned-buffer-preparation).
-Finish those checks and native release observations before collecting timings.
+[Both native architectures now pass the phase and release checks](returned-buffer-phases-2026-11-09/README.md).
 Retain the exact measurement source under an immutable tag before collection.
 
 ## What runs
@@ -90,8 +90,8 @@ of these external factory/reader/release boundaries, not of all local array code
 
 ## Current preparation
 
-The native phase callers and their record reader are implemented but not yet
-verified. `returned-buffer-phases` checks outputs/arguments, actual wrong sums and
+The native phase callers and their record reader now pass on both architectures.
+`returned-buffer-phases` checks outputs/arguments, actual wrong sums and
 a separately linked clock that moves backward. Its runs are correctness controls;
 they collect no peer ratios. C/fwp and Swift use reusable typed pointer slots;
 Rust uses a preallocated `Vec` and forward draining. Their slot initialization
@@ -101,8 +101,9 @@ The [collector](../../scripts/measure-returned-buffers.py) implements the fixed
 C-only pilot and both sessions, with separate compile/RSS runs and a reader that
 reconstructs every result from raw commands. It requires an immutable
 `roadmap/returned-buffer-time-…` tag matching its exact source. It has not collected
-an experiment. Native correctness and storage checks must pass first; timing
-reader controls still need CI verification.
+an experiment. Native correctness/storage and timing-reader controls now pass.
+The reusable timing workflow repeats phase checks for its exact source before
+the pilot and requires the explicit immutable source tag.
 
 Whole-process elapsed time starts before launching the child and ends after
 waiting for its output; it includes launch/wait overhead. The three internal
@@ -154,7 +155,9 @@ the contiguous-array allocation path; an unfamiliar factory path fails for revie
 Ordinary and omitted-release cases must have equal metadata allocation and exit
 byte counts. Metadata is reported, not subtracted from whole-process totals.
 [The original failures and stacks](returned-buffer-phases-2026-11-09/README.md#first-native-allocation-run)
-remain available. The corrected observation still needs native verification.
+remain available. Fresh profiles and complete original-archive audits now pass
+on both architectures; the [result table](returned-buffer-phases-2026-11-09/README.md#verified-results)
+keeps native storage and one-time metadata costs separate.
 
 fwp's managed arrays live in its reserved heap. Its runtime unmaps that reservation
 at shutdown, so native allocation leaks at process exit cannot prove timely

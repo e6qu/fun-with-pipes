@@ -1,8 +1,57 @@
 # Returned-buffer phase checks
 
-These check the [phase experiment](../returned-buffer-phases.md); they are not
-performance samples. The first run found an ARM64 linking error, so the experiment
-is not yet verified on both architectures.
+Phase callers and native storage checks now pass on Linux ARM64 and AMD64.
+These verify the [experiment](../returned-buffer-phases.md); no peer timing
+experiment has run yet. The original failures and their repairs follow below.
+
+## Verified results
+
+Source `ec9313228681689daa4c20c495edd8b5f9faa583`, retained as
+`roadmap/returned-buffer-observers-2026-11-09`:
+
+- [Phase run 42600727564](https://github.com/e6qu/fun-with-pipes/actions/runs/42600727564):
+  each host passes 16 phase builds and 120 result/argument/backward-clock checks,
+  plus the original 48 builds, 528 native and 14 interpreter checks.
+- [Storage run 42600729662](https://github.com/e6qu/fun-with-pipes/actions/runs/42600729662):
+  each host passes 60 profiles across 15 native builds, including actual omitted
+  first/last owner releases and allocator/unwinder controls.
+- Docs `42600729223`, job `129104245085`: four pilot/sample-reader tests, three
+  allocation-reader tests and the complete audit pass (407 link sets).
+
+For 65,536 arrays of 16 integers, both hosts and both repetitions find these
+native storage requests per array. Bytes are derived from storage retained by the
+omitted-release control, divided by the number of arrays; they exclude allocator
+rounding, caller slots, runtime metadata and RSS.
+
+| Representation | Requests per array | Requested bytes per array | Empty-array bytes |
+|---|---:|---:|---:|
+| C unique | 1 | 128 | 0 |
+| C shared counter + elements | 1 | 136 | 8 |
+| Rust `Vec` | 1 | 128 | 0 |
+| Rust `Rc<Vec>` | 2 | 168 | 40 |
+| Swift native `Array`, either owner mode | 1 | 160 | 0 |
+
+Ordinary release leaves zero array-storage bytes at exit in every case. First
+shared releases preserve usable elements; omitting either owner retains their
+storage. Swift additionally makes 27 one-time type-metadata requests, with
+256 AMD64 / 264 ARM64 bytes still present at exit. These appear separately and
+in the full factory totals. fwp's managed heap is a different boundary; this
+table is not a native-byte comparison with fwp or an ARC-operation count.
+
+Both runners also verify the complete first profile ZIP hashes/manifests, all
+324 AMD64 / 234 ARM64 commands and raw allocation stacks. The only failing child
+commands are the five original ARM64 Rust links. Successful commands have only
+heaptrack statistics on stderr. Original faulty summaries are reproduced before
+the corrected interpretation; the earlier failed runs remain failed records.
+
+[Verified archive identities](verified-artifacts.json), reports, first-archive
+audit/diagnostic receipts and complete job logs are retained here. Current large
+ZIPs were not downloaded locally; selected members have ZIP CRC verification.
+The complete first ZIPs were independently hashed on runners. Setup's optional
+manual-page and libtool relink notices are retained, with no unexpected compiler
+or program diagnostic.
+
+## First phase run
 
 Source `c0f187899` in run
 [42596304052](https://github.com/e6qu/fun-with-pipes/actions/runs/42596304052):
@@ -20,7 +69,7 @@ a [native static library](https://doc.rust-lang.org/rustc/command-line-arguments
 placing it in the normal library link order. Stack protection stays enabled.
 The backward-clock control also selects an actual replacement native library.
 The shared builder applies this repair to phase checks, profiles and timings.
-Repair verification remains pending.
+The verified run above checks the repair on both architectures.
 
 All raw commands, failed groups and completed groups were reviewed. Apart from
 the four link errors, diagnostics are the specified bad-argument, wrong-result,
@@ -57,14 +106,13 @@ The repair recognizes the recorded Rust factory symbol and separates Swift
 array-storage stacks from type-initialization stacks. It retains both, plus the
 unfiltered factory total, and rejects unfamiliar Swift factory paths. Zero live
 array storage remains required; native runtime metadata is reported explicitly.
-Ordinary/control metadata requests and exit bytes must agree. These repairs have
-not yet passed the new native run.
+Ordinary/control metadata requests and exit bytes must agree. The verified run
+above checks these repairs with fresh profiles on both hosts.
 
 [Profile archive identities](profile-first-artifacts.json), compressed reports,
 complete job logs and selected raw stacks are retained here. The bounded local
 reader refused the large raw-command member; it remains in the remote archive.
-No full-archive hash or complete raw-command audit is claimed for this first run.
-The next runner suite performs that complete audit, including reconstruction of
-the original faulty observer and the corrected attribution. Setup notices about
+The later runner suite performs the complete archive/command audit described
+above, including the original faulty observer and corrected attribution. Setup notices about
 optional C++ manual pages and libtool's installation-time relinking are retained;
 they do not report compiler failures.
