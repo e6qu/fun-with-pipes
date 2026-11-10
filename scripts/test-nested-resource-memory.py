@@ -40,6 +40,22 @@ class Memory(unittest.TestCase):
             with self.assertRaises(ChildProcessError):
                 os.waitpid(record['pid'], os.WNOHANG)
 
+    @unittest.skipUnless(sys.platform == 'linux', 'exec memory accounting requires Linux')
+    def test_wait4_includes_memory_used_before_exec(self):
+        program = ('import os\n'
+                   'data = bytearray(32 * 1024 * 1024)\n'
+                   'os.execve("/bin/sleep", ["/bin/sleep", ".3"], dict(os.environ))\n')
+        with tempfile.TemporaryDirectory() as name:
+            row = observe([sys.executable, '-c', program], dict(os.environ),
+                          Path(name) / 'result', .05, 30, 600)
+            self.assertEqual(row['status'], 0)
+            # Ignore snapshots before exec; only inspect the sleep process.
+            after_exec = [snapshot for snapshot in row['snapshots']
+                          if (Path(name) / 'result' / snapshot['files']['status']['file']).read_text().startswith('Name:\tsleep\n')]
+            self.assertGreaterEqual(len(after_exec), 2)
+            peak = max(s['fast']['VmHWMKiB'] for s in after_exec)
+            self.assertGreater(row['wait4PeakRssKiB'] - peak, 16 * 1024)
+
     @unittest.skipUnless(sys.platform == 'linux', 'stopped snapshots require Linux /proc')
     def test_actual_child_is_resumed_and_reaped(self):
         with tempfile.TemporaryDirectory() as name:

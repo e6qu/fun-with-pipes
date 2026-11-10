@@ -25,7 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('input', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    for name in ('source', 'arch', 'cc', 'c-arch'):
+    for name in ('source', 'arch', 'cc', 'c-arch', 'image'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--rounds', type=int, required=True)
     parser.add_argument('--interval-ms', type=int, required=True)
@@ -34,6 +34,9 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert platform.machine() == args.arch and args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch]
     assert (args.rounds, args.interval_ms, args.deadline) == (4, 50, 30)
+    assert args.image == 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0'
+    libc_package = subprocess.check_output(['dpkg-query', '-W', '-f=${Version}', 'libc6'], text=True)
+    assert libc_package == '2.39-0ubuntu8.9'
     original = args.input.resolve()
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
@@ -63,10 +66,15 @@ def main():
     env.update(LC_ALL='C', FWP_LTO='0', FWP_STACK='1')
     report = dict(observerSource=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         binarySource=args.source, architecture=args.arch, kernel=platform.release(), pageBytes=os.sysconf('SC_PAGE_SIZE'),
-        cpu=subprocess.check_output(['lscpu'], text=True), settings=vars(args) | dict(input=str(original), output=str(folder)),
+        cpu=subprocess.check_output(['lscpu'], text=True), image=args.image, libcPackage=libc_package,
+        wait4Scope='Whole child lifetime, including pre-exec memory inherited from the observer; not fwp-only RSS.',
+        settings=vars(args) | dict(input=str(original), output=str(folder)),
         binaries={label: dict(path=str(path), sha256=digest(path)) for label, path in images.items()},
         scope='Stopped snapshots of unchanged ordinary binaries. Not timing or exact transient peak acceptance. Original RSS misses remain recorded.',
         controls={}, cases={}, failures=[])
+
+    identity = {key: value for key, value in report.items() if key not in ('controls', 'cases', 'failures')}
+    (folder / 'identity.json').write_text(json.dumps(identity, indent=2) + '\n')
 
     def save():
         (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

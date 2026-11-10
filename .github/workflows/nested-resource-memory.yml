@@ -24,11 +24,18 @@ jobs:
             arch: x86_64
             c_arch: x86-64
     runs-on: ${{ matrix.runner }}
+    container: swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0
     timeout-minutes: 30
+    env:
+      MEMORY_IMAGE: swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0
     steps:
+      - name: Install explicit observation tools in the original image
+        run: apt-get update && apt-get install -y git gcc python3 gh
       - uses: actions/checkout@v7
       - name: Native identity and memory-reader controls
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(dpkg-query -W -f='${Version}' libc6)" = "2.39-0ubuntu8.9"
           test "$(uname -m)" = "${{ matrix.arch }}"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           gcc --version
@@ -80,7 +87,7 @@ jobs:
           python3 -W error::ResourceWarning scripts/measure-nested-resource-memory.py
           --input original-native --output nested-memory --source "$BINARY_SOURCE"
           --arch "${{ matrix.arch }}" --cc gcc --c-arch "${{ matrix.c_arch }}"
-          --rounds 4 --interval-ms 50 --deadline 30
+          --rounds 4 --interval-ms 50 --deadline 30 --image "$MEMORY_IMAGE"
       - name: Reconstruct raw snapshots and reject changed reports
         run: |
           python3 scripts/audit-nested-resource-memory.py --mode audit --input nested-memory --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output memory-audit.json

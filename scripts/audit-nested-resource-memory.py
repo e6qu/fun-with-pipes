@@ -22,6 +22,11 @@ def audit(folder, source, arch):
     report = json.loads((folder / 'report.json').read_text())
     assert report['observerSource'] == source and report['architecture'] == arch
     assert report['binarySource'] == 'd80357c8c81d206c9d9934b141b5a5fafe97c430' and not report['failures']
+    identity = json.loads((folder / 'identity.json').read_text())
+    assert identity == {key: value for key, value in report.items() if key not in ('controls', 'cases', 'failures')}
+    assert identity['image'] == 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0'
+    assert identity['libcPackage'] == '2.39-0ubuntu8.9'
+    assert identity['wait4Scope'] == 'Whole child lifetime, including pre-exec memory inherited from the observer; not fwp-only RSS.'
     settings = report['settings']
     assert (settings['rounds'], settings['interval_ms'], settings['deadline']) == (4, 50, 30)
     assert set(report['controls']) == {'ordinary', 'omit-touch', 'omit-unmap'}
@@ -101,6 +106,8 @@ def main():
     original, original_manifest = path.read_bytes(), manifest_path.read_bytes()
     observation_path = folder / '64-0/0-reference/observation.json'
     original_observation = observation_path.read_bytes()
+    identity_path = folder / 'identity.json'
+    original_identity = identity_path.read_bytes()
     rejected = []
     for name in ('rss-summary', 'fast-counter', 'binary-hash'):
         try:
@@ -115,10 +122,14 @@ def main():
                 observation_path.write_text(json.dumps(observation, indent=2) + '\n')
             else:
                 report['binaries']['candidate']['sha256'] = '0' * 64
+                identity = json.loads(original_identity)
+                identity['binaries']['candidate']['sha256'] = '0' * 64
+                identity_path.write_text(json.dumps(identity, indent=2) + '\n')
             changed = (json.dumps(report, indent=2) + '\n').encode()
             path.write_bytes(changed)
             manifest = json.loads(original_manifest)
             manifest['report.json'] = hashlib.sha256(changed).hexdigest()
+            manifest['identity.json'] = hashlib.sha256(identity_path.read_bytes()).hexdigest()
             manifest[str(observation_path.relative_to(folder))] = hashlib.sha256(observation_path.read_bytes()).hexdigest()
             manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
             try:
@@ -129,6 +140,7 @@ def main():
             path.write_bytes(original)
             manifest_path.write_bytes(original_manifest)
             observation_path.write_bytes(original_observation)
+            identity_path.write_bytes(original_identity)
     assert rejected == ['rss-summary', 'fast-counter', 'binary-hash']
     args.output.write_text(json.dumps(dict(rejected=rejected), indent=2) + '\n')
     print('All three altered reports rejected; original evidence restored')

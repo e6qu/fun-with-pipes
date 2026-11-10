@@ -34,3 +34,24 @@ Stopping a process perturbs timing, so discard timing claims from these runs.
 No sample is selected or rerun based on its memory result. Attribution must explain
 the observations before changing compiler code or proposing a future memory gate.
 The [original acceptance contract](nested-resource-owners.md) remains unchanged.
+
+## Environment correction after the first diagnostic
+
+Run `42810648965` passes all observation controls on both hosts, with lower
+candidate page residency and zero fast-RSS/page-walk disagreement. It runs on
+the runner host, whereas the original measurements ran inside Swift's container.
+It therefore does not reproduce the original library environment or explain the
+four misses. Preserve it as an environment-limited observation.
+
+Correct the diagnostic to use the original multi-architecture image digest
+`sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0`
+and require the recorded libc package `2.39-0ubuntu8.9`. Keep the same binaries,
+cases and observation settings. This is an environment repair, not a timing rerun
+or permission to replace original RSS observations.
+
+`wait4PeakRssKiB` includes the child's pre-exec memory. Linux preserves resource
+usage across `exec`; it can therefore reflect the Python observer's inherited
+memory, even when fwp's own snapshots remain small. Keep that raw value, label
+its whole-child scope and verify this with an allocation-before-exec control.
+Use the stopped-process page readings for memory categories; none is an exact
+transient peak. [Linux accounting semantics](https://man7.org/linux/man-pages/man2/getrusage.2.html).

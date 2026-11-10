@@ -1,18 +1,26 @@
 # Current work
 
-**Next:** run the focused [RSS diagnosis](measurements/nested-resource-rss.md)
-on the saved native executables, audit both remaining Linux production jobs,
-and bundle the diagnostic, results and any repairs into [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276).
+**Next:** run the corrected [RSS diagnostic](measurements/nested-resource-rss.md)
+in the original container image, retain both diagnostic results and bundle final
+reports/repairs into [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276).
 Keep original noisy/missed limits; do not rerun unchanged timings for qualification.
 
 Worktree `.worktrees/service-cpu-costs`, local branch `service-cpu-costs`. Published
 PR head remains `d80357c8c81d206c9d9934b141b5a5fafe97c430`. The separate evidence
-branch `service-memory-diagnosis` will run only the new diagnostic, preserving
-this PR head while its current gates finish. Contract commit `5235b9983` and tag
-`roadmap/nested-resource-rss-contract-2026-11-10` precede diagnostic implementation.
+branch `service-memory-diagnosis` runs only the diagnostic. Contract commit
+`5235b9983` and tag `roadmap/nested-resource-rss-contract-2026-11-10` precede it.
 
-- Production run `42798426347`: seven of nine jobs pass (all macOS, Windows and
-  benchmarks); both Linux jobs are still running. Docs `42798426476` pass.
+- Production `42798426347`, docs `42798426476` and full-log audit `42810654258`
+  all pass at the published PR head. Audit artifact `13760124978` is locally
+  size/SHA/CRC verified with an empty issue report.
+- RSS diagnostic `42810648965`, observer `4eeb669925ccc2ec8b471da912f4147a742984fd`,
+  passes both native jobs and controls. Page residency is lower for candidates;
+  fast RSS and page walks agree. This does not explain the original misses:
+  the observer ran on host libraries, whereas the original ran in a container.
+- Correct the diagnostic to the original image digest and libc package; preserve
+  its host-library observations. Also label `wait4` as whole-child usage including
+  pre-exec memory, and add a native allocation-before-exec control. Do not compare
+  its 25–84 MiB totals with fwp-only resident pages.
 - Ordinary timing/compiler run `42798403679`: both jobs pass raw-data audits.
   [Results](measurements/nested-resource-time-2026-11-10/README.md): 31/32 service
   comparisons qualify and meet timing targets; qualified gains are 16–21%.
@@ -26,7 +34,7 @@ this PR head while its current gates finish. Contract commit `5235b9983` and tag
 Complete finished logs have been inspected. No compiler diagnostic or unexpected
 failure appears. The docs runner's deliberate failures, Homebrew's already-installed
 OpenSSL notice and measurement setup's missing C++ manual page remain visible.
-Full unfinished-job logs are not available yet. Final delivery still requires the
+Both complete Linux logs are also clean. Final delivery still requires the
 exact-head nine production gates, docs and complete-log audit.
 
 Production compiler sources, libraries and input fixtures are unchanged since
@@ -129,8 +137,9 @@ All local checks use `python3 scripts/local-guard.py` serially:
 - `test-compiler-build-comparison.py`: five controls pass, covering both contracts.
 - `test-nested-resource-analysis.py`: two controls pass after fixing repeated
   instrumentation rejection; native observer verification also passes on both architectures.
-- `test-nested-resource-memory.py`: two counter-reader controls pass locally; two
-  Linux child-process controls are skipped on macOS and must pass on runners.
+- `test-nested-resource-memory.py`: two counter-reader controls pass locally; three
+  Linux child-process controls are skipped on macOS. The first two pass in the
+  initial native run; the new pre-exec control must pass in the corrected run.
 - `actionlint` on the new memory workflow and numerics caller, plus Python syntax
   checks for the diagnostic/reader/tests: pass.
 - `summarize-nested-resource-counts.py`: raw cases and both hosts agree.

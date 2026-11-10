@@ -55,6 +55,7 @@ def observe(command, environment, folder, interval, timeout, limit):
                 return 'stopped'
             assert os.WIFEXITED(status) or os.WIFSIGNALED(status)
             child.returncode = os.waitstatus_to_exitcode(status)
+            # Linux retains pre-exec usage: this is whole-child, not fwp-only RSS.
             record.update(status=child.returncode, wait4PeakRssKiB=usage.ru_maxrss)
             return 'exited'
 
