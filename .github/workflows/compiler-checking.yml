@@ -1,0 +1,52 @@
+name: Compiler checking on maintained applications
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  applications:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CC: gcc
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Native compiler observation dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev time
+      - name: Verify phase reader and build release compiler
+        run: |
+          python3 scripts/test-compiler-scaling.py
+          cargo fetch --locked
+          cargo build --release --locked --offline --bin fwp
+      - name: Observe all maintained application compiles
+        run: |
+          set -o pipefail
+          python3 scripts/inspect-compiler-checking.py --compiler target/release/fwp --cc gcc --time /usr/bin/time --deadline 120 --output compiler-checking 2>&1 | tee compiler-checking.log
+      - name: Retain exact source and build settings
+        if: always()
+        run: |
+          git rev-parse HEAD > compiler-source.txt
+          rustc -Vv > compiler-build.txt
+          cat Cargo.toml >> compiler-build.txt
+          printenv | sort | sed -n '/^CARGO_PROFILE_/p' >> compiler-build.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-checking-${{ matrix.runner }}
+          path: |
+            compiler-source.txt
+            compiler-build.txt
+            compiler-checking.log
+            compiler-checking/
+          if-no-files-found: error

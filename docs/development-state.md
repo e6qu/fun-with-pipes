@@ -43,7 +43,7 @@ open; do not repeat unchanged noisy runs to obtain qualification.
 
 Final head: `a0261f9ccaa4a87651fbcae11966afee68208d4d`.
 
-- Production `42730888995`: benchmark and both macOS ARM64 jobs pass; six native
+- Production `42730888995`: benchmark, both macOS ARM64 jobs and Intel ownership pass; five native
   jobs remain active. Complete passing logs are audited. No failed steps reported;
   both Windows jobs reached native TLS/executable checks.
 - Docs `42730888467`, job `129548275958`: passes. Full log audited; its
@@ -89,3 +89,13 @@ Finish the preparation as a coherent diagnostic batch, verify it on runners,
 then select and freeze the actual optimization contract from the resulting costs.
 Keep 64 GiB free disk, generated targets below 2 GiB, sampled workload RSS below
 1 GiB and the guard's 180-second deadline. Do not raise or bypass limits.
+
+## Next application attribution batch
+
+Prepared `inspect-compiler-checking.py` and `compiler-checking.yml`, exposed as
+`suite=compiler-checking`. Four original programs (words, full numerical tutorial,
+queued service and HTTP API) each get ordinary/observed emit-C builds and exact
+C equality, with phase counts and process RSS retained. This does not execute
+programs or measure a speedup. All cases are attempted; failures remain recorded.
+Guarded actionlint and command import/argument checks pass. Native execution of
+this diagnostic is pending; freeze its source before dispatch.

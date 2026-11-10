@@ -47,6 +47,28 @@ Do not add a cache, skip library validation or depend on an older fwp build.
 
 ## Measurements after the observation controls pass
 
+The next diagnostic command is `scripts/inspect-compiler-checking.py`, dispatched
+with `suite=compiler-checking`. It compiles these complete maintained sources:
+
+| Program | Source | Work represented |
+|---|---|---|
+| Word frequencies | `examples/wordfreq.fwp` | Read text, count words and sort results |
+| Numerical tutorial | `docs/tutorials/20-autodiff-and-devices/main.fwp` | Derivatives, tensor calculations and Rosenbrock descent |
+| Queued service | `tests/fixtures/weak_callback_service.fwp` | All eight delivery/cancellation/expiration/error cases in its original `main` |
+| HTTP API | `examples/server/api.fwp` | The maintained server, including its original connection limit |
+
+Each gets one ordinary and one observed release-compiler invocation with
+`--target native --emit-c -O2`, a 120-second deadline and GNU time process-memory
+accounting. Original source paths preserve imports; retained copies record exact
+inputs. Emitted C must match byte-for-byte. Every invocation and failure is
+retained, and all programs are attempted before reporting failure.
+
+This first pass does not run GCC or execute programs. Existing application and
+HTTP checks cover runtime behavior; this diagnostic attributes compilation work.
+It has no warmup/copy-control schedule and establishes no speedup or observer
+overhead. Its source is frozen before dispatch. The paired experiment below is
+required for an eventual performance comparison, not for this initial attribution.
+
 - Use native Linux ARM64 and AMD64, explicit GCC O2 targets and the release fwp
   build. Preserve the existing 120-second child deadline.
 - Retain fresh-process emit-C time separately from GCC time and program execution.
@@ -54,7 +76,7 @@ Do not add a cache, skip library validation or depend on an older fwp build.
 - Keep one warmup per treatment and eight balanced ordinary/identical-copy and
   observed/identical-copy rounds, two sessions per host. Retain the frozen 2%
   copy-control limit. Do not rerun unchanged noise to qualify it.
-- Include the three complete applications. Check their independent results and
+- Include all four complete applications. Check their independent results and
   compile/runtime effects; a service's compilation is distinct from sustained
   server latency. No runtime throughput claim follows from compiler timings.
 - Report the extra observer cost against ordinary compilation. A heavily observed
