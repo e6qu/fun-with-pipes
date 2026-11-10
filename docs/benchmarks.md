@@ -57,28 +57,31 @@ cases, full-process time, allocation profiles, RSS and build costs. fwp's proces
 RSS is lower than Swift's here but higher than C/Rust's. This is a serial queued
 service, not the network throughput/latency experiment below.
 
-## Remaining service load measurements
+## Sustained service load
 
 The native HTTP correctness test runs 64 clients with 200 requests each and
 checks shutdown with a request in flight. Its 12,800 successful requests do not
 establish throughput, latency or sustained capacity.
 
-Milestone 5 has a [separate measurement contract](measurements/application-tooling.md#sustained-http-load).
-Its endpoint, concurrency levels, request windows and error accounting are fixed;
-sustained results remain pending. The required evidence is:
+The [November 10 measurements](measurements/application-compiler-load-2026-11-10/README.md#what-http-load-means)
+follow a [separate fixed protocol](measurements/application-tooling.md#sustained-http-load):
+plain loopback HTTP, one small JSON endpoint, 1/8/32/64 persistent connections,
+two sessions per architecture and a five-minute soak on each.
 
-- Freeze endpoint work, request/response sizes, keep-alive policy, concurrency
-  levels, warmup, measured duration, host limits and baseline source before runs.
-- Report completed requests per second and median/p95/p99 request latency at
-  each concurrency level, alongside errors and timeouts. Do not omit failures
-  from the denominator or mix load-generator time with server computation.
-- Measure steady allocation traffic and long-running live storage/RSS; distinguish
-  bounded pools and warmed caches from continuing growth.
-- Exercise slow readers/writers, backpressure, client disconnects, cancellation
-  and shutdown under load. Check partial-response and resource cleanup behavior.
-- Set acceptance limits from the stated application and measured starting point;
-  retain saturation and inconclusive results. A fixed correctness request count
-  is not a substitute for this contract.
+- All 34 trials have zero failures across 26.8 million attempts, including warmup
+  and late replies. Correct replies within the window define throughput.
+- Sampled server RSS stays flat within each trial, at 9.24–16.99 MiB across
+  hosts/connection counts. This does not mean zero allocation or transient peaks.
+- Five-minute, 32-connection soaks sustain about 16,249 replies/s on Neoverse N2
+  and 20,815 replies/s on EPYC 9V45. Their p99 latencies are 8.90 and 2.28 ms.
+- Separate allocation/backpressure controls cover slow clients, partial requests,
+  disconnects and final cancellation. Instrumentation is absent from timed load.
+
+These establish an fwp baseline, not a C/Rust/Swift comparison. The two AMD64
+sessions use different CPUs; do not pool them or rank architectures. The server
+uses about one CPU core; attribute its CPU work before selecting an optimization.
+The [report](measurements/application-compiler-load-2026-11-10/README.md) retains
+all concurrency levels, raw summaries, process traces and measurement limits.
 
 ## November 7 complete-solve derivative comparison
 

@@ -10,13 +10,17 @@ identities. Do not edit observations to make an old experiment describe new code
 ## Current diagnosis
 
 [The complete ownership comparison passes all delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
-[Milestone 5](application-tooling.md) now checks application workflows and prepares
-compiler-phase and sustained-load measurements; it has no new timing results yet.
+[Milestone 5 measurements now pass](application-compiler-load-2026-11-10/README.md):
+all 48 compiler comparisons qualify under their copy controls, and 34 HTTP trials
+complete with zero failed requests and flat sampled server memory. The report
+separates compiler phases, GCC cost, HTTP latency and differing host CPUs.
+Final platform delivery remains in progress; the [protocol](application-tooling.md)
+retains the explicit measurement settings.
 [Application workflows pass on both Linux architectures](application-workflows-2026-11-09/README.md).
 
 [Compiler and HTTP correctness](compiler-http-checks-2026-11-09/README.md) now
 verifies all growth sizes, exact responses, allocation controls and slow-client
-cleanup. The recursive fixture repair remains pending.
+cleanup. The corrected recursive fixtures now pass on both native Linux hosts.
 [Preparation](compiler-http-preparation-2026-11-09/README.md) retains the original
 generic-cap and connection-policy failures.
 

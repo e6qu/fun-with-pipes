@@ -1,14 +1,16 @@
 # Current work
 
-**Next:** verify the corrected recursive-expansion fixtures, then complete the
-frozen compiler and HTTP timing sessions in the same PR. Audit every current job
-before batching repairs; retain failed/noisy results unchanged.
+**Next:** finish the exact-final-head production matrix, docs and complete-log
+audit for [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274), repair any
+failures, then squash-merge. All planned focused checks and measurements pass;
+do not rerun unchanged timings.
 
-Normal [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) is open.
 Worktree: `.worktrees/application-milestone`, branch `application-tooling-costs`.
-Preserve unrelated root-worktree changes. This batch changes tests/docs only;
-compiler, runtime, applications and measurement runners remain at verified source
-`7fa50257155abf63fa220cd17f9500ea6d9bdd16`. Record the new head/runs after publication.
+Preserve unrelated root-worktree changes. This final report batch changes only
+docs/evidence. Measured source: `7a65a8bb2ac23df0554610dfb90609c5fed30ee8`, retained by
+`roadmap/application-tooling-measurements-2026-11-10`. Compiler/runtime/application
+and runner code are unchanged from `7fa50257155abf63fa220cd17f9500ea6d9bdd16`;
+`7a65a8bb2` repairs the negative recursion fixtures and records earlier checks.
 
 ## Roadmap status
 
@@ -18,68 +20,78 @@ compiler, runtime, applications and measurement runners remain at verified sourc
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup repair | Recorded measurement limits still apply |
-| 5 | In progress | Application workflows, compiler reports/growth, HTTP allocation/backpressure controls | Recursive negative fixture, timed sessions, final delivery |
+| 5 | In progress | Applications, compiler reports/growth, HTTP allocation/backpressure and all timed sessions | Exact-head final delivery gates |
 
-#273 is merged as `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`. Its
+#273 merged as `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`. Its
 [receipt](measurements/ownership-peer-final-gates-2026-11-09/README.md) retains all
-nine production jobs, docs and complete-log audit at tested source `0f3c0b94a1afa5b1e2c9b12435a2905532b0d072`.
-Verified tag: `roadmap/ownership-peer-delivery-2026-11-09`. Do not repeat unchanged
-experiments to obtain qualification; original milestone 1–3 limits stay open.
+nine production jobs, docs and complete-log audit at source
+`0f3c0b94a1afa5b1e2c9b12435a2905532b0d072`.
+Verified tag: `roadmap/ownership-peer-delivery-2026-11-09`.
+Original milestone 1–3 timing limits remain open. After M5 delivery, follow
+[PLAN.md](../PLAN.md): attribute compiler/library and service CPU costs before
+selecting the next optimization; do not infer ARC cost from whole-service time.
 
-## Focused results at `7fa502571`
+## Verified M5 results
 
-| Run | Result |
+The [November 10 receipt](measurements/application-compiler-load-2026-11-10/README.md)
+retains all ten complete focused logs, raw compiler samples/commands, HTTP
+summaries/process traces and exact identities. All following runs pass at `7a65a8bb2`:
+
+| Run | Coverage |
 |---|---|
-| Applications `42721015315` | Both hosts: seven compiler-option tests pass; one recursive fixture fails before specialization because it lacks `rec`. All three SDK applications, eight integer tests and O0–O3 inspection pass; AMD64 browser passes. |
-| Compiler growth `42721021055` | Both hosts: all twelve sizes, exact ordinary/observed C and outputs, early/late type errors pass. The 512-type regression is repaired. |
-| HTTP `42721026186` | Both hosts: actual API request check, driver failure controls, exact allocation/cleanup, disabled counter and slow-client backpressure pass. |
-| Docs `42721032218` | Pass |
-| PR docs `42721961173`, head `16e19fd9dbbdbcfb18e06e3d80b986a8a6504968` | Pass; only documentation differs from `7fa502571` |
+| Applications `42724971788` | Both hosts: all eight compiler-option tests, three SDK applications, eight integer tests, O0–O3 C/object reports; AMD64 browser |
+| Compiler timing `42725018602` | Two sessions per host; all 48 case/session copy controls pass; identical C and checked execution for all 1,728 builds including warmups |
+| HTTP timing `42725023571` | Two sessions per host; all 34 trials, including two five-minute soaks; 26,807,548 attempts including warmup/late replies, zero failures |
+| Documentation `42724948809` | Pass |
 
-[The retained receipt](measurements/compiler-http-checks-2026-11-09/README.md)
-contains all six native logs, selected artifact members and independent HTTP
-record re-audits. No other compiler warnings or failing targets were found.
-Original [application](measurements/application-workflows-2026-11-09/README.md)
-and [growth/connection-policy failures](measurements/compiler-http-preparation-2026-11-09/README.md)
-remain retained. Superseded `3bd0a9f0c` runs `42718472554`, `42718478175`,
-`42718483690`, `42718488627` were cancelled while wholly queued.
+Independent local audit recomputed all compiler medians/noise controls and all
+HTTP RSS/CPU traces. Each trial's sampled server RSS is flat. Type checking is
+the largest fwp phase; GCC dominates the largest declaration/generic builds.
+Keep different host CPU models separate. Raw HTTP attempts stay in the identified
+CI artifacts until February 8, 2027; the receipt explicitly distinguishes those
+archives from permanently tracked samples/summaries. No new peer-overhead claim.
 
-The new test repair adds `rec` to both direct and mutual generic recursion
-fixtures. It now gathers both diagnostics before asserting, so one failure cannot
-hide the other. Rust formatting passes; corrected native execution is pending.
-The earlier failure did not exercise the compiler's expansion bound.
+## Repairs and original evidence
 
-## Production CI
+- [Initial applications](measurements/application-workflows-2026-11-09/README.md):
+  scripted REPL mode, integer formatting and saved-source audit repairs.
+- [Preparation](measurements/compiler-http-preparation-2026-11-09/README.md):
+  independent generic uses incorrectly hit a global cap; the measured HTTP source
+  needed an explicit long-lived connection policy.
+- [Repaired correctness](measurements/compiler-http-checks-2026-11-09/README.md):
+  all twelve growth sizes, early/late errors, allocation and slow-client cleanup
+  pass. The remaining recursive test omitted `rec`; both corrected fixtures now
+  reach the expansion bound and pass in `42724971788`.
 
-Run `42721961219` tests PR head `16e19fd9d`; it is still running and contains the
-known fixture error. Audit completed targets and all failures. Automatic approval
-review rejected cancelling this active run because it would discard in-progress
-verification; leave it intact. New repair pushes must not cancel it indirectly.
-No final delivery claim is established by focused Linux checks.
+Superseded production `42721961219` tested `16e19fd9dbbdbcfb18e06e3d80b986a8a6504968`.
+Both Windows logs failed only on that missing-`rec` fixture. All completed targets
+and available full logs were audited. Initial cancellation was rejected by
+approval review. After `7a65a8bb2` had its own nine-job matrix and those failures
+were audited, cancellation of the superseded run was approved and completed.
 
-## Remaining measurements and delivery
+## Final CI
 
-1. Verify both corrected recursion cases. Keep bounded expansion, source locations,
-   ordinary/report equivalence and the verified 512-type breadth case.
-2. Freeze the source and run two compiler sessions per Linux host under the
-   [protocol](measurements/application-tooling.md): separate fwp from GCC time,
-   retained raw reports, identical-copy controls and process memory. Growth
-   correctness prerequisites pass; no timing session has run yet.
-3. Run two HTTP sessions per host: 1/8/32/64 connections, two 30-second windows
-   each, and one 300-second soak per host. The correctness prerequisites pass.
-   Keep ordinary timing separate from allocation and pressure instrumentation.
-4. Retain/audit reports, update this PR and docs, then require nine production
-   jobs, docs and complete-log audit at the exact final head. Squash-merge with
-   one line ≤80 characters, empty body and no trailers/attribution; verify the
-   resulting tree and message.
+Production `42724948766` tests `7a65a8bb2`: benchmark passes; eight native jobs
+are still running without a reported failure at this report's preparation.
+The new documentation/evidence commit needs its own nine jobs and docs gate;
+record their IDs here after publication. Audit every failed step and completed
+target before any repair push. Preserve the final head while gates finish.
+Focused Linux passes do not establish final native platform delivery.
+
+After all nine jobs and docs pass, dispatch `suite=production-log-audit` for the
+exact source/run/attempt/documentation job. Merge only after that audit passes.
+Use one squash subject ≤80 characters and an empty body; no trailers or
+attribution. Verify the resulting message and tree, then continue PLAN.md.
 
 ## Local checks and limits
 
-Use `python3 scripts/local-guard.py` serially. Rust formatting, actionlint, Python
-syntax, compiler-accounting controls, HTTP-reader/sampler controls and doc links
-pass. Bounded artifact reads verified selected ZIP members; both HTTP check
-summaries were reconstructed from retained compressed attempt records. No local
-fwp build, full suite or load measurement ran. Last free disk: 122 GiB.
+Use `python3 scripts/local-guard.py` serially. Rust formatting, actionlint,
+Python syntax, compiler-accounting controls, HTTP-reader/sampler controls and
+doc links pass (440 link sets, 106 immutable anchors, five roadmap rows).
+All 251 receipt file hashes/sizes and all 34 exact request/response samples were
+checked against staged bytes. This report also uses guarded `/tmp/fwp-analyze-m5.py` to
+recompute all measurements and bounded ZIP readers to verify selected members.
+No local fwp build, full suite or load measurement ran. Last free disk: 122 GiB.
 Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and the
-180-second guard deadline. Full builds/suites/measurements stay on GitHub.
-Dispatcher size is 502,964 bytes; keep it below 512,000.
+180-second deadline. Full builds/suites/measurements stay on GitHub.
+Dispatcher size: 502,964 bytes; limit: 512,000.

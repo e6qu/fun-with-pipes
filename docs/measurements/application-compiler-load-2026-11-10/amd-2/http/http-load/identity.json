@@ -1,0 +1,43 @@
+{
+  "source": "7a65a8bb2ac23df0554610dfb90609c5fed30ee8",
+  "programSha256": "715e3a7593121256222f0ce526de5a428699a4195a83d1c312a4f96f28cd553a",
+  "maintainedProgramSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+  "maxRequestsPerConnection": 10000000,
+  "machine": "x86_64",
+  "phase": "measure",
+  "session": 2,
+  "compilerSha256": "8aff77ad5142bae99680bef4ec935d5980975371b2fe02c470fd574fef5c03a6",
+  "generatorSha256": "f2fdf5694661629d29364af201bd30d070da5a11adacc7776c78cf19e8dc6b93",
+  "gccVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "gxxVersion": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "topology": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+  "allowedCpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "serverCpu": 0,
+  "generatorCpu": 1,
+  "clockTicksPerSecond": 100,
+  "environment": {
+    "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+    "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+    "FWP_LTO": "0",
+    "FWP_ADDR": "127.0.0.1:0"
+  },
+  "flags": [
+    "-march=x86-64",
+    "-ffp-contract=off",
+    "-fno-fast-math",
+    "-fno-lto"
+  ],
+  "optimization": "O2",
+  "requestDeadlineSeconds": 5,
+  "shutdownDeadlineSeconds": 20,
+  "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+  "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+  "binarySha256": "cf6c7fc8bd1e9563d59469316339abaf18c9649694c67d74cfd7911e9fba62cb",
+  "binaryBytes": 2853800,
+  "generatedCSha256": "9fbb5ae4d0eb4fccc0d8211927a2c51b7b8daa537eb2cf0ecfec6c02d411808e"
+}

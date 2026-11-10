@@ -49,7 +49,7 @@ implementation; do not invent a universal language-overhead target.
 | 2 | Broader ownership and representation coverage | Extend a common lifetime or representation proof to at least two distinct application patterns exposed by milestone 1. Cover local/escaping closures, records and shared inputs as appropriate. Preserve trap/cancellation cleanup and count necessary sharing; report time, allocations, live memory and compiler scaling. |
 | 3 | Structured autodiff usable beyond one objective | Compare ordinary reverse AD, local forward AD and existing tensor operations on a neighboring-pair objective, independent per-element loss, and a dense coupled objective. Specify supported operations and effects. Add a public structured operation only with correctness, lifetime and measured-benefit evidence; preserve general `grad`, nested differentiation and F128 precision. |
 | 4 | Complete ownership and peer comparisons | Complete the [buffer, returned-function, weak-registration and parser comparisons](docs/measurements/ownership-peers.md). Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
-| 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#remaining-service-load-measurements). Add syntax only for a demonstrated need. |
+| 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#sustained-service-load). Add syntax only for a demonstrated need. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
@@ -71,34 +71,44 @@ limits. Complete delivery of 4,096 queued messages still takes 18.65–20.23 tim
 C's time and 5.12–6.70 times Swift's; the implementations differ in queues,
 representations and synchronization. ARC counts alone do not explain that gap.
 
-Milestone 5 follows the [application/compiler/load protocol](docs/measurements/application-tooling.md):
+Milestone 5's [application/compiler/load measurements](docs/measurements/application-compiler-load-2026-11-10/README.md)
+now pass. PR #274 delivers these related tasks together:
 
-1. **Complete application workflows:** word counting, numerical minimization and
-   queued callbacks through raw/optimized interpretation, native O1/O2, REPL,
-   notebook edits/save/reopen, debugger inspection and retained O0–O3 C/code
-   reports. The [walkthroughs](docs/application-workflows.md) and focused tests
-   pass on both Linux architectures, with browser checks on AMD64.
-   [Retained results](docs/measurements/application-workflows-2026-11-09/README.md)
-   record the repairs and inspection scope.
-2. **Expose real compiler phases:** source loading/parsing, macro expansion,
-   inference, specialization, optimization, ownership, C emission and external
-   compilation. Account for nested work without double-counting. Ordinary and
-   observed compilation must emit identical C and results; report observer cost.
-3. **Measure compiler growth:** the protocol's declaration, generic-use and
-   nesting families, with early/late errors, explicit deadlines, memory and
-   source/IR/C sizes on both native Linux architectures. Use the results to
-   select bounded improvements; do not promise linear inference for all inputs.
-4. **Measure sustained HTTP load:** the existing API endpoint with 1/8/32/64
-   persistent connections, two sessions, complete response/error records and a
-   five-minute soak. Separate ordinary latency/throughput from allocation and
-   cleanup instrumentation; include slow clients, cancellation and shutdown.
-5. **Deliver one coherent batch:** fix discovered issues, keep docs and tutorials
-   aligned, retain all observations and original failures, then run the complete
-   final native matrix, documentation and log audit for the next substantial PR.
+1. **Application workflows:** word counting, numerical minimization and queued
+   callbacks pass raw/optimized interpretation, native O1/O2, REPL, notebook
+   edits/save/reopen, debugger and O0–O3 code inspection. Browser checks pass on
+   AMD64. [Walkthroughs](docs/application-workflows.md) explain each computation.
+2. **Compiler phase reports:** nested spans separate loading/parsing, macros,
+   typing, specialization, optimization, ownership, C emission and child tools.
+   Ordinary and observed builds emit identical C and results. Measured observer
+   ratios range from 0.9799 to 1.0177; this does not establish zero overhead.
+3. **Compiler growth:** all twelve sizes pass on both architectures, including
+   512 independent generic uses; expanding recursion remains bounded. All 48
+   timed comparisons pass copy controls. Type checking dominates fwp time;
+   GCC dominates the largest definition/generic-use builds. Peak memory and
+   both process times are retained separately.
+4. **Sustained HTTP:** four sessions cover 1/8/32/64 connections and two five-minute
+   soaks. All 34 trials complete with zero failed requests and flat sampled
+   server RSS. Separate probes verify allocation traffic, slow-client progress,
+   cancellation and exact cleanup. Different CPU models remain separate.
+5. **Final delivery remains:** audit all nine production jobs, documentation and
+   complete logs for the exact final PR head; fix any failures before merging.
 
-No compiler-phase timings or sustained-load results have been collected for this
-milestone. Keep the experimental local-pair helper and public gradient API
-unchanged unless representative evidence justifies a replacement.
+After delivery, use the new measurements to select the next substantial change:
+
+- **Compiler:** separate bundled-library checking from user declarations using
+  the existing phase report and representative application inputs. Establish
+  which repeated work can be eliminated without changing inference, effects,
+  diagnostics or macro execution. Freeze its cost/correctness contract first.
+- **Service:** attribute CPU time in the actual queued service and HTTP endpoint
+  to payload construction, queues/channels, protocol work and cleanup. Use the
+  existing C/Rust/Swift queued-service comparison and the new HTTP baseline;
+  do not call either gap an ARC cost without attribution.
+
+These are investigations, not selected implementations or promised speedups.
+Original milestone 1–3 timing limits remain open; do not repeat unchanged runs
+for qualification. Keep the experimental local-pair helper and public gradient
+API unchanged unless representative evidence justifies a replacement.
 
 ## Earlier contracts
 

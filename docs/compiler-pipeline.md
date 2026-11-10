@@ -108,8 +108,9 @@ polymorphic recursion terminates or that compilation is always linear.
 
 The first growth run exposed the old global cap incorrectly rejecting 512
 independent uses. The corrected case passes on both Linux architectures; the
-[checks](measurements/compiler-http-checks-2026-11-09/README.md) retain original
-results and the remaining recursive-fixture verification.
+[checks](measurements/compiler-http-checks-2026-11-09/README.md) retain the original
+results. Corrected direct/mutual recursion fixtures and all timed growth sessions
+[now pass](measurements/application-compiler-load-2026-11-10/README.md).
 
 ## Lowering and execution details
 

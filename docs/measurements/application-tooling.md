@@ -1,10 +1,11 @@
 # Milestone 5: applications, compiler costs and sustained load
 
-**Implementation in progress, not timing results.** [PR #273's delivery gates
-pass](ownership-peer-final-gates-2026-11-09/README.md). This is the next
-[roadmap](../../PLAN.md) batch. Freeze its implementation source and complete measurement settings before
-collecting timings. Existing unit tests establish individual features; the work
-below checks complete user workflows and measures the costs still missing.
+**Focused checks and measurements pass; final delivery is pending.** The
+[November 10 report](application-compiler-load-2026-11-10/README.md) records all
+four compiler sessions, four HTTP sessions and corrected recursion checks.
+This document retains their frozen protocol; [the handoff](../development-state.md)
+tracks PR #274's final platform gates. The original milestone 1–3 timing limits
+remain open.
 
 ## Three applications through the tools
 
@@ -114,9 +115,11 @@ observed output, and early/late type errors with matching source locations.
 warmup; eight measured rounds alternate order. Identical compiler copies have
 matching SHA-256 digests. All sources, commands, failures, reports and samples
 are retained. All 12 sizes now [pass on both hosts](compiler-http-checks-2026-11-09/README.md),
-including the repaired 512-type case. A separate recursive-limit fixture needed
-its required `rec` declarations; that corrected negative control remains pending.
-No timing session has run yet.
+including the repaired 512-type case. The recursive-limit fixtures needed their
+required `rec` declarations; both corrected controls now pass on both hosts.
+All 48 timed case/session comparisons pass the identical-copy controls. The
+[report](application-compiler-load-2026-11-10/README.md#what-compiler-time-means)
+separates fwp time, GCC time, phase costs and process memory.
 
 Additional required controls:
 
@@ -184,7 +187,11 @@ server (correct/wrong/partial replies and timeout), exercises the actual API,
 and runs its existing physical cleanup/socket/cancellation controls. `http-load`
 is reserved for the complete timed protocol after those checks pass. Session 1
 also runs the single 300-second soak per host. Each trial starts a fresh server.
-No sustained timing result exists yet.
+All four timed sessions now pass: 34 trials, including both five-minute soaks,
+with no failed requests and flat sampled server RSS. The
+[results](application-compiler-load-2026-11-10/README.md#what-http-load-means)
+keep the different CPU models separate and retain latency, throughput and CPU
+traces. They do not establish a Swift/C/Rust throughput comparison.
 
 The generator runs on one allowed logical CPU, the server on another. Generator
 CPU saturation limits what this experiment can say about server capacity. The
@@ -271,6 +278,20 @@ payload construction, queue/effect/channel work and cleanup before selecting a
 shared improvement. A temporary weak-lookup result alone does not explain it.
 
 ## Delivery
+
+The measured source is `7a65a8bb2ac23df0554610dfb90609c5fed30ee8`, retained by
+`roadmap/application-tooling-measurements-2026-11-10`. To reproduce the full
+sessions on runners, use the tag rather than a moving branch:
+
+```sh
+gh workflow run numerics.yml --ref roadmap/application-tooling-measurements-2026-11-10 -f suite=compiler-scaling
+gh workflow run numerics.yml --ref roadmap/application-tooling-measurements-2026-11-10 -f suite=http-load
+```
+
+The tagged reusable workflows fix both hosts, two sessions and all runner
+arguments. Host CPU models and installed stable tools can change; record new
+identities rather than treating a reproduction as the same experiment. Original
+timings are not rerun unchanged to obtain qualification.
 
 Keep this batch in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274),
 based on #273’s verified squash merge. Update guides and the handoff with actual
