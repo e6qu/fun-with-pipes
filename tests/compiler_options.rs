@@ -135,6 +135,17 @@ fn verify_profile(path: &Path, status: u8) -> Vec<Json> {
                 }
                 grouped_bindings[parent] += bindings;
             }
+            if name == "type-check-bodies" {
+                assert!(matches!(
+                    field(&events[parent], "phase"),
+                    Json::Str(group) if matches!(group.as_str(),
+                        "type-check-library-group" | "type-check-user-group" | "type-check-mixed-group")
+                ));
+                assert_eq!(
+                    field(field(event, "counts"), "bindings"),
+                    field(field(&events[parent], "counts"), "bindings")
+                );
+            }
         }
     }
     for (index, event) in events.iter().enumerate() {
@@ -204,6 +215,11 @@ fn compile_reports_preserve_code_results_errors_and_nested_macro_accounting() {
                 "type-check-dependencies",
                 "type-check-library-group",
                 "type-check-user-group",
+                "type-check-bodies",
+                "type-check-deferred",
+                "type-check-constraints",
+                "type-check-validation",
+                "type-check-generalization",
             ] {
                 assert!(events
                     .iter()

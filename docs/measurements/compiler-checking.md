@@ -18,6 +18,22 @@ This is most of the word-count compiler process, but only part of the HTTP
 server's 1.2–1.4 seconds. Attribute internal checking work and retain the other
 compiler stages before choosing a change.
 
+The next observation divides each group into five existing operations:
+
+- **Bodies:** infer expressions and unify each definition with its signature.
+- **Deferred operations:** decide unresolved pipes and record-field operations
+  after more types are known.
+- **Constraints:** solve trait requirements against signatures or the group's
+  inferred types.
+- **Validation:** check sizes, integer literals, effects and resource captures.
+- **Generalization:** finish inferred signatures and check the entry value.
+
+Report group setup/cleanup separately. These spans observe existing code; they
+do not change trait selection or omit checks. The application report must account
+for every nanosecond of each group using its direct children and its remainder.
+These finer observations need their own checks; earlier results use only the
+coarser library/user boundaries.
+
 ## Questions and boundaries
 
 | Question | Evidence to collect |

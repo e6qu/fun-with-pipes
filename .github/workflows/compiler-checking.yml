@@ -15,6 +15,12 @@ jobs:
       CARGO_BUILD_JOBS: '2'
       CC: gcc
       FWP_LTO: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -24,10 +30,14 @@ jobs:
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Native compiler observation dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev time
-      - name: Verify phase reader and build release compiler
+      - name: Verify phase reader and compiler report contracts
         run: |
           python3 scripts/test-compiler-scaling.py
           cargo fetch --locked
+          cargo clippy --locked --offline --test compiler_options -- -D warnings
+          cargo test --locked --offline --test compiler_options -- --nocapture
+      - name: Build release compiler
+        run: |
           cargo build --release --locked --offline --bin fwp
       - name: Observe all maintained application compiles
         run: |

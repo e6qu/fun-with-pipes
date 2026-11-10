@@ -113,3 +113,9 @@ Delivery branch has local diagnostic commit `9054528ba`, published only as tag
 `roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`. It records large
 socket-send progress and failing round, without changing runtime behavior or the
 published PR head. Finish the Windows failure investigation there first.
+
+Prepared finer compiler boundaries for bodies, deferred operations, constraints,
+validation and generalization, with exact group-time reconciliation in the
+application report. The focused workflow now checks the eight compiler-option
+contracts at production Rust O1 before building the release observer. No solver
+algorithm changed. Native verification of these new boundaries is pending.
