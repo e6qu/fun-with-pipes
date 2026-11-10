@@ -1,7 +1,7 @@
 # Reuse an enclosing resource owner inside nested calls
 
 **Selected from [verified service CPU samples](service-cpu-attribution-2026-11-10/README.md);
-first native-lowering implementation passes focused correctness checks.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
+native correctness and count targets pass; ordinary timing remains open.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
 retained by `roadmap/service-cpu-software-clock-2026-11-10`. Its ordinary code is
 unchanged from the recorded service source. Freeze this contract before changing
 production code. Keep earlier missed timing goals separate.
@@ -120,10 +120,12 @@ Seven proof controls cover aliases/projections, uninitialized slots, completed
 scopes, factory results, pattern branches, sibling scopes, reassignment and count
 operations. The actual service ledger test requires the optimized program to
 exercise this selection before checking native outputs and physical release.
-[Native O1/O2 checks](nested-resource-first-checks-2026-11-10/README.md) pass on
-both Linux architectures. The first workflow failed its setup for formatting and
-Clippy; the repair installs both components. Ordinary performance acceptance and
-final delivery remain pending.
+[Native O1/O2 count and cleanup checks](nested-resource-counts-2026-11-10/README.md)
+pass on both Linux architectures: 29.7–36.9% fewer cleanup registrations in large
+cases, 4.85–5.34% fewer actual count increments, unchanged heap use. The
+[omitted-owner control](nested-resource-lifetime-2026-11-10/README.md) exposes
+premature closure. The earlier formatter/linter setup is repaired and both pass.
+Ordinary performance acceptance and final delivery remain pending.
 
 The comparisons build the exact frozen reference `65719f7fc` and the candidate
 from Rust source with the same toolchain. They retain source identities,

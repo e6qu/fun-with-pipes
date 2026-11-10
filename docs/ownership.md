@@ -119,8 +119,9 @@ establish protection. Loop/tail-call rebinding is outside this proof.
 Only the duplicate frame hold is removed. Ordinary arguments, returned owners,
 failure cleanup and the point at which a file closes or weak target expires retain
 their existing rules. The interpreter keeps its original scope metadata.
-[Focused Linux checks](measurements/nested-resource-first-checks-2026-11-10/README.md)
-pass; [count/time acceptance and final platform verification](measurements/nested-resource-owners.md)
+[Native Linux counts/cleanup](measurements/nested-resource-counts-2026-11-10/README.md)
+and the [omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md)
+pass. [Ordinary timing and final platform verification](measurements/nested-resource-owners.md)
 remain open. This is distinct from borrowing an ordinary function argument below.
 
 ### Borrowing across direct calls

@@ -1,113 +1,87 @@
 # Current work
 
-**Next:** monitor corrected focused/count run `42790112990` at
-`c49af8a6e873380cd328d2679c1df2a6a795b489`; audit both jobs before starting
-the prepared ordinary timing workflow under [the frozen contract](measurements/nested-resource-owners.md).
-Deliver the compiler proof, profiler repairs, measurements and docs in one normal PR.
+**Next:** publish the verified count/lifetime/HTTP evidence, open the normal PR,
+and start ordinary runtime and compiler-cost measurements. Monitor sustained load
+run `42797169205`; all four jobs reached the load protocol. Keep every noisy or
+missed timing target explicit before final delivery.
 
-Publish the additional file-owner fault control with the isolated proof observer
-and run `nested-resource-lifetime`. That scope checks only the changed file target
-plus formatting/Clippy; it does not repeat the ongoing eight-target/count batch.
-The source test removes actual protecting holds and requires earlier file closure
-to change the observable result. Generated ordinary/fault C, binaries and outputs
-are retained. This added negative native control has not run yet.
+Worktree `.worktrees/service-cpu-costs`, branch `service-cpu-costs`. The last native
+correctness source is `cd661ff84b88736ceec83c75e0e2ecf7e6de551d`; the next publication
+adds reports and starts the final matrix. Production compiler sources are unchanged
+since `c49af8a6e873380cd328d2679c1df2a6a795b489`.
 
-The first native-lowering proof is implemented in `src/cgen/resource_borrows.rs`.
-It tracks initialized enclosing owners through exact aliases and immutable
-projections, with scope rollback. It rejects reassigned IDs and excludes loop/self-
-tail-rebinding emission. All three native result representations use the proof;
-interpreter/debugger metadata stays unchanged. Seven unit controls cover positive
-and negative lifetime boundaries. The service ledger requires actual selection.
-At `0c73a4e7102876fef8d576abdce5b1290f0b28c0`, run `42784994278` passes all
-14 unit checks and eight native targets on both Linux architectures (34 integration
-tests per host). Jobs `129723892136` / `129723892565` fail only because rustfmt was
-not installed; Clippy consequently did not run. Complete logs were inspected.
-No compiler diagnostic or native test failure appeared. [Complete logs and scope](measurements/nested-resource-first-checks-2026-11-10/README.md)
-are retained. Documentation run `42784998783` passes. This is focused correctness
-evidence, not final delivery or performance acceptance.
+| Run | Source | ARM64 job | AMD64 job | Result |
+|---|---|---|---|---|
+| `42790112990` | `c49af8a6e` | `129741105253` | `129741105281` | Pass: 14 units, eight native targets / 34 tests, actual counts and fault controls |
+| `42792514554` | `cd661ff84` | `129749269814` | `129749269413` | Pass: omitted-file-owner control, target and lints |
+| `42793407188` | `cd661ff84` | `129752322335` | `129752322565` | Pass: HTTP responses, physical cleanup, broken counters and slow clients |
 
-Repair/count head `1df44e5f2de21ccd49b517a122112d6ffebf56a9`, run `42787231448`,
-was cancelled before its reference build/count measurements. Both jobs had started
-by cancellation and passed formatting/Clippy; their unit builds were interrupted.
-Its disabled-proof reference left
-some new setup work in the comparison compiler. The replacement builds exact
-reference `65719f7fc` instead; no measurements ran on that superseded setup.
-The candidate now removes an empty frame only when the proof removed its last
-parameter. Existing empty frames retain their original behavior.
+The complete logs contain no compiler warnings or failed tests.
+[Counts](measurements/nested-resource-counts-2026-11-10/README.md) show 29.7–36.9%
+fewer large-case cleanup registrations and 4.85–5.34% fewer actual reference
+increments/decrements, with unchanged heap use. The [file-lifetime control](measurements/nested-resource-lifetime-2026-11-10/README.md)
+exposes premature closure after removing a real protecting hold. [HTTP checks](measurements/nested-resource-http-checks-2026-11-10/README.md)
+verify the second application. None of these establishes a speedup.
 
-Prepared next: `nested-resource-time` runs contemporary C/Rust/Swift peers and
-ordinary reference/candidate service timings, then compiler costs on all 16 inputs.
-It requires an exact `roadmap/weak-callback-time-*` tag via `weak_time_tag`.
-Do not dispatch timing before count/fault checks pass. Preserve all noisy or failed
-observations; do not rerun unchanged cases for qualification. HTTP functional/load
-checks and final nine-job/docs/log-audit delivery are still outstanding.
+## What changed and what is still unverified
 
-The prepared diagnostic compiler observer counts both proof scans and alias walks
-on four applications plus twelve growth inputs. It requires identical emitted C
-to the ordinary compiler and remains separate from timing. Its two guarded controls
-pass after repairing repeated-instrumentation rejection. Native observer compilation
-and its actual visit bounds remain unverified until the timing workflow runs.
+`src/cgen/resource_borrows.rs` proves when an enclosing resource owner protects an
+inner parameter through exact aliases and immutable projections. It tracks only
+initialized bindings and rolls back scope state. Reassigned IDs and loop/self-tail
+rebinding prevent selection. All three native result representations use it;
+ordinary argument owners and interpreter/debugger metadata stay intact. A frame
+is omitted only when the proof removes its last parameter and it has no bindings.
 
-## Verified delivery
+[First focused checks](measurements/nested-resource-first-checks-2026-11-10/README.md)
+pass 14 unit checks and eight targets / 34 integration tests per Linux architecture
+at `0c73a4e7102876fef8d576abdce5b1290f0b28c0`. Initial missing rustfmt/Clippy setup
+is repaired. Both lints passed at superseded head `1df44e5f2`; that run was cancelled
+before measurements. Its complete logs/cancellation receipt remain in the report.
+The file control removes a real protecting hold and exposes premature closure
+on both hosts at O1/O2. Its complete small native archives are retained and locally
+verified against their recorded size, SHA-256 digest and member checksums.
 
-[PR #275](https://github.com/e6qu/fun-with-pipes/pull/275) merged as
-`13d31fc4041a664129ed5674845750836faa0a84`. Its tree equals verified head
-`a232e1e35062a37aa013975ac77bbd8cb4620663`; its message is one line, 49 characters,
-with an empty body and no trailers. [All final gates and receipts](measurements/compiler-borrowed-final-gates-2026-11-10/README.md)
-are retained: production `42767361217`, docs `42767360650`, complete-log audit
-`42778134759`. All ten audit reports match the exact passing head. Complete archive
-size, SHA-256 and every CRC pass. Duplicate main runs `42779270202` and `42779270047`
-were cancelled after equal-tree verification.
+The [frozen contract](measurements/nested-resource-owners.md) uses ordinary reference
+`65719f7fc2277a5b97c5a790df941fea6c5eb4d7`, retained by
+`roadmap/service-cpu-software-clock-2026-11-10`. Both compilers are built from Rust;
+no previous fwp executable is a build dependency. The earlier disabled-proof
+reference was replaced before measurement because it omitted some added compiler
+setup costs. Contract anchor `be57644e4` precedes production changes.
 
-[Borrowed compiler types](measurements/compiler-borrowed-types-2026-11-10/README.md)
-remove 29–32% of type copies with identical C and diagnostics. Ordinary compilation
-takes 11–14% less time for word counting and 8–10% less for callbacks. All complete
-applications and memory limits pass. [Four AMD64 growth comparisons](measurements/compiler-type-time-2026-11-10/README.md)
-remain noisy under the frozen 2% copy-control limit; do not rerun them unchanged.
+## Remaining validation
 
-## Current branch and source identities
+- Count/fault checks pass. Dispatch `nested-resource-time` with an
+  exact `roadmap/weak-callback-time-*` tag and pass it through `weak_time_tag`.
+  The workflow measures contemporary C/Rust/Swift/fwp peers, then reference/candidate
+  binaries and identical copies using the audited C pilots. Two sessions per host;
+  sixteen balanced rounds; original 2% copy limit. Preserve every missed/noisy case.
+- Ordinary compiler costs cover four applications plus twelve growing inputs with
+  the explicit `nested-resources` contract (at most 2% extra time / 5% extra RSS).
+  A separate diagnostic compiler counts both proof scans and alias walks and must
+  emit identical C. That observer has not yet compiled or run natively.
+- Finish sustained HTTP load `42797169205`. Responses and disconnect/error cleanup
+  pass. Static HTTP selection does not establish an HTTP speedup.
+- Publish one normal PR. Finish nine exact-head production jobs, docs and the
+  complete-log audit before squash merging with one subject of at most 80 characters,
+  an empty body and no trailers. Then continue the remaining roadmap.
 
-Worktree `.worktrees/service-cpu-costs`, branch `service-cpu-costs`, rebased onto
-the verified squash. No delivery PR yet. Immutable observation source
-`fac4a47440fb02667ddbf385dba959ae8f91a310` is retained by
-`roadmap/service-cpu-observation-2026-11-10`.
-Reference ordinary compiler/runtime `65719f7fc2277a5b97c5a790df941fea6c5eb4d7` is
-retained by `roadmap/service-cpu-software-clock-2026-11-10`; its ordinary sources
-match the recording source. Contract published before production edits as `be57644e4`, retained by
-`roadmap/nested-resource-owner-contract-2026-11-10`.
+## Earlier verified evidence
 
-## Verified service diagnosis
+[Service CPU attribution](measurements/service-cpu-attribution-2026-11-10/README.md)
+passes native replay `42781360626` and independent local reconstruction. Saved
+recordings/binaries were decoded without resampling or rebuilding. The pinned
+perf reader repair recognizes the actual `0x` end marker; the old reader still
+fails. All previous failed decoder/setup attempts remain recorded.
 
-[Run `42781360626`](measurements/service-cpu-attribution-2026-11-10/README.md) passes:
+Identified ownership work is 40–43% of sampled CPU work on ARM64 and 48–51% on AMD64;
+cleanup bookkeeping is also prominent. These are not elapsed-time gains. Inlining
+erased service phase boundaries; unknown peer library work stays unclassified.
 
-| Host | Job | Artifact | Verification |
-|---|---|---|---|
-| ARM64 | `129711934407` | `13746173266` | 32 original cases / 16 profiles reconstructed |
-| AMD64 | `129711935132` | `13747030196` | Same |
-
-Every service result, calibration choice, sample period and attribution row
-reconstructs both on runners and locally. Complete archive sizes, hashes and CRCs
-pass. Saved recordings/binaries were decoded; no programs were rebuilt or rerun.
-The pinned perf reader repair requires the `0x` prefix before an end marker;
-unpatched readers still produce 115 ARM / 121 AMD errors as controls.
-[All failed LLVM/setup attempts](measurements/service-decoder-replay-2026-11-10/README.md)
-remain separate records. Both complete passing logs contain only optional manual-
-page notices and the download action's Node Buffer deprecation. The next workflow
-uses `gh api`, verifies source/archive hashes/CRCs, and avoids that deprecated path.
-
-Identified count operations account for 40–43% of fwp sampled CPU work on ARM64,
-48–51% on AMD64. Cleanup push/pop leaf samples account for 26–32% and 12–14%.
-Do not add unlike attribution categories or equate samples with ARC counts.
-fwp unknown leaf work is below 1%; nearly every stack has an unknown libc ancestor.
-Inlining erased construction/dispatch/drain boundaries; they stay unclassified.
-C/Rust/Swift have larger unresolved leaf shares. These are not peer time ratios.
-
-Generated `w40` contains nested frame holds for values already owned by an outer
-frame. Review `src/resource.rs`, `src/cgen.rs` and interpreter region clearing.
-A native-lowering proof can leave interpreter/debugger metadata intact. Consider
-exact aliases first; allow immutable projections only with dominance and lifetime
-proof. Do not change ordinary owner transfer or retain an obsolete proof across
-loop rebinding. Inspect actual HTTP selection before claiming shared benefit.
+[PR #275 delivery](measurements/compiler-borrowed-final-gates-2026-11-10/README.md)
+merged as `13d31fc4041a664129ed5674845750836faa0a84`, with an equal verified tree and
+one-line message. Its nine production jobs, docs and complete-log audit pass.
+Type copying fell 29–32%, with unchanged C/diagnostics; ordinary application
+compilation improved. Four noisy AMD64 growth comparisons remain open.
 
 ## Roadmap status
 
@@ -119,26 +93,29 @@ loop rebinding. Inspect actual HTTP selection before claiming shared benefit.
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup; all gates | Recorded comparison limits apply |
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
-| 7 | In progress | Verified service CPU profiles; lifetime proof passes focused native checks | Lint setup repair, measured acceptance and final delivery |
+| 7 | In progress | Verified profiles, count reductions and file/HTTP lifetime checks | Ordinary timing, compiler costs, sustained load and final delivery |
+
 
 ## Local checks and preservation
 
-Four guarded collection/replay controls pass, including altered periods, wrong
-classification and skipped calibration. Five compiler-reader and five service-reader
-controls previously pass. Shared compiler replay `42772707168` exactly matches the
-previous reader's rows/counts/periods on both hosts. New summaries independently
-reconstruct all 32 profiles. Actionlint passes the explicit verified-download step.
-The attribution/contract docs audit passed 459 link sets / 106 anchors / seven
-milestones. Actionlint passes the focused proof workflow. Local formatting initially
-used the wrong edition; incidental changes were removed, keeping only the intended
-C-generator edit and new module. Formatting and Clippy pass on both native runners
-at the superseded head. Guarded final local formatting, Python syntax, four workflow
-lint checks, two count-observer controls, three timing-reader controls and five
-compiler-comparison controls pass. The latter tests both explicit contracts and
-continues later inputs after a changed-C failure. The latest docs audit passes
-460 link sets / 106 anchors / seven milestones. No local builds.
+All local checks use `python3 scripts/local-guard.py` serially:
 
-Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data <2 GiB,
-sampled RSS <1 GiB, 180 seconds. Last free space: about 106 GiB. Preserve unrelated
-root changes, old worktrees and stash `451bbf713d451f2d62d80fd7676839404875846a`.
-Pre-rebase service backup: `540b0682408d751afb6e439d58a3b887bdcba373`.
+- `cargo fmt --all -- --check`: pass, no local builds.
+- `actionlint` on the changed native/time/numerics/compiler workflows: pass.
+- `test-nested-resource-counts.py`: two controls pass.
+- `test-nested-resource-timing.py`: three controls pass.
+- `test-compiler-build-comparison.py`: five controls pass, covering both contracts.
+- `test-nested-resource-analysis.py`: two controls pass after fixing repeated
+  instrumentation rejection; native observer verification is still pending.
+- `summarize-nested-resource-counts.py`: raw cases and both hosts agree.
+- Complete file-control ZIP hashes, member checksums, ELF architectures and results
+  pass local verification; small HTTP reports agree with their raw outcomes.
+- `check-roadmap.py`: 463 link sets, 106 immutable preparation anchors and seven
+  roadmap steps pass with these reports. Earlier reader/replay checks are recorded
+  with their measurement reports.
+
+Keep 64 GiB free disk, generated target data below 2 GiB, sampled workload RSS
+below 1 GiB and the 180-second guard deadline. Last free space: about 108 GiB.
+Preserve unrelated root changes, old worktrees, stash
+`451bbf713d451f2d62d80fd7676839404875846a` and pre-rebase backup
+`540b0682408d751afb6e439d58a3b887bdcba373`.

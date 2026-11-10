@@ -1,0 +1,452 @@
+{
+  "source": "c49af8a6e873380cd328d2679c1df2a6a795b489",
+  "referenceSource": "65719f7fc2277a5b97c5a790df941fea6c5eb4d7",
+  "cases": {
+    "64-0": {
+      "reference": {
+        "pushes": 13783,
+        "pops": 13783,
+        "unwinds": 0,
+        "dupCalls": 6250,
+        "dropCalls": 0,
+        "releaseCalls": 7930,
+        "retains": 4832,
+        "decrements": 4832,
+        "requests": 1232,
+        "requestedBytes": 39720,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "candidate": {
+        "pushes": 9523,
+        "pops": 9523,
+        "unwinds": 0,
+        "dupCalls": 4756,
+        "dropCalls": 0,
+        "releaseCalls": 6436,
+        "retains": 4554,
+        "decrements": 4554,
+        "requests": 1232,
+        "requestedBytes": 39720,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "comparison": {
+        "cleanupReduction": 0.3090763984618733,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -4260,
+          "pops": -4260,
+          "unwinds": 0,
+          "dupCalls": -1494,
+          "dropCalls": 0,
+          "releaseCalls": -1494,
+          "retains": -278,
+          "decrements": -278,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "64-1": {
+      "reference": {
+        "pushes": 13159,
+        "pops": 13159,
+        "unwinds": 0,
+        "dupCalls": 6026,
+        "dropCalls": 0,
+        "releaseCalls": 7610,
+        "retains": 4624,
+        "decrements": 4624,
+        "requests": 1152,
+        "requestedBytes": 38184,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "candidate": {
+        "pushes": 8899,
+        "pops": 8899,
+        "unwinds": 0,
+        "dupCalls": 4548,
+        "dropCalls": 0,
+        "releaseCalls": 6132,
+        "retains": 4362,
+        "decrements": 4362,
+        "requests": 1152,
+        "requestedBytes": 38184,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "comparison": {
+        "cleanupReduction": 0.3237328064442587,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -4260,
+          "pops": -4260,
+          "unwinds": 0,
+          "dupCalls": -1478,
+          "dropCalls": 0,
+          "releaseCalls": -1478,
+          "retains": -262,
+          "decrements": -262,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "64-2": {
+      "reference": {
+        "pushes": 11515,
+        "pops": 11515,
+        "unwinds": 0,
+        "dupCalls": 5410,
+        "dropCalls": 0,
+        "releaseCalls": 6831,
+        "retains": 3992,
+        "decrements": 3992,
+        "requests": 906,
+        "requestedBytes": 32616,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "candidate": {
+        "pushes": 7267,
+        "pops": 7267,
+        "unwinds": 0,
+        "dupCalls": 3984,
+        "dropCalls": 0,
+        "releaseCalls": 5405,
+        "retains": 3782,
+        "decrements": 3782,
+        "requests": 906,
+        "requestedBytes": 32616,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "comparison": {
+        "cleanupReduction": 0.36891011723838474,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -4248,
+          "pops": -4248,
+          "unwinds": 0,
+          "dupCalls": -1426,
+          "dropCalls": 0,
+          "releaseCalls": -1426,
+          "retains": -210,
+          "decrements": -210,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "64-3": {
+      "reference": {
+        "pushes": 7357,
+        "pops": 7353,
+        "unwinds": 4,
+        "dupCalls": 3317,
+        "dropCalls": 0,
+        "releaseCalls": 4310,
+        "retains": 2595,
+        "decrements": 2595,
+        "requests": 764,
+        "requestedBytes": 28000,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "candidate": {
+        "pushes": 5161,
+        "pops": 5157,
+        "unwinds": 4,
+        "dupCalls": 2542,
+        "dropCalls": 0,
+        "releaseCalls": 3535,
+        "retains": 2443,
+        "decrements": 2443,
+        "requests": 764,
+        "requestedBytes": 28000,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 16464
+      },
+      "comparison": {
+        "cleanupReduction": 0.29849123283947265,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -2196,
+          "pops": -2196,
+          "unwinds": 0,
+          "dupCalls": -775,
+          "dropCalls": 0,
+          "releaseCalls": -775,
+          "retains": -152,
+          "decrements": -152,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "4096-0": {
+      "reference": {
+        "pushes": 876631,
+        "pops": 876631,
+        "unwinds": 0,
+        "dupCalls": 397354,
+        "dropCalls": 0,
+        "releaseCalls": 503866,
+        "retains": 307232,
+        "decrements": 307232,
+        "requests": 77846,
+        "requestedBytes": 2523432,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "candidate": {
+        "pushes": 606259,
+        "pops": 606259,
+        "unwinds": 0,
+        "dupCalls": 303124,
+        "dropCalls": 0,
+        "releaseCalls": 409636,
+        "retains": 290826,
+        "decrements": 290826,
+        "requests": 77846,
+        "requestedBytes": 2523432,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "comparison": {
+        "cleanupReduction": 0.30842167342929927,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -270372,
+          "pops": -270372,
+          "unwinds": 0,
+          "dupCalls": -94230,
+          "dropCalls": 0,
+          "releaseCalls": -94230,
+          "retains": -16406,
+          "decrements": -16406,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "4096-1": {
+      "reference": {
+        "pushes": 836695,
+        "pops": 836695,
+        "unwinds": 0,
+        "dupCalls": 383018,
+        "dropCalls": 0,
+        "releaseCalls": 483386,
+        "retains": 293920,
+        "decrements": 293920,
+        "requests": 72726,
+        "requestedBytes": 2425128,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "candidate": {
+        "pushes": 566323,
+        "pops": 566323,
+        "unwinds": 0,
+        "dupCalls": 289812,
+        "dropCalls": 0,
+        "releaseCalls": 390180,
+        "retains": 278538,
+        "decrements": 278538,
+        "requests": 72726,
+        "requestedBytes": 2425128,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "comparison": {
+        "cleanupReduction": 0.3231428417762745,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -270372,
+          "pops": -270372,
+          "unwinds": 0,
+          "dupCalls": -93206,
+          "dropCalls": 0,
+          "releaseCalls": -93206,
+          "retains": -15382,
+          "decrements": -15382,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "4096-2": {
+      "reference": {
+        "pushes": 733243,
+        "pops": 733243,
+        "unwinds": 0,
+        "dupCalls": 344098,
+        "dropCalls": 0,
+        "releaseCalls": 434223,
+        "retains": 253976,
+        "decrements": 253976,
+        "requests": 57354,
+        "requestedBytes": 2064744,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "candidate": {
+        "pushes": 462883,
+        "pops": 462883,
+        "unwinds": 0,
+        "dupCalls": 253968,
+        "dropCalls": 0,
+        "releaseCalls": 344093,
+        "retains": 241670,
+        "decrements": 241670,
+        "requests": 57354,
+        "requestedBytes": 2064744,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "comparison": {
+        "cleanupReduction": 0.3687181466444276,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -270360,
+          "pops": -270360,
+          "unwinds": 0,
+          "dupCalls": -90130,
+          "dropCalls": 0,
+          "releaseCalls": -90130,
+          "retains": -12306,
+          "decrements": -12306,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    },
+    "4096-3": {
+      "reference": {
+        "pushes": 454909,
+        "pops": 454905,
+        "unwinds": 4,
+        "dupCalls": 204917,
+        "dropCalls": 0,
+        "releaseCalls": 266390,
+        "retains": 159843,
+        "decrements": 159843,
+        "requests": 47138,
+        "requestedBytes": 1753696,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "candidate": {
+        "pushes": 319657,
+        "pops": 319653,
+        "unwinds": 4,
+        "dupCalls": 157774,
+        "dropCalls": 0,
+        "releaseCalls": 219247,
+        "retains": 151627,
+        "decrements": 151627,
+        "requests": 47138,
+        "requestedBytes": 1753696,
+        "initialLiveBytes": 320,
+        "finalLiveBytes": 320,
+        "peakChargedBytes": 1016280
+      },
+      "comparison": {
+        "cleanupReduction": 0.2973166061783785,
+        "cleanupTargetMet": true,
+        "delta": {
+          "pushes": -135252,
+          "pops": -135252,
+          "unwinds": 0,
+          "dupCalls": -47143,
+          "dropCalls": 0,
+          "releaseCalls": -47143,
+          "retains": -8216,
+          "decrements": -8216,
+          "requests": 0,
+          "requestedBytes": 0,
+          "initialLiveBytes": 0,
+          "finalLiveBytes": 0,
+          "peakChargedBytes": 0
+        }
+      }
+    }
+  },
+  "selection": {
+    "reference-service": 0,
+    "reference-http": 0,
+    "candidate-service": 43,
+    "candidate-http": 1310
+  },
+  "hosts": {
+    "aarch64": {
+      "compilers": {
+        "reference": "f88bf46178325607644e2ac3d0c5555a2a4ed86e7a71949ea28d9fae8426b2c2",
+        "candidate": "5ac9bb1394ffd158fa694e285f5e4b1ae2cdbb15445662a60667d45db2dfb080"
+      },
+      "host": {
+        "system": "Linux",
+        "node": "runnervmkb2gk",
+        "release": "7.0.0-1017-azure",
+        "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "ccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "x86_64": {
+      "compilers": {
+        "reference": "f459c076f93e89abd0694c862ecb401b14b221dad285fa05af654f56029ac9eb",
+        "candidate": "0ea83f4cf36192ab48eadaa2397667b6eee9eaa163e41b07d10c06dbed4aa5fc"
+      },
+      "host": {
+        "system": "Linux",
+        "node": "runnervm7aw5e",
+        "release": "7.0.0-1017-azure",
+        "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "ccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    }
+  }
+}

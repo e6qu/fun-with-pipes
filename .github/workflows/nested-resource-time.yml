@@ -77,6 +77,22 @@ jobs:
           cp ../nested-time-reference-target/release/fwp nested-time-reference/fwp
           git -C ../nested-time-reference-checkout diff --exit-code HEAD
           sha256sum target/release/fwp nested-time-reference/fwp > nested-time-reference/compilers.sha256
+      - name: Count proof traversals separately and require unchanged emitted C
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach ../nested-analysis-checkout "$GITHUB_SHA"
+          python3 scripts/inspect-nested-resource-analysis.py prepare \
+            --checkout ../nested-analysis-checkout --output nested-analysis-setup
+          cargo build --release --locked --offline --bin fwp \
+            --manifest-path ../nested-analysis-checkout/Cargo.toml \
+            --target-dir ../nested-analysis-target 2>&1 | tee nested-analysis-setup/build.log
+          git -C ../nested-analysis-checkout diff HEAD > nested-analysis-setup/after-build.patch
+          cmp nested-analysis-setup/observer.patch nested-analysis-setup/after-build.patch
+          python3 scripts/inspect-nested-resource-analysis.py measure \
+            --compiler ../nested-analysis-target/release/fwp --ordinary target/release/fwp \
+            --output nested-analysis-observations
       - name: Verify real timing callers and wrong-result, release and clock controls
         run: >-
           python3 scripts/check-weak-callback-timing.py --cc gcc --ar ar --rustc rustc --swiftc swiftc
@@ -123,22 +139,6 @@ jobs:
               --reference-source "$REFERENCE_SOURCE" --phase measure --session "$session" --time /usr/bin/time \
               --cc gcc --cpu "$compiler_cpu" --deadline 120 --output "nested-compiler-session-$session"
           done
-      - name: Count proof traversals separately and require unchanged emitted C
-        if: ${{ !cancelled() }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git worktree add --detach ../nested-analysis-checkout "$GITHUB_SHA"
-          python3 scripts/inspect-nested-resource-analysis.py prepare \
-            --checkout ../nested-analysis-checkout --output nested-analysis-setup
-          cargo build --release --locked --offline --bin fwp \
-            --manifest-path ../nested-analysis-checkout/Cargo.toml \
-            --target-dir ../nested-analysis-target 2>&1 | tee nested-analysis-setup/build.log
-          git -C ../nested-analysis-checkout diff HEAD > nested-analysis-setup/after-build.patch
-          cmp nested-analysis-setup/observer.patch nested-analysis-setup/after-build.patch
-          python3 scripts/inspect-nested-resource-analysis.py measure \
-            --compiler ../nested-analysis-target/release/fwp --ordinary target/release/fwp \
-            --output nested-analysis-observations
       - name: Retain all observations, including incomplete or failed cases
         if: always()
         uses: actions/upload-artifact@v7

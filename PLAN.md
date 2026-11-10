@@ -83,8 +83,10 @@ Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
 those results; do not repeat unchanged cases to obtain qualification.
 
 **Current:** verify [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
-The first implementation passes [focused Linux lifetime/cleanup checks](docs/measurements/nested-resource-first-checks-2026-11-10/README.md).
-Actual operation counts, ordinary timing, compiler costs and final delivery remain open.
+Both Linux architectures pass [native counts and cleanup checks](docs/measurements/nested-resource-counts-2026-11-10/README.md):
+large-case cleanup registrations fall by 29.7–36.9%, actual count increments by
+4.85–5.34%, with unchanged heap use. The [omitted-owner control](docs/measurements/nested-resource-lifetime-2026-11-10/README.md)
+detects premature file closure. Ordinary timing, compiler costs and final delivery remain open.
 [Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
 identify substantial count work and cleanup bookkeeping. Prove that an enclosing
 owner protects an inner parameter for its full lifetime; remove only that duplicate
