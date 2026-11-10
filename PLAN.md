@@ -98,6 +98,9 @@ change, profiler/observation repairs, docs and final delivery evidence in one PR
 on both architectures with every sample accounted for. Unnamed frames remain
 visible; independent counters quantify copies. Neither proves a compiler speedup.
 
+The [service CPU protocol](docs/measurements/service-cpu-costs.md) prepares the
+next investigation while the compiler delivery gates run.
+
 After this compiler milestone, attribute CPU time in the queued service and HTTP
 endpoint to payload construction, queues/channels, protocol work and cleanup.
 The 4,096-message service still takes 18.65–20.23 times C's time and 5.12–6.70 times

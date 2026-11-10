@@ -1,13 +1,19 @@
 # Current work
 
-**Next:** publish the combined compiler change as a normal PR, verify its nine
-production jobs plus documentation and complete-log audit, then squash-merge.
+**Next:** finish [PR #275](https://github.com/e6qu/fun-with-pipes/pull/275):
+monitor its nine production jobs and audit complete logs before squash merge.
 Use one subject of at most 80 characters and an empty body; verify the resulting
 message and tree. Keep four noisy growth comparisons open after delivery.
 
 ## Current branch and verified baseline
 
-Worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`.
+Delivery worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`.
+PR #275 is open at `a232e1e35062a37aa013975ac77bbd8cb4620663`. Production run
+`42767361217` is active; docs run `42767360650`, job `129666864000`, passes.
+Keep its exact head stable. This separate worktree `.worktrees/service-cpu-costs`,
+branch `service-cpu-costs`, prepares [service CPU attribution](measurements/service-cpu-costs.md).
+No second PR or runtime change is introduced. The protocol is not yet implemented
+or dispatched. Rebase preparation onto the verified squash after #275 merges.
 PR #274 is merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree equals
 passing source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
 [All production/docs/audit gates pass](measurements/application-final-gates-2026-11-10/README.md).
