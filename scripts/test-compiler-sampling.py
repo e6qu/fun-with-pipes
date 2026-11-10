@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import compiler_sampling
 import compiler_sample_stacks
-from compiler_sample_stacks import attribute, stacks
+from compiler_sample_stacks import attribute, stacks, thread_periods
 from compiler_sampling import REGISTER_WARNING, histogram, recording_messages
 
 
@@ -44,8 +44,12 @@ class CompilerSamplingTests(unittest.TestCase):
                         text = '# Total Lost Samples: 0\n# Event count (approx.): 7000\n'+heading+'100%\t7\t7000\t'+caller+'fwp\t[.] clone\t- -\n'
                         return subprocess.CompletedProcess(command, 0, text, '')
                     if 'script' in command:
+                        if '--hide-call-graph' in command:
+                            return subprocess.CompletedProcess(command, 0, '10 1000 cpu-clock:u:\n' * 3 + '20 1000 cpu-clock:u:\n' * 4, '')
+                        self.assertIn('--tid', command)
+                        count = {'10': 3, '20': 4}[command[command.index('--tid')+1]]
                         sample = '1000 cpu-clock:u:\n 123 clone (fwp)\n 456 <fwp::infer::Infer>::check_binding (fwp)\n\n'
-                        return subprocess.CompletedProcess(command, 0, sample * 7, '')
+                        return subprocess.CompletedProcess(command, 0, sample * count, '')
                     self.assertIn('--format=rust', command)
                     return subprocess.CompletedProcess(command, 0, settings['input_data'], '')
 
@@ -106,6 +110,14 @@ class CompilerSamplingTests(unittest.TestCase):
                 attribute(samples, wrong)
         with self.assertRaises(AssertionError):
             attribute(stacks(text.replace('check_binding', 'another_function')), flat)
+
+    def test_thread_census_rejects_unaccounted_events(self):
+        self.assertEqual(thread_periods('10 1000 cpu-clock:u:\n20 500 cpu-clock:u:\n10 2000 cpu-clock:u:\n'),
+                         {10: [1000, 2000], 20: [500]})
+        for invalid in ('', '10 1000 cycles:u:', '10 0 cpu-clock:u:', '0 1000 cpu-clock:u:',
+                        '10 1000 cpu-clock:u: unexpected frames'):
+            with self.subTest(text=invalid), self.assertRaises(AssertionError):
+                thread_periods(invalid)
 
     def test_recording_diagnostics_remain_strict(self):
         recording_messages(REGISTER_WARNING+'\n[ perf record: Woken up 1 times to write data ]\n')
