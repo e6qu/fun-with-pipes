@@ -18,11 +18,19 @@ under the guard; no local fwp build or full suite ran.
 Current profiler repair: `f7f4336f7`, immutable tag
 `roadmap/compiler-cpu-flow-2026-11-10`, run `42754692740`.
 Both native jobs recorded all four applications but caller attribution failed.
+Replay source `63ae40d08`, tag `roadmap/compiler-user-stacks-2026-11-10`,
+run `42757176892`, decodes these existing recordings on both hosts.
 `perf report --parent` does not attach parents reconstructed from DWARF user
 stacks; a direct `perf script` reader is prepared, retaining all samples and
 cross-checking their counts/periods against the original flat report. Replay the
 existing recordings on runners; no compiler rebuild or new timing is needed.
-Five focused reader/control tests and workflow lint pass under the guard.
+Replay passes ARM64's four applications. AMD64 callbacks pass; the other three
+contain empty unwind cursors. Retaining their periods exposes a second limitation:
+word counting and the numerical input have no decoded body-checking caller at all.
+Do not accept those profiles. The next replay retains verbose unwind diagnostics,
+without rebuilding or sampling. Five reader controls and workflow lint pass.
+Windows ARM64 now passes too; its log contains only deliberate scheduler panic
+controls, with all tests passing. Six production jobs and docs now pass.
 The obsolete `42753509308` was cancelled after
 publishing the bookkeeping fix; its ARM64 failure is audited and its queued
 AMD64 job is not a pass. [The checking contract](measurements/compiler-checking.md)

@@ -23,7 +23,7 @@ def stacks(text):
         frame = re.fullmatch(r'\s*([0-9a-f]+)\s+(.+)\s+\((.+)\)\s*', line)
         assert current is not None and frame is not None, f'unexpected stack line: {line}'
         current['frames'].append(dict(ip=frame[1], symbol=frame[2], dso=frame[3]))
-    assert samples and all(sample['frames'] for sample in samples), 'missing sample frames'
+    assert samples, 'no samples'
     assert all(len(sample['frames']) < 512 for sample in samples), 'stack depth reached decoding limit'
     return samples
 
@@ -33,13 +33,20 @@ def attribute(samples, flat):
     assert sum(sample['period'] for sample in samples) == sum(row['period'] for row in flat), 'stack periods differ from flat report'
     groups = {}
     unresolved = 0
+    unavailable = 0
     for sample in samples:
         frames = sample['frames']
-        leaf = frames[0]
-        parent = next((frame['symbol'] for frame in frames
-                       if re.search(r'::infer::Infer>?::check_(binding|effects)\b', frame['symbol'])), '[other]')
-        key = (parent, leaf['dso'], leaf['symbol'])
-        row = groups.setdefault(key, dict(parent=parent, dso=leaf['dso'], symbol=leaf['symbol'], samples=0, period=0))
+        if frames:
+            leaf = frames[0]
+            parent = next((frame['symbol'] for frame in frames
+                           if re.search(r'::infer::Infer>?::check_(binding|effects)\b', frame['symbol'])), '[other]')
+            key = (parent, leaf['dso'], leaf['symbol'])
+        else:
+            # perf can emit a sample header with an empty unwind cursor. Keep
+            # its period, but do not invent an instruction, symbol or caller.
+            unavailable += 1
+            key = ('[unavailable]', '[unavailable]', '[no decoded frame]')
+        row = groups.setdefault(key, dict(parent=key[0], dso=key[1], symbol=key[2], samples=0, period=0))
         row['samples'] += 1
         row['period'] += sample['period']
         if any(frame['symbol'] == '[unknown]' or re.fullmatch(r'(0x)?[0-9a-f]+', frame['symbol']) for frame in frames):
@@ -49,7 +56,8 @@ def attribute(samples, flat):
     for row in rows:
         row['overheadPercent'] = row['period'] * 100 / total
     assert any(re.search(r'::infer::Infer>?::check_binding\b', row['parent']) for row in rows), 'no decoded body-checking caller stacks'
-    return dict(samples=len(samples), period=total, samplesWithUnknownFrames=unresolved, rows=rows)
+    return dict(samples=len(samples), period=total, samplesWithUnknownFrames=unresolved,
+                samplesWithoutFrames=unavailable, rows=rows)
 
 
 def decode(recording, output, perf, demangler, environment, deadline, flat, commands):

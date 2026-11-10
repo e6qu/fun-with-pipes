@@ -1,0 +1,226 @@
+{
+  "attempts": [
+    {
+      "name": "first",
+      "run": 42750772791,
+      "source": "f26b3723a0ac5049bfaa40180593be1618e8695c",
+      "conclusion": "failure",
+      "artifacts": [
+        {
+          "id": 13734165462,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczNDE2NTQ2Mg==",
+          "name": "compiler-sampling-ubuntu-24.04-arm",
+          "size_in_bytes": 28482593,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13734165462",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13734165462/zip",
+          "expired": false,
+          "digest": "sha256:d252fdbb7f7d70a8653c4ef06a83324ee6fdc545163a18fcf9b8c26af42c2356",
+          "created_at": "2026-11-10T03:42:48Z",
+          "updated_at": "2026-11-10T03:42:48Z",
+          "expires_at": "2027-02-08T03:38:40Z",
+          "workflow_run": {
+            "id": 42750772791,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f26b3723a0ac5049bfaa40180593be1618e8695c"
+          }
+        },
+        {
+          "id": 13733004169,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczMzAwNDE2OQ==",
+          "name": "compiler-sampling-ubuntu-latest",
+          "size_in_bytes": 761,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733004169",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733004169/zip",
+          "expired": false,
+          "digest": "sha256:bf2c53efe0f133ab5d42043fc88198af47d3388bb33431d319aad7eba6a1e1f1",
+          "created_at": "2026-11-10T03:40:52Z",
+          "updated_at": "2026-11-10T03:40:52Z",
+          "expires_at": "2027-02-08T03:38:40Z",
+          "workflow_run": {
+            "id": 42750772791,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f26b3723a0ac5049bfaa40180593be1618e8695c"
+          }
+        }
+      ]
+    },
+    {
+      "name": "registers",
+      "run": 42751630458,
+      "source": "f8cf810f53fb5b0fd40ea74cb7000e8a851ed468",
+      "conclusion": "failure",
+      "artifacts": [
+        {
+          "id": 13733498108,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczMzQ5ODEwOA==",
+          "name": "compiler-sampling-ubuntu-latest",
+          "size_in_bytes": 31259505,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733498108",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733498108/zip",
+          "expired": false,
+          "digest": "sha256:e7e852774d94d0105a75b5576a1d28b2ccbaf663baad485cf49e37ba8843c248",
+          "created_at": "2026-11-10T03:52:08Z",
+          "updated_at": "2026-11-10T03:52:08Z",
+          "expires_at": "2027-02-08T03:46:49Z",
+          "workflow_run": {
+            "id": 42751630458,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f8cf810f53fb5b0fd40ea74cb7000e8a851ed468"
+          }
+        },
+        {
+          "id": 13733248508,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczMzI0ODUwOA==",
+          "name": "compiler-sampling-ubuntu-24.04-arm",
+          "size_in_bytes": 28483227,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733248508",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733248508/zip",
+          "expired": false,
+          "digest": "sha256:f5e4ebfa0f763766722ba24ba49c3d61a6a90868c8684ede835970b258a51cd4",
+          "created_at": "2026-11-10T03:51:32Z",
+          "updated_at": "2026-11-10T03:51:32Z",
+          "expires_at": "2027-02-08T03:46:49Z",
+          "workflow_run": {
+            "id": 42751630458,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f8cf810f53fb5b0fd40ea74cb7000e8a851ed468"
+          }
+        }
+      ]
+    },
+    {
+      "name": "preflight",
+      "run": 42752530541,
+      "source": "1ae957feceeeed0564d769951c3a96b0af91d248",
+      "conclusion": "failure",
+      "artifacts": [
+        {
+          "id": 13733908713,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczMzkwODcxMw==",
+          "name": "compiler-sampling-ubuntu-24.04-arm",
+          "size_in_bytes": 49969538,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733908713",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733908713/zip",
+          "expired": false,
+          "digest": "sha256:3cc967b5bc56ac35f95323e45b03401f4aced4fb25bd85d2a66d111b53e7e342",
+          "created_at": "2026-11-10T03:58:44Z",
+          "updated_at": "2026-11-10T03:58:44Z",
+          "expires_at": "2027-02-08T03:55:24Z",
+          "workflow_run": {
+            "id": 42752530541,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "1ae957feceeeed0564d769951c3a96b0af91d248"
+          }
+        },
+        {
+          "id": 13733709201,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczMzcwOTIwMQ==",
+          "name": "compiler-sampling-ubuntu-latest",
+          "size_in_bytes": 49902575,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733709201",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13733709201/zip",
+          "expired": false,
+          "digest": "sha256:286913bed7de712d6053ce2fa9d6c2fd4c6cbe60fc45b7b7fdfdb738a1b78238",
+          "created_at": "2026-11-10T04:01:17Z",
+          "updated_at": "2026-11-10T04:01:17Z",
+          "expires_at": "2027-02-08T03:55:24Z",
+          "workflow_run": {
+            "id": 42752530541,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "1ae957feceeeed0564d769951c3a96b0af91d248"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports",
+      "run": 42753509308,
+      "source": "7a2cfc91945d5c4263d0408744f40e1853789dd4",
+      "conclusion": "cancelled",
+      "artifacts": [
+        {
+          "id": 13735345421,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczNTM0NTQyMQ==",
+          "name": "compiler-sampling-ubuntu-24.04-arm",
+          "size_in_bytes": 30564296,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13735345421",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13735345421/zip",
+          "expired": false,
+          "digest": "sha256:1c38831f73fd4ae0a14945a0a1d9058f62206d0e1abce0b7b5264e13eaa29f19",
+          "created_at": "2026-11-10T04:12:06Z",
+          "updated_at": "2026-11-10T04:12:06Z",
+          "expires_at": "2027-02-08T04:04:46Z",
+          "workflow_run": {
+            "id": 42753509308,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "7a2cfc91945d5c4263d0408744f40e1853789dd4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "flow",
+      "run": 42754692740,
+      "source": "f7f4336f79ee3d76684cc77960ffb7fc0ef3a387",
+      "conclusion": "failure",
+      "artifacts": [
+        {
+          "id": 13736131328,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczNjEzMTMyOA==",
+          "name": "compiler-sampling-ubuntu-latest",
+          "size_in_bytes": 50889174,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13736131328",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13736131328/zip",
+          "expired": false,
+          "digest": "sha256:765bd923389ddebcb661b95400b6c3a41d881a71d5fe5291c47e53aa04103fb8",
+          "created_at": "2026-11-10T04:36:50Z",
+          "updated_at": "2026-11-10T04:36:50Z",
+          "expires_at": "2027-02-08T04:15:30Z",
+          "workflow_run": {
+            "id": 42754692740,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f7f4336f79ee3d76684cc77960ffb7fc0ef3a387"
+          }
+        },
+        {
+          "id": 13735173652,
+          "node_id": "MDg6QXJ0aWZhY3QxMzczNTE3MzY1Mg==",
+          "name": "compiler-sampling-ubuntu-24.04-arm",
+          "size_in_bytes": 48532692,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13735173652",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13735173652/zip",
+          "expired": false,
+          "digest": "sha256:be2820ef1daa363542b5b1726a649613152eb9179942697d35d04c0873e17f01",
+          "created_at": "2026-11-10T04:28:37Z",
+          "updated_at": "2026-11-10T04:28:37Z",
+          "expires_at": "2027-02-08T04:15:30Z",
+          "workflow_run": {
+            "id": 42754692740,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "compiler-body-costs",
+            "head_sha": "f7f4336f79ee3d76684cc77960ffb7fc0ef3a387"
+          }
+        }
+      ]
+    }
+  ],
+  "verification": "Complete executed job logs audited; selected archive members verified by ZIP CRC. Archive digests are GitHub metadata, not independently rehashed archives. Cancelled-before-start AMD64 job has a job receipt, not an execution log.",
+  "status": "Caller attribution unverified; direct stack replay pending."
+}
