@@ -12,6 +12,12 @@ checking, dependency analysis or solving constraints. The new boundaries locate
 the fixed cost in library checking; its internal work still needs attribution.
 No optimization is selected.
 
+[Complete-program observations](compiler-applications-2026-11-10/README.md) also
+pass: all four programs check the same library bindings at about 208–234 ms.
+This is most of the word-count compiler process, but only part of the HTTP
+server's 1.2–1.4 seconds. Attribute internal checking work and retain the other
+compiler stages before choosing a change.
+
 ## Questions and boundaries
 
 | Question | Evidence to collect |

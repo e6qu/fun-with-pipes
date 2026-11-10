@@ -43,9 +43,10 @@ open; do not repeat unchanged noisy runs to obtain qualification.
 
 Final head: `a0261f9ccaa4a87651fbcae11966afee68208d4d`.
 
-- Production `42730888995`: benchmark, both macOS ARM64 jobs and Intel ownership pass; five native
-  jobs remain active. Complete passing logs are audited. No failed steps reported;
-  both Windows jobs reached native TLS/executable checks.
+- Production `42730888995`: benchmark and all four macOS jobs pass; their complete
+  logs are clean. Four native jobs remain active. Windows ARM64 `129548282561`
+  failed its TLS/executable step; wait for the failure artifact after command
+  tests, audit all failures and repair on the delivery branch before merging.
 - Docs `42730888467`, job `129548275958`: passes. Full log audited; its
   deliberate runner-failure/timeout controls pass, no unexpected diagnostics.
 - After all nine and docs pass, dispatch `suite=production-log-audit` with
@@ -97,5 +98,18 @@ Prepared `inspect-compiler-checking.py` and `compiler-checking.yml`, exposed as
 queued service and HTTP API) each get ordinary/observed emit-C builds and exact
 C equality, with phase counts and process RSS retained. This does not execute
 programs or measure a speedup. All cases are attempted; failures remain recorded.
-Guarded actionlint and command import/argument checks pass. Native execution of
-this diagnostic is pending; freeze its source before dispatch.
+Guarded actionlint, command import/argument checks and roadmap audit pass.
+Published source `ea531da149d085dbb146a64cd6ff1f92b61b170b`, tag
+`roadmap/compiler-application-attribution-2026-11-10`: run `42741790147`, jobs
+`129584368434` ARM64 and `129584369033` AMD64. Both pass; all eight byte comparisons
+and group partitions pass, both full logs are clean. The
+[receipt](measurements/compiler-applications-2026-11-10/README.md) retains results:
+library checking remains 208–234 ms; HTTP process compilation is 1.2–1.4 seconds.
+No speedup or observer-overhead claim. Next investigation should separate
+expression checking from constraint solving within library groups, while retaining
+later compiler costs; do not implement a trait index merely from source inspection.
+
+Delivery branch has local diagnostic commit `9054528ba`, published only as tag
+`roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`. It records large
+socket-send progress and failing round, without changing runtime behavior or the
+published PR head. Finish the Windows failure investigation there first.
