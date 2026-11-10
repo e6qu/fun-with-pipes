@@ -9,10 +9,13 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
-[Queued-service CPU attribution](service-cpu-costs.md) has [first native recordings](service-cpu-first-2026-11-10/README.md).
-All service outputs are correct, but six fwp decoder failures leave attribution
-incomplete. [The decoder diagnosis](service-decoder-replay-2026-11-10/README.md)
-identifies a marker-reader bug. Repair and replay before selecting an optimization.
+[Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
+now passes both native replays and independent raw-record audits. Identified
+ownership operations account for 40–43% of fwp sampled CPU work on ARM64 and
+48–51% on AMD64; cleanup bookkeeping is also prominent. [Nested resource-owner
+borrowing](nested-resource-owners.md) is selected under a frozen contract, not yet
+implemented. Unknown leaves, erased phase boundaries and all failed decoder
+attempts remain explicit.
 
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.

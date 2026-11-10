@@ -33,7 +33,9 @@ there are no compiler warnings or unexpected failures. [files.json](files.json)
 hashes the retained reports, commands and full logs.
 
 These first runs precede the fwp physical-allocation-ledger regression below.
-All-peer allocation costs and timing results remain open.
+Subsequent [peer allocation profiles](../weak-callback-profiles-2026-11-09/README.md)
+and [complete-service timings](../weak-callback-time-2026-11-09/README.md) supply
+those separate measurements.
 
 The first ledger extension (`79c5c5318`, [run 42657535238](https://github.com/e6qu/fun-with-pipes/actions/runs/42657535238))
 failed to compile its Rust test on both architectures: it referenced `serde_json`,

@@ -53,7 +53,7 @@ jobs:
       SAMPLE_REGISTERS: ${{ matrix.registers }}
     steps:
       - name: Install native compilers and profiler
-        run: apt-get update && apt-get install -y git make gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
+        run: apt-get update && apt-get install -y git gh make gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -165,14 +165,49 @@ jobs:
         run: >-
           python3 scripts/service_cpu_audit.py collection --input service-cpu-evidence
           --source "$GITHUB_SHA" --arch "$SAMPLE_ARCH"
-      - name: Download the original recordings
+      - name: Download and verify the original recordings
         if: inputs.replay
-        uses: actions/download-artifact@v8
-        with:
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.evidence_run }}
-          name: service-cpu-${{ matrix.arch }}
-          path: service-recordings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          python3 - <<'PYDOWNLOAD'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+
+          repository = 'repos/' + os.environ['GITHUB_REPOSITORY']
+          run = int(os.environ['RECORDING_RUN'])
+          listing = json.loads(subprocess.check_output([
+              'gh', 'api', f'{repository}/actions/runs/{run}/artifacts?per_page=100']))
+          assert listing['total_count'] == len(listing['artifacts'])
+          entries = [a for a in listing['artifacts'] if a['name'] == 'service-cpu-' + os.environ['SAMPLE_ARCH']]
+          assert len(entries) == 1
+          artifact = entries[0]
+          assert not artifact['expired']
+          assert artifact['workflow_run']['id'] == run
+          assert artifact['workflow_run']['head_sha'] == os.environ['RECORDING_SOURCE']
+          archive = Path('service-recordings.zip')
+          with archive.open('wb') as output:
+              subprocess.run(['gh', 'api',
+                  f"{repository}/actions/artifacts/{artifact['id']}/zip"], stdout=output, check=True)
+          assert archive.stat().st_size == artifact['size_in_bytes']
+          with archive.open('rb') as source:
+              assert 'sha256:' + hashlib.file_digest(source, 'sha256').hexdigest() == artifact['digest']
+          destination = Path('service-recordings').resolve()
+          assert not destination.exists()
+          with zipfile.ZipFile(archive) as contents:
+              assert all((destination/name).resolve().is_relative_to(destination) for name in contents.namelist())
+              assert contents.testzip() is None
+              contents.extractall(destination)
+          Path('service-recording-download.json').write_text(json.dumps(artifact, indent=2) + '\n')
+          archive.unlink()
+          print('Verified original recording source, archive SHA-256 and all ZIP CRCs')
+          PYDOWNLOAD
       - name: Verify saved outputs and decode all original samples
         if: inputs.replay
         env:
@@ -202,5 +237,6 @@ jobs:
             service-cpu-probe/
             service-cpu-setup/
             service-perf-build/
+            service-recording-download.json
             ${{ !inputs.replay && 'service-cpu-evidence/' || 'service-cpu-replayed/' }}
           if-no-files-found: error

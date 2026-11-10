@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13747030196,
+      "node_id": "MDg6QXJ0aWZhY3QxMzc0NzAzMDE5Ng==",
+      "name": "service-cpu-x86_64",
+      "size_in_bytes": 1584793,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13747030196",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13747030196/zip",
+      "expired": false,
+      "digest": "sha256:1e7692340cff56ed03813089e0eafbad92060da37f72e9ca8be8866425959d35",
+      "created_at": "2026-11-10T08:19:29Z",
+      "updated_at": "2026-11-10T08:19:29Z",
+      "expires_at": "2027-02-08T08:16:38Z",
+      "workflow_run": {
+        "id": 42781360626,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "service-cpu-costs",
+        "head_sha": "65719f7fc2277a5b97c5a790df941fea6c5eb4d7"
+      }
+    },
+    {
+      "id": 13746173266,
+      "node_id": "MDg6QXJ0aWZhY3QxMzc0NjE3MzI2Ng==",
+      "name": "service-cpu-aarch64",
+      "size_in_bytes": 2163956,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13746173266",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13746173266/zip",
+      "expired": false,
+      "digest": "sha256:abe9523a21c96860b3ce97a3b1dbc7f5eedeb7d71d550245dffe1bceee8c428f",
+      "created_at": "2026-11-10T08:19:02Z",
+      "updated_at": "2026-11-10T08:19:02Z",
+      "expires_at": "2027-02-08T08:16:38Z",
+      "workflow_run": {
+        "id": 42781360626,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "service-cpu-costs",
+        "head_sha": "65719f7fc2277a5b97c5a790df941fea6c5eb4d7"
+      }
+    }
+  ]
+}

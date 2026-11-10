@@ -51,7 +51,7 @@ implementation; do not invent a universal language-overhead target.
 | 4 | Complete ownership and peer comparisons | Complete the [buffer, returned-function, weak-registration and parser comparisons](docs/measurements/ownership-peers.md). Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
 | 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#sustained-service-load). Add syntax only for a demonstrated need. |
 | 6 | Reduce repeated compiler type-copy work | Borrow inputs while finding unresolved variables and substituting resolved types, under the [frozen contract](docs/measurements/compiler-type-walks.md). Preserve inference, diagnostics, effects and exact C; verify copy reductions on four applications and compiler growth. Require qualified ordinary-build timing and memory results, then all final delivery gates. |
-| 7 | Reduce measured queued-service costs | Complete the [CPU attribution](docs/measurements/service-cpu-costs.md), select a demonstrated cost, and freeze a candidate contract before implementation. Preserve delivery/cancellation/expiration/error results, verify whole-service time and working memory on both architectures, check the same mechanism in HTTP, and pass all final delivery gates. |
+| 7 | Reduce measured queued-service costs | Deliver [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md), selected from verified CPU attribution, under its frozen correctness and measurement contract. Preserve delivery/cancellation/expiration/error results, verify whole-service time and working memory on both architectures, check the same mechanism in HTTP, and pass all final delivery gates. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
@@ -82,17 +82,20 @@ pass](docs/measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
 Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
 those results; do not repeat unchanged cases to obtain qualification.
 
-**Next:** complete the [service CPU protocol](docs/measurements/service-cpu-costs.md).
-All original service outputs pass; repair the profiler's symbol reader and replay
-the saved recordings before selecting a runtime change. Keep failed observations
-and unknown frames visible. Then freeze the selected change's correctness,
-whole-service time, memory and compiler-cost targets before implementation.
+**Next:** implement [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
+[Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
+identify substantial count work and cleanup bookkeeping. Prove that an enclosing
+owner protects an inner parameter for its full lifetime; remove only that duplicate
+protection. Preserve original disposal/weak-expiration timing. Require fewer cleanup
+registrations, ordinary whole-service gains, complete cleanup and bounded compiler
+cost. The contract defines exact targets and negative lifetime controls.
 
-Attribute CPU time in the queued service and HTTP
-endpoint to payload construction, queues/channels, protocol work and cleanup.
+Check the same selected mechanism in the maintained HTTP endpoint. Keep profile
+limitations explicit: inlining erased fwp phase boundaries, and peer libraries have
+substantial unresolved leaf work.
 The 4,096-message service still takes 18.65–20.23 times C's time and 5.12–6.70 times
-Swift's, with differing representations and synchronization. Do not call that gap
-an ARC cost or choose another optimization before attribution. Keep the experimental
+Swift's, with differing representations and synchronization. Do not call that entire gap
+an ARC cost or infer peer timing ratios from CPU samples. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.
 
 ## Earlier contracts

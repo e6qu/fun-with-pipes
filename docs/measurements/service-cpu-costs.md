@@ -1,8 +1,9 @@
 # Locate queued-service CPU costs before changing its implementation
 
-**Recordings collected; decoder repair pending.** [The first native run](service-cpu-first-2026-11-10/README.md)
-verifies all outputs but rejects six fwp stack reports. [The failed LLVM replay](service-decoder-replay-2026-11-10/README.md) confirms
-a GNU marker-reader bug. Repair that reader and replay the saved samples.
+**Verified replay complete.** [Both native hosts](service-cpu-attribution-2026-11-10/README.md)
+pass all sixteen profiles and independent reconstruction of all 32 service cases.
+[Failed attempts and their repair](service-decoder-replay-2026-11-10/README.md)
+remain retained. The selected next change is [nested resource-owner borrowing](nested-resource-owners.md).
 The [complete service comparison](weak-callback-time-2026-11-09/README.md) found
 that delivering 4,096 messages takes about 19–20 times C's service time and 5–7
 times Swift's. Different queues, representations and synchronization prevent
