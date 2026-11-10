@@ -81,7 +81,11 @@ while substituting resolved types. Borrow the existing input trees and build onl
 required outputs. Keep row flattening unchanged initially; report remaining copies.
 [Focused checks pass](docs/measurements/compiler-borrowed-types-2026-11-10/README.md)
 on both architectures: 29–32% fewer total type copies, unchanged visit counts,
-exact C and preserved diagnostics. Ordinary speed and memory results are pending.
+exact C and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
+verify 11–14% less word-count compilation time and 8–10% less callback compilation
+time. All complete-application targets and memory limits pass; four noisy AMD64
+growth comparisons leave full timing acceptance open. Retain the verified gains
+without repeating those unchanged cases to obtain qualification.
 
 The frozen target is at least 5% less ordinary emit-C time for word counting and
 queued callbacks, with numerical/HTTP/growth regressions limited to 2% and peak

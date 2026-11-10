@@ -15,7 +15,9 @@ Bodies dominate. [Exact type-copy counts](compiler-type-copies-2026-11-10/README
 select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
 [focused native checks](compiler-borrowed-types-2026-11-10/README.md) verify
 29–32% fewer type copies and unchanged C on both architectures.
-No candidate speedup is measured yet.
+[Ordinary timing](compiler-type-time-2026-11-10/README.md) verifies 11–14% less
+word-count compilation time and 8–10% less callback compilation time, with peak
+memory essentially unchanged. Four noisy growth comparisons remain inconclusive.
 [Windows backpressure](http-backpressure.md) records a test assumption exposed
 by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
 

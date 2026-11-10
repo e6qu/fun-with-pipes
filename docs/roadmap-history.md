@@ -9,7 +9,7 @@ Commit/tree checks, archive hashes and individual gate IDs belong in those
 records. This index explains what changed and which claims remain unproved.
 
 Historical milestone codes refer to their original contracts, not current tasks.
-[The current five milestones](../PLAN.md#milestones) supersede those old queues.
+[The current milestones](../PLAN.md#milestones) supersede those old queues.
 
 ## Application workflows and compiler costs (PR #274)
 
@@ -38,7 +38,7 @@ events, allocator slots, process memory and phase timings. They expose a large
 remaining callback-service gap: 18.65–20.23 times C's time and 5.12–6.70 times
 Swift's for the 4,096-message case. Different representations and queues matter;
 these are not isolated ARC costs. Original noisy or missed timing results remain
-open. Milestone 5 moves to application workflows, compiler costs and sustained load.
+open.
 
 ## Known array callbacks and structured gradients (PR #272)
 

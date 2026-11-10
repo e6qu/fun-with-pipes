@@ -1,0 +1,1474 @@
+[
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "words",
+    "medianEmitNs": {
+      "reference": 279619727.0,
+      "reference-copy": 278373346.0,
+      "candidate": 246638836.0,
+      "candidate-copy": 246075374.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9955425855916096,
+      "candidate": 0.9977154388613803
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8820509148126019,
+    "peakRssKiB": {
+      "reference": 42048,
+      "candidate": 42048
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "numerical",
+    "medianEmitNs": {
+      "reference": 590104669.0,
+      "reference-copy": 588668902.5,
+      "candidate": 555891109.5,
+      "candidate-copy": 556377241.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9975669290967769,
+      "candidate": 1.0008745084994024
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9420212018352968,
+    "peakRssKiB": {
+      "reference": 66756,
+      "candidate": 66756
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "callbacks",
+    "medianEmitNs": {
+      "reference": 374709727.5,
+      "reference-copy": 375859602.0,
+      "candidate": 343107673.5,
+      "candidate-copy": 343559405.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.003068707363622,
+      "candidate": 1.0013165896157086
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9156625737718539,
+    "peakRssKiB": {
+      "reference": 57320,
+      "candidate": 57280
+    },
+    "peakRssRatio": 0.9993021632937893,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "http",
+    "medianEmitNs": {
+      "reference": 1240667157.0,
+      "reference-copy": 1238021299.0,
+      "candidate": 1204072600.5,
+      "candidate-copy": 1201947214.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9978673909556872,
+      "candidate": 0.9982348352590056
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9705041305449823,
+    "peakRssKiB": {
+      "reference": 129600,
+      "candidate": 129600
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "definitions-16",
+    "medianEmitNs": {
+      "reference": 276064992.5,
+      "reference-copy": 274420724.5,
+      "candidate": 243020272.5,
+      "candidate-copy": 242685735.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9940439097869318,
+      "candidate": 0.9986234193692627
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8803009403664248,
+    "peakRssKiB": {
+      "reference": 41564,
+      "candidate": 41576
+    },
+    "peakRssRatio": 1.0002887113848522,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "definitions-64",
+    "medianEmitNs": {
+      "reference": 285008986.5,
+      "reference-copy": 284445924.5,
+      "candidate": 250168266.5,
+      "candidate-copy": 251540987.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9980244061532425,
+      "candidate": 1.0054871887598102
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8777557142044712,
+    "peakRssKiB": {
+      "reference": 42560,
+      "candidate": 42560
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "definitions-256",
+    "medianEmitNs": {
+      "reference": 306802465.5,
+      "reference-copy": 308250001.0,
+      "candidate": 276034608.5,
+      "candidate-copy": 274453044.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.00471813516114,
+      "candidate": 0.9942704122914355
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8997144402022414,
+    "peakRssKiB": {
+      "reference": 46540,
+      "candidate": 46540
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "definitions-1024",
+    "medianEmitNs": {
+      "reference": 425472970.0,
+      "reference-copy": 424205910.0,
+      "candidate": 393339920.5,
+      "candidate-copy": 392096802.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9970219964854642,
+      "candidate": 0.9968395834360779
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9244768721735719,
+    "peakRssKiB": {
+      "reference": 61984,
+      "candidate": 61980
+    },
+    "peakRssRatio": 0.9999354672173464,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "generic-8",
+    "medianEmitNs": {
+      "reference": 277801257.0,
+      "reference-copy": 278191293.5,
+      "candidate": 246870250.0,
+      "candidate-copy": 245677169.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0014040127255435,
+      "candidate": 0.9951671738494209
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8886577860229049,
+    "peakRssKiB": {
+      "reference": 41536,
+      "candidate": 41536
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "generic-32",
+    "medianEmitNs": {
+      "reference": 280516978.5,
+      "reference-copy": 280741596.0,
+      "candidate": 248270767.5,
+      "candidate-copy": 247555747.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0008007269335393,
+      "candidate": 0.9971199972223874
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8850472040144265,
+    "peakRssKiB": {
+      "reference": 42440,
+      "candidate": 42440
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "generic-128",
+    "medianEmitNs": {
+      "reference": 299217247.0,
+      "reference-copy": 300317665.0,
+      "candidate": 268584743.0,
+      "candidate-copy": 268309301.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0036776556533187,
+      "candidate": 0.9989744707874192
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8976245376657717,
+    "peakRssKiB": {
+      "reference": 46176,
+      "candidate": 46152
+    },
+    "peakRssRatio": 0.9994802494802495,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "generic-512",
+    "medianEmitNs": {
+      "reference": 401895370.5,
+      "reference-copy": 401000209.0,
+      "candidate": 369314500.5,
+      "candidate-copy": 369486064.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9977726503818983,
+      "candidate": 1.000464545799766
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9189319599291079,
+    "peakRssKiB": {
+      "reference": 60372,
+      "candidate": 60372
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "nesting-8",
+    "medianEmitNs": {
+      "reference": 277852354.0,
+      "reference-copy": 279165386.0,
+      "candidate": 245868713.0,
+      "candidate-copy": 245282361.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0047256464848953,
+      "candidate": 0.9976151845721013
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8848897965428071,
+    "peakRssKiB": {
+      "reference": 41320,
+      "candidate": 41280
+    },
+    "peakRssRatio": 0.9990319457889641,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "nesting-32",
+    "medianEmitNs": {
+      "reference": 279167746.0,
+      "reference-copy": 278984565.5,
+      "candidate": 247368912.5,
+      "candidate-copy": 246013763.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9993438335816918,
+      "candidate": 0.9945217489687593
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8860941711368046,
+    "peakRssKiB": {
+      "reference": 41664,
+      "candidate": 41704
+    },
+    "peakRssRatio": 1.0009600614439325,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "nesting-128",
+    "medianEmitNs": {
+      "reference": 294589380.0,
+      "reference-copy": 294478052.5,
+      "candidate": 262388376.0,
+      "candidate-copy": 262583180.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9996220926226194,
+      "candidate": 1.0007424280868296
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8906919047794595,
+    "peakRssKiB": {
+      "reference": 45544,
+      "candidate": 45544
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 1,
+    "case": "nesting-512",
+    "medianEmitNs": {
+      "reference": 461254840.0,
+      "reference-copy": 460273262.0,
+      "candidate": 419015250.0,
+      "candidate-copy": 418287155.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9978719399453889,
+      "candidate": 0.9982623675391289
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9084246140376543,
+    "peakRssKiB": {
+      "reference": 55884,
+      "candidate": 55884
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "words",
+    "medianEmitNs": {
+      "reference": 266469061.5,
+      "reference-copy": 266117185.5,
+      "candidate": 232577423.0,
+      "candidate-copy": 233300895.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9986794864738922,
+      "candidate": 1.0031106716665272
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8728121069319712,
+    "peakRssKiB": {
+      "reference": 42048,
+      "candidate": 42048
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "numerical",
+    "medianEmitNs": {
+      "reference": 563466055.5,
+      "reference-copy": 562827192.0,
+      "candidate": 529710191.5,
+      "candidate-copy": 529807293.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9988661899083999,
+      "candidate": 1.0001833106131581
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9400924622335125,
+    "peakRssKiB": {
+      "reference": 66880,
+      "candidate": 66884
+    },
+    "peakRssRatio": 1.0000598086124401,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "callbacks",
+    "medianEmitNs": {
+      "reference": 361598069.0,
+      "reference-copy": 361441675.0,
+      "candidate": 328014203.0,
+      "candidate-copy": 329571394.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9995674921593677,
+      "candidate": 1.0047473294929243
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9071237684070708,
+    "peakRssKiB": {
+      "reference": 57280,
+      "candidate": 57280
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "http",
+    "medianEmitNs": {
+      "reference": 1149151022.0,
+      "reference-copy": 1146253395.0,
+      "candidate": 1115257160.5,
+      "candidate-copy": 1119643779.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9974784628438507,
+      "candidate": 1.0039332802831173
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9705053027399213,
+    "peakRssKiB": {
+      "reference": 129600,
+      "candidate": 129600
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "definitions-16",
+    "medianEmitNs": {
+      "reference": 266020950.5,
+      "reference-copy": 265093764.5,
+      "candidate": 233268420.0,
+      "candidate-copy": 233901978.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9965146128594109,
+      "candidate": 1.002716004163787
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8768798831879973,
+    "peakRssKiB": {
+      "reference": 41536,
+      "candidate": 41536
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "definitions-64",
+    "medianEmitNs": {
+      "reference": 272363921.0,
+      "reference-copy": 271742571.5,
+      "candidate": 238538731.0,
+      "candidate-copy": 238815618.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9977186791197649,
+      "candidate": 1.0011607653769232
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8758088447404897,
+    "peakRssKiB": {
+      "reference": 42560,
+      "candidate": 42560
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "definitions-256",
+    "medianEmitNs": {
+      "reference": 293315770.5,
+      "reference-copy": 293272228.5,
+      "candidate": 261045113.5,
+      "candidate-copy": 261630071.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9998515524755939,
+      "candidate": 1.0022408310661597
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8899798093195265,
+    "peakRssKiB": {
+      "reference": 46540,
+      "candidate": 46540
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "definitions-1024",
+    "medianEmitNs": {
+      "reference": 405960160.0,
+      "reference-copy": 406343269.5,
+      "candidate": 372772402.0,
+      "candidate-copy": 372283371.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0009437120627798,
+      "candidate": 0.9986881244497279
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9182487315996722,
+    "peakRssKiB": {
+      "reference": 61984,
+      "candidate": 61984
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "generic-8",
+    "medianEmitNs": {
+      "reference": 264336021.5,
+      "reference-copy": 264429203.0,
+      "candidate": 231594713.0,
+      "candidate-copy": 232198577.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.000352511547504,
+      "candidate": 1.0026074191944097
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8761375452569562,
+    "peakRssKiB": {
+      "reference": 41536,
+      "candidate": 41536
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "generic-32",
+    "medianEmitNs": {
+      "reference": 269602420.5,
+      "reference-copy": 270340872.0,
+      "candidate": 238595179.5,
+      "candidate-copy": 238519511.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.002739038835892,
+      "candidate": 0.99968285821969
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8849890110686154,
+    "peakRssKiB": {
+      "reference": 42480,
+      "candidate": 42464
+    },
+    "peakRssRatio": 0.9996233521657251,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "generic-128",
+    "medianEmitNs": {
+      "reference": 291211716.0,
+      "reference-copy": 291495317.0,
+      "candidate": 259251062.0,
+      "candidate-copy": 259826907.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0009738653509395,
+      "candidate": 1.0022211866580513
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8902494225198,
+    "peakRssKiB": {
+      "reference": 46152,
+      "candidate": 46152
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "generic-512",
+    "medianEmitNs": {
+      "reference": 387790633.0,
+      "reference-copy": 387432876.0,
+      "candidate": 355402672.5,
+      "candidate-copy": 354750661.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9990774480620319,
+      "candidate": 0.9981654288207413
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9164808075702024,
+    "peakRssKiB": {
+      "reference": 60372,
+      "candidate": 60412
+    },
+    "peakRssRatio": 1.0006625588020936,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "nesting-8",
+    "medianEmitNs": {
+      "reference": 267895959.0,
+      "reference-copy": 267376207.5,
+      "candidate": 235690697.5,
+      "candidate-copy": 236590835.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9980598755504184,
+      "candidate": 1.003819149459643
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.879784444602242,
+    "peakRssKiB": {
+      "reference": 41280,
+      "candidate": 41280
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "nesting-32",
+    "medianEmitNs": {
+      "reference": 268025545.5,
+      "reference-copy": 268099300.5,
+      "candidate": 236418963.5,
+      "candidate-copy": 235818148.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0002751789940858,
+      "candidate": 0.9974586831313977
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8820762329163881,
+    "peakRssKiB": {
+      "reference": 41664,
+      "candidate": 41664
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "nesting-128",
+    "medianEmitNs": {
+      "reference": 285463827.5,
+      "reference-copy": 285394064.5,
+      "candidate": 253444804.0,
+      "candidate-copy": 252525958.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9997556152714305,
+      "candidate": 0.996374571561546
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8878350935724072,
+    "peakRssKiB": {
+      "reference": 45504,
+      "candidate": 45504
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "arm",
+    "session": 2,
+    "case": "nesting-512",
+    "medianEmitNs": {
+      "reference": 445970057.5,
+      "reference-copy": 446327841.5,
+      "candidate": 406940589.0,
+      "candidate-copy": 406750677.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0008022601382829,
+      "candidate": 0.9995333188550528
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9124841055052222,
+    "peakRssKiB": {
+      "reference": 55884,
+      "candidate": 55924
+    },
+    "peakRssRatio": 1.000715768377353,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "words",
+    "medianEmitNs": {
+      "reference": 301909635.5,
+      "reference-copy": 296978666.5,
+      "candidate": 260002030.5,
+      "candidate-copy": 261608453.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9836674010359633,
+      "candidate": 1.0061784998252157
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8611915617380155,
+    "peakRssKiB": {
+      "reference": 43044,
+      "candidate": 43120
+    },
+    "peakRssRatio": 1.0017656351640183,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "numerical",
+    "medianEmitNs": {
+      "reference": 624784402.5,
+      "reference-copy": 628123262.5,
+      "candidate": 583649207.0,
+      "candidate-copy": 586284374.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.005344019451574,
+      "candidate": 1.0045149842891845
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9341609756335106,
+    "peakRssKiB": {
+      "reference": 67816,
+      "candidate": 67868
+    },
+    "peakRssRatio": 1.0007667807007197,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "callbacks",
+    "medianEmitNs": {
+      "reference": 413239545.0,
+      "reference-copy": 411697278.5,
+      "candidate": 373711227.0,
+      "candidate-copy": 377719628.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9962678632317243,
+      "candidate": 1.0107259327801785
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.904345267827647,
+    "peakRssKiB": {
+      "reference": 58460,
+      "candidate": 58496
+    },
+    "peakRssRatio": 1.0006158056790968,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "http",
+    "medianEmitNs": {
+      "reference": 1242147496.5,
+      "reference-copy": 1247068913.5,
+      "candidate": 1203800774.5,
+      "candidate-copy": 1204061170.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0039620230398298,
+      "candidate": 1.0002163111251596
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9691286887362012,
+    "peakRssKiB": {
+      "reference": 131340,
+      "candidate": 130776
+    },
+    "peakRssRatio": 0.9957058017359525,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "definitions-16",
+    "medianEmitNs": {
+      "reference": 296873500.0,
+      "reference-copy": 294845076.5,
+      "candidate": 257927594.0,
+      "candidate-copy": 262211185.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9931673810562411,
+      "candidate": 1.0166077267405518
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8688131274768546,
+    "peakRssKiB": {
+      "reference": 42604,
+      "candidate": 42612
+    },
+    "peakRssRatio": 1.0001877757956998,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "definitions-64",
+    "medianEmitNs": {
+      "reference": 299300651.0,
+      "reference-copy": 299365880.0,
+      "candidate": 259557721.5,
+      "candidate-copy": 262705695.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0002179380491891,
+      "candidate": 1.012128221352105
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8672140225314778,
+    "peakRssKiB": {
+      "reference": 43548,
+      "candidate": 43612
+    },
+    "peakRssRatio": 1.0014696426931202,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "definitions-256",
+    "medianEmitNs": {
+      "reference": 321856964.5,
+      "reference-copy": 321786768.5,
+      "candidate": 279731897.0,
+      "candidate-copy": 282256353.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9997819031192658,
+      "candidate": 1.0090245571816217
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8691186702595028,
+    "peakRssKiB": {
+      "reference": 47524,
+      "candidate": 47556
+    },
+    "peakRssRatio": 1.0006733439946132,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "definitions-1024",
+    "medianEmitNs": {
+      "reference": 432176861.5,
+      "reference-copy": 436046320.5,
+      "candidate": 393381074.5,
+      "candidate-copy": 390786306.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.008953415475715,
+      "candidate": 0.9934039315356031
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9102316887920664,
+    "peakRssKiB": {
+      "reference": 63052,
+      "candidate": 63040
+    },
+    "peakRssRatio": 0.9998096808983061,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "generic-8",
+    "medianEmitNs": {
+      "reference": 293075965.5,
+      "reference-copy": 292793854.5,
+      "candidate": 254919159.0,
+      "candidate-copy": 261587053.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9990374133903519,
+      "candidate": 1.0261568962731435
+    },
+    "timingQualified": false,
+    "candidateRatio": 0.8698057466605872,
+    "peakRssKiB": {
+      "reference": 42588,
+      "candidate": 42528
+    },
+    "peakRssRatio": 0.9985911524373062,
+    "acceptance": false
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "generic-32",
+    "medianEmitNs": {
+      "reference": 303941175.5,
+      "reference-copy": 300455288.5,
+      "candidate": 260699156.5,
+      "candidate-copy": 264224061.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9885310471861355,
+      "candidate": 1.0135209681815753
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8577289867723105,
+    "peakRssKiB": {
+      "reference": 43612,
+      "candidate": 43572
+    },
+    "peakRssRatio": 0.99908282124186,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "generic-128",
+    "medianEmitNs": {
+      "reference": 319029226.0,
+      "reference-copy": 316091162.5,
+      "candidate": 277596064.5,
+      "candidate-copy": 278427455.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9907906133339646,
+      "candidate": 1.0029949650096714
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8701273798031282,
+    "peakRssKiB": {
+      "reference": 47248,
+      "candidate": 47264
+    },
+    "peakRssRatio": 1.0003386386725364,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "generic-512",
+    "medianEmitNs": {
+      "reference": 412540569.5,
+      "reference-copy": 414953652.0,
+      "candidate": 374918128.5,
+      "candidate-copy": 376293600.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0058493216871365,
+      "candidate": 1.003668726304335
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9088030516717459,
+    "peakRssKiB": {
+      "reference": 61372,
+      "candidate": 61360
+    },
+    "peakRssRatio": 0.9998044710943101,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "nesting-8",
+    "medianEmitNs": {
+      "reference": 295931546.5,
+      "reference-copy": 293203224.0,
+      "candidate": 254190176.5,
+      "candidate-copy": 256508615.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9907805621527409,
+      "candidate": 1.0091208835523193
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8589492384516701,
+    "peakRssKiB": {
+      "reference": 42432,
+      "candidate": 42392
+    },
+    "peakRssRatio": 0.9990573152337858,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "nesting-32",
+    "medianEmitNs": {
+      "reference": 296060448.0,
+      "reference-copy": 295616532.0,
+      "candidate": 257834705.5,
+      "candidate-copy": 255994074.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.998500589987623,
+      "candidate": 0.9928611957167264
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8708853453467719,
+    "peakRssKiB": {
+      "reference": 42652,
+      "candidate": 42660
+    },
+    "peakRssRatio": 1.0001875644752884,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "nesting-128",
+    "medianEmitNs": {
+      "reference": 315146949.5,
+      "reference-copy": 317808040.0,
+      "candidate": 277408527.5,
+      "candidate-copy": 276816269.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0084439671849021,
+      "candidate": 0.9978650331864798
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8802513492201834,
+    "peakRssKiB": {
+      "reference": 46596,
+      "candidate": 46528
+    },
+    "peakRssRatio": 0.9985406472658598,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 1,
+    "case": "nesting-512",
+    "medianEmitNs": {
+      "reference": 488441294.5,
+      "reference-copy": 488651289.5,
+      "candidate": 442970737.0,
+      "candidate-copy": 441980353.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.000429928841735,
+      "candidate": 0.9977642225156738
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9069068115001485,
+    "peakRssKiB": {
+      "reference": 56932,
+      "candidate": 56908
+    },
+    "peakRssRatio": 0.9995784444600576,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "words",
+    "medianEmitNs": {
+      "reference": 308208807.0,
+      "reference-copy": 312575939.5,
+      "candidate": 272900122.5,
+      "candidate-copy": 274969897.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.014169395555267,
+      "candidate": 1.0075843681601866
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8854390799416708,
+    "peakRssKiB": {
+      "reference": 43100,
+      "candidate": 43024
+    },
+    "peakRssRatio": 0.9982366589327146,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "numerical",
+    "medianEmitNs": {
+      "reference": 622563176.5,
+      "reference-copy": 629275342.5,
+      "candidate": 590786500.0,
+      "candidate-copy": 589009177.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.010781501787072,
+      "candidate": 0.996991599334108
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9489583102575293,
+    "peakRssKiB": {
+      "reference": 67920,
+      "candidate": 67932
+    },
+    "peakRssRatio": 1.0001766784452297,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "callbacks",
+    "medianEmitNs": {
+      "reference": 410171016.5,
+      "reference-copy": 414261655.0,
+      "candidate": 376707798.0,
+      "candidate-copy": 375949063.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0099730071980841,
+      "candidate": 0.9979858805577473
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9184164235066082,
+    "peakRssKiB": {
+      "reference": 58504,
+      "candidate": 58408
+    },
+    "peakRssRatio": 0.9983590865581841,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "http",
+    "medianEmitNs": {
+      "reference": 1369164916.5,
+      "reference-copy": 1353540160.5,
+      "candidate": 1308330135.0,
+      "candidate-copy": 1310926682.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9885881124971113,
+      "candidate": 1.0019846267624188
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.955567966453952,
+    "peakRssKiB": {
+      "reference": 130844,
+      "candidate": 130716
+    },
+    "peakRssRatio": 0.9990217358075265,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "definitions-16",
+    "medianEmitNs": {
+      "reference": 305753926.5,
+      "reference-copy": 307369742.5,
+      "candidate": 270991609.5,
+      "candidate-copy": 269310015.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.005284694193453,
+      "candidate": 0.9937946639635719
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8863062286789635,
+    "peakRssKiB": {
+      "reference": 42596,
+      "candidate": 42560
+    },
+    "peakRssRatio": 0.999154850220678,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "definitions-64",
+    "medianEmitNs": {
+      "reference": 310635157.0,
+      "reference-copy": 312301183.5,
+      "candidate": 277624985.5,
+      "candidate-copy": 272606296.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.005363290221525,
+      "candidate": 0.9819227761832697
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8937333049523432,
+    "peakRssKiB": {
+      "reference": 43584,
+      "candidate": 43584
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "definitions-256",
+    "medianEmitNs": {
+      "reference": 336940201.0,
+      "reference-copy": 336729489.5,
+      "candidate": 296444966.0,
+      "candidate-copy": 295898345.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9993746323550154,
+      "candidate": 0.9981560810177496
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8798147716425206,
+    "peakRssKiB": {
+      "reference": 47560,
+      "candidate": 47544
+    },
+    "peakRssRatio": 0.9996635828427249,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "definitions-1024",
+    "medianEmitNs": {
+      "reference": 463982392.0,
+      "reference-copy": 460178091.5,
+      "candidate": 424877035.5,
+      "candidate-copy": 427635773.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9918007653618027,
+      "candidate": 1.0064930256744837
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9157180160836793,
+    "peakRssKiB": {
+      "reference": 63068,
+      "candidate": 63016
+    },
+    "peakRssRatio": 0.9991754931185387,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "generic-8",
+    "medianEmitNs": {
+      "reference": 307692938.0,
+      "reference-copy": 308342823.5,
+      "candidate": 275473230.5,
+      "candidate-copy": 269176633.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0021121235483148,
+      "candidate": 0.9771426174929182
+    },
+    "timingQualified": false,
+    "candidateRatio": 0.8952861651312908,
+    "peakRssKiB": {
+      "reference": 42588,
+      "candidate": 42544
+    },
+    "peakRssRatio": 0.9989668451206912,
+    "acceptance": false
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "generic-32",
+    "medianEmitNs": {
+      "reference": 307863460.0,
+      "reference-copy": 308950110.0,
+      "candidate": 274362460.0,
+      "candidate-copy": 278239806.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0035296491503083,
+      "candidate": 1.0141322030718052
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8911822793130435,
+    "peakRssKiB": {
+      "reference": 43624,
+      "candidate": 43552
+    },
+    "peakRssRatio": 0.9983495323675041,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "generic-128",
+    "medianEmitNs": {
+      "reference": 333402841.5,
+      "reference-copy": 333364059.0,
+      "candidate": 297300143.5,
+      "candidate-copy": 303656519.0
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9998836767562462,
+      "candidate": 1.021380331086184
+    },
+    "timingQualified": false,
+    "candidateRatio": 0.891714486182626,
+    "peakRssKiB": {
+      "reference": 47332,
+      "candidate": 47332
+    },
+    "peakRssRatio": 1.0,
+    "acceptance": false
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "generic-512",
+    "medianEmitNs": {
+      "reference": 438352814.5,
+      "reference-copy": 437724577.0,
+      "candidate": 394491285.5,
+      "candidate-copy": 396961738.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9985668222508927,
+      "candidate": 1.006262376612119
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8999401223189819,
+    "peakRssKiB": {
+      "reference": 61416,
+      "candidate": 61360
+    },
+    "peakRssRatio": 0.9990881854891234,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "nesting-8",
+    "medianEmitNs": {
+      "reference": 306180394.0,
+      "reference-copy": 314747561.5,
+      "candidate": 270984574.0,
+      "candidate-copy": 276180730.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0279807840994548,
+      "candidate": 1.0191751007199399
+    },
+    "timingQualified": false,
+    "candidateRatio": 0.8850487467855306,
+    "peakRssKiB": {
+      "reference": 42488,
+      "candidate": 42356
+    },
+    "peakRssRatio": 0.9968932404443608,
+    "acceptance": false
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "nesting-32",
+    "medianEmitNs": {
+      "reference": 310104896.5,
+      "reference-copy": 309579215.0,
+      "candidate": 273011972.5,
+      "candidate-copy": 274059659.5
+    },
+    "identicalCopyRatios": {
+      "reference": 0.9983048268313944,
+      "candidate": 1.0038375130233528
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.8803858809756008,
+    "peakRssKiB": {
+      "reference": 42712,
+      "candidate": 42684
+    },
+    "peakRssRatio": 0.9993444465255665,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "nesting-128",
+    "medianEmitNs": {
+      "reference": 327900179.5,
+      "reference-copy": 328649402.0,
+      "candidate": 295762552.0,
+      "candidate-copy": 292643279.5
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0022849103075895,
+      "candidate": 0.9894534569068771
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.9019896007711701,
+    "peakRssKiB": {
+      "reference": 46504,
+      "candidate": 46496
+    },
+    "peakRssRatio": 0.9998279717873731,
+    "acceptance": true
+  },
+  {
+    "host": "amd",
+    "session": 2,
+    "case": "nesting-512",
+    "medianEmitNs": {
+      "reference": 520106649.0,
+      "reference-copy": 524350130.0,
+      "candidate": 469395667.5,
+      "candidate-copy": 469303050.0
+    },
+    "identicalCopyRatios": {
+      "reference": 1.0081588670480541,
+      "candidate": 0.9998026877825837
+    },
+    "timingQualified": true,
+    "candidateRatio": 0.902498878648252,
+    "peakRssKiB": {
+      "reference": 56932,
+      "candidate": 56880
+    },
+    "peakRssRatio": 0.9990866296634582,
+    "acceptance": true
+  }
+]

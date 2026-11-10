@@ -1,11 +1,11 @@
 # Milestone 5: applications, compiler costs and sustained load
 
-**Focused checks and measurements pass; final delivery is pending.** The
+**Milestone 5 is verified and merged in PR #274.** The
 [November 10 report](application-compiler-load-2026-11-10/README.md) records all
-four compiler sessions, four HTTP sessions and corrected recursion checks.
-This document retains their frozen protocol; [the handoff](../development-state.md)
-tracks PR #274's final platform gates. The original milestone 1–3 timing limits
-remain open.
+four compiler sessions, four HTTP sessions and corrected recursion checks;
+[the delivery receipt](application-final-gates-2026-11-10/README.md) records all
+nine production jobs, documentation and the complete-log audit. This document
+retains the frozen protocol. Original milestone 1–3 timing limits remain open.
 
 ## Three applications through the tools
 
@@ -296,8 +296,7 @@ arguments. Host CPU models and installed stable tools can change; record new
 identities rather than treating a reproduction as the same experiment. Original
 timings are not rerun unchanged to obtain qualification.
 
-Keep this batch in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274),
-based on #273’s verified squash merge. Update guides and the handoff with actual
-commands/results, and fix every encountered issue. Run focused
-checks during development, then one complete final matrix and log audit for the
-assembled batch. Keep full builds and all measurements on GitHub runners.
+[PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) delivered this batch on
+#273's verified baseline. The final receipt preserves the Windows backpressure
+repair, formatting repair and all passing gates. [The current roadmap](../../PLAN.md)
+selects the next work; this completed protocol is not another task queue.

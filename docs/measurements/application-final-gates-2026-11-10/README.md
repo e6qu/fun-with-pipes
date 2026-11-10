@@ -29,3 +29,10 @@ HTTP measurements and the Windows test repair. [Results and limits](../applicati
 remain explicit: these observations establish no universal C/Rust/Swift parity,
 and later fine-grained reporter overhead is unmeasured. Original milestone 1–3
 timing acceptance remains open.
+
+The redundant post-merge run `42760668107` was cancelled after its three completed
+jobs passed, freeing six runner slots. Its tree matches the verified source above.
+The [receipt](duplicate-main.json) and [complete log archive](duplicate-main-logs.zip)
+retain all nine logs and the cancellation reason. ZIP CRC and all aggregate logs
+were checked: only deliberate panic controls, cancellation messages and missing
+uploads caused by interruption appeared. Cancelled jobs add no passing coverage.

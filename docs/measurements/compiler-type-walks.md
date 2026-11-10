@@ -6,7 +6,10 @@ Linux architectures and preserve generated C: roughly 804,000–810,000 cloned
 nodes during unresolved-variable search and 469,000–471,000 during substitution
 per complete application. The existing compiler remains the reference at
 `35a12dfee0266134237d03d1262649be69df7c41`; ordinary compiler sources are identical
-to merged #274. No candidate speedup is measured yet.
+to merged #274. [Ordinary timing results](compiler-type-time-2026-11-10/README.md)
+verify all complete-application targets: word counting takes 11–14% less time and
+callbacks 8–10% less. Four noisy AMD64 growth comparisons leave the full timing
+rule open; memory limits pass everywhere.
 
 CPU profiles now locate type copying under checking on both architectures.
 [Caller decoding passes](compiler-cpu-samples-2026-11-10/README.md), but unnamed

@@ -11,7 +11,9 @@ checking, dependency analysis or solving constraints. The new boundaries locate
 the fixed cost in library checking. The later body profiles and
 [exact counters](compiler-type-copies-2026-11-10/README.md) select
 [borrowed type traversals](compiler-type-walks.md) as the current candidate.
-Ordinary compiler speed and memory acceptance remain unverified.
+[Ordinary measurements](compiler-type-time-2026-11-10/README.md) verify the
+complete-application speed targets and all memory limits. Four noisy growth
+comparisons leave the full timing rule open.
 
 [Complete-program observations](compiler-applications-2026-11-10/README.md) also
 pass: all four programs check the same library bindings at about 208–234 ms.

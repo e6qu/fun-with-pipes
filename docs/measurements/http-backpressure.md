@@ -1,9 +1,10 @@
 # Make the slow-reader test exercise a blocked write
 
-**Focused Windows verification passes on both architectures.** The
+**Windows verification and all final delivery gates pass.** The
 [retained results](http-pressure-repair-2026-11-10/README.md) include original
-failures, actual send results and exact cleanup. Final combined delivery gates
-remain pending. The test must observe the real socket
+failures, actual send results and exact cleanup. The
+[combined delivery receipt](application-final-gates-2026-11-10/README.md) records
+the final matrix and complete-log audit. The test must observe the real socket
 would-block branch, preserve other clients' progress and release all resources.
 Increasing a timeout or accepting a run without that branch is not a repair.
 
@@ -56,7 +57,7 @@ The test never injects a synthetic would-block result or skips a platform.
 Focused verification uses the production Rust O1 settings and native Windows
 toolchains: [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/42744070652)
 and [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/42744095817).
-Both pass; the combined repair must now pass the full matrix.
+Both pass; the combined repair also passes the final matrix.
 Retain original failures, send results, cleanup logs and exact source identities.
 
 See the [complete application/load contract](application-tooling.md) for the

@@ -3,8 +3,9 @@
 **Both native Linux architectures pass.** The compiler makes about 1.1 million
 fewer type-node copies per complete application, without changing traversal counts
 or emitted C. These counts establish neither allocated bytes nor a speedup.
-Ordinary timing and peak-memory acceptance remain pending under the
-[frozen protocol](../compiler-type-walks.md).
+[Ordinary timing](../compiler-type-time-2026-11-10/README.md) now verifies all
+complete-application targets and memory limits; four noisy growth comparisons
+leave the [full frozen rule](../compiler-type-walks.md) open.
 
 ## Compared code and work
 
