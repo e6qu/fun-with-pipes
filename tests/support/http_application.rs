@@ -1,7 +1,11 @@
 //! Bounded-live cohorts through the maintained JSON API, including failures.
 use super::{example, fwp, http_server_process};
+#[cfg(windows)]
+use std::ffi::c_char;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
+#[cfg(windows)]
+use std::os::windows::io::{AsRawSocket, RawSocket};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::{mpsc, Arc, Mutex};
@@ -12,6 +16,26 @@ use std::time::{Duration, Instant};
 mod memory;
 #[path = "process_memory.rs"]
 mod process_memory;
+
+#[cfg(windows)]
+#[link(name = "ws2_32")]
+extern "system" {
+    fn setsockopt(
+        socket: RawSocket,
+        level: i32,
+        option: i32,
+        value: *const c_char,
+        size: i32,
+    ) -> i32;
+    fn getsockopt(
+        socket: RawSocket,
+        level: i32,
+        option: i32,
+        value: *mut c_char,
+        size: *mut i32,
+    ) -> i32;
+    fn WSAGetLastError() -> i32;
+}
 
 struct Observed {
     child: Child,
@@ -222,7 +246,7 @@ fn metrics(reader: &mut BufReader<TcpStream>) -> f64 {
     count
 }
 
-fn cohort(address: &str, repeats: usize, disconnect: bool) {
+fn cohort(address: &str, repeats: usize, disconnect: bool, item_only: bool) {
     std::thread::scope(|scope| {
         let workers: Vec<_> = (0..8).map(|_| scope.spawn(move || {
             let mut reader = connection(address);
@@ -242,10 +266,15 @@ fn cohort(address: &str, repeats: usize, disconnect: bool) {
                     ("GET", "/slow?ms=0", "", "", 200, "slept 0 ms"),
                     ("GET", "/stream", "", "", 200, "line 1\nline 2\nline 3\nline 4\nline 5\n"),
                 ] {
+                    if item_only && path != "/items/42" {
+                        continue;
+                    }
                     send(reader.get_mut(), method, path, headers, body);
                     assert_eq!(response(&mut reader), (code, expected.into()), "{method} {path}");
                 }
-                assert!(metrics(&mut reader) > 0.0);
+                if !item_only {
+                    assert!(metrics(&mut reader) > 0.0);
+                }
             }
         })).collect();
         for worker in workers {
@@ -285,11 +314,11 @@ fn cancel_pending(server: &mut Observed) {
     }
 }
 
-fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
+fn exercise(binary: &Path, artifact: PathBuf, variant: &str, item_only: bool) {
     let mut server = Observed::start(binary, artifact);
-    cohort(&server.address, 1, false);
+    cohort(&server.address, 1, false, item_only);
     server.checkpoint(8, true);
-    cohort(&server.address, 4, false);
+    cohort(&server.address, 4, false, item_only);
     server.checkpoint(16, variant == "healthy");
     if variant != "healthy" {
         assert_eq!(server.wait().code(), Some(241), "broken observer control");
@@ -297,18 +326,27 @@ fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
             reader.join().unwrap();
         }
         let log = server.log.lock().unwrap().clone();
-        assert!(log.contains("http-memory changed"), "{log}");
+        let diagnostic = if variant == "missing-count" {
+            "http-allocation observation missing"
+        } else {
+            "http-memory changed"
+        };
+        assert!(log.contains(diagnostic), "{log}");
         return;
     }
     for (i, repeats) in [16, 1, 16, 4].into_iter().enumerate() {
-        cohort(&server.address, repeats, false);
+        cohort(&server.address, repeats, false, item_only);
         server.checkpoint((i + 3) * 8, true);
     }
-    cohort(&server.address, 0, true);
+    cohort(&server.address, 0, true, item_only);
     server.checkpoint(56, true);
-    cohort(&server.address, 1, false);
+    cohort(&server.address, 1, false, item_only);
     server.checkpoint(64, true);
-    cancel_pending(&mut server);
+    verify_finish(&mut server);
+}
+
+fn verify_finish(server: &mut Observed) {
+    cancel_pending(server);
     if let Some(reader) = server.reader.take() {
         reader.join().unwrap();
     }
@@ -316,6 +354,35 @@ fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
     assert!(log.contains("http-shutdown\t1\n"), "{log}");
     assert!(log.contains("http-final\t72\t72\t0\t"), "{log}");
     assert!(log.ends_with("http-metrics-final\t0\n"), "{log}");
+    let traffic: Vec<Vec<u64>> = log
+        .lines()
+        .filter_map(|line| line.strip_prefix("http-traffic\t"))
+        .map(|line| {
+            line.split('\t')
+                .map(|value| value.parse().unwrap())
+                .collect()
+        })
+        .collect();
+    assert_eq!(traffic.len(), 9, "{log}");
+    let idle: Vec<u64> = log
+        .lines()
+        .filter(|line| line.starts_with("http-memory\t"))
+        .map(|line| line.split('\t').nth(3).unwrap().parse().unwrap())
+        .collect();
+    for (index, row) in traffic.iter().enumerate() {
+        assert_eq!(row.len(), 5);
+        assert_eq!(row[0], (index as u64 + 1) * 8);
+        assert!(row[1] > 0 && row[2] >= row[3] && row[4] > 0, "{row:?}");
+        assert_eq!(row[2] - row[3], if index < 8 { idle[index] } else { 0 });
+        if index > 0 {
+            assert!(
+                row[1] > traffic[index - 1][1],
+                "allocation count did not advance"
+            );
+            assert!(row[2] >= traffic[index - 1][2] && row[3] >= traffic[index - 1][3]);
+            assert!(row[4] >= traffic[index - 1][4]);
+        }
+    }
     let samples: Vec<u64> = server
         .resident
         .lines()
@@ -367,7 +434,7 @@ fn measure(opt: &str) {
         std::fs::write(artifact.with_extension("c"), &code).unwrap();
         let binary = artifact.with_extension("exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        exercise(&binary, artifact, variant);
+        exercise(&binary, artifact, variant, false);
     }
 }
 
@@ -381,8 +448,8 @@ fn api_live_memory_o1() {
         .args(["run", "--interp"])
         .arg(example());
     let mut reference = super::start(command);
-    cohort(&reference.addr, 1, false);
-    cohort(&reference.addr, 0, true);
+    cohort(&reference.addr, 1, false, false);
+    cohort(&reference.addr, 0, true, false);
     http_server_process::terminate(&reference.child).unwrap();
     let end = Instant::now() + Duration::from_secs(20);
     loop {
@@ -400,6 +467,263 @@ fn api_live_memory_o2() {
     measure("-O2");
 }
 
+#[test]
+fn api_allocation_observer_rejects_missing_counts_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-allocation-control").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("allocation-controls");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let source = temporary.join("api.c");
+    let output = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(example())
+        .arg("-o")
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let observed = memory::instrument(&std::fs::read_to_string(source).unwrap());
+    assert_eq!(observed.matches("#define HTTP_APP_OMIT_COUNT 0").count(), 1);
+    let code = observed.replace(
+        "#define HTTP_APP_OMIT_COUNT 0",
+        "#define HTTP_APP_OMIT_COUNT 1",
+    );
+    let artifact = artifacts.join("missing-countO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    exercise(&binary, artifact, "missing-count", false);
+}
+
+#[test]
+fn api_item_allocation_traffic_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-item-traffic").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("item-traffic");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let source = temporary.join("api.c");
+    let output = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(example())
+        .arg("-o")
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let code = memory::instrument(&std::fs::read_to_string(source).unwrap());
+    let artifact = artifacts.join("apiO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    exercise(&binary, artifact, "healthy", true);
+}
+
+fn pressure_header(reader: &mut BufReader<TcpStream>, expected: usize) {
+    let mut line = String::new();
+    reader.read_line(&mut line).unwrap();
+    assert_eq!(line, "HTTP/1.1 200 OK\r\n");
+    let mut length = None;
+    loop {
+        line.clear();
+        assert!(reader.read_line(&mut line).unwrap() > 0);
+        if line == "\r\n" {
+            break;
+        }
+        let (name, value) = line.split_once(':').unwrap();
+        assert!(!name.eq_ignore_ascii_case("transfer-encoding"));
+        if name.eq_ignore_ascii_case("content-length") {
+            assert!(length.is_none());
+            length = Some(value.trim().parse::<usize>().unwrap());
+        }
+    }
+    assert_eq!(length, Some(expected));
+}
+
+#[test]
+fn api_slow_clients_release_backpressured_output_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-pressure").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("pressure");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let original = std::fs::read_to_string(example()).unwrap();
+    let route = "routes = http.router [";
+    assert_eq!(original.matches(route).count(), 1);
+    let source_text = original.replace(
+        route,
+        &format!("{route}\n    http.route \"GET\" \"/pressure/:bytes\" pressure,"),
+    ) + r#"
+pressure : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+pressure =
+    http.param "bytes"
+    | option.and-then parse-int
+    | or-fail { status = 400, message = "byte count required" }
+    | flip string.repeat "x"
+    | http.text 200
+"#;
+    let source = artifacts.join("api.fwp");
+    std::fs::write(&source, source_text).unwrap();
+    let emitted = temporary.join("api.c");
+    let result = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&emitted)
+        .output()
+        .unwrap();
+    assert!(result.status.success(), "{result:?}");
+    let mut code = memory::instrument(&std::fs::read_to_string(emitted).unwrap());
+    for (before, after) in [
+        ("    if (!c) { http_app_checkpoint(); return FWP_NONE; }",
+         "    if (!c) { http_app_checkpoint(); return FWP_NONE; }\n    int pressure_buffer = 16384;\n    if (setsockopt(SOCK(c)->fd, SOL_SOCKET, SO_SNDBUF, (const char *)&pressure_buffer, (socklen_t)sizeof pressure_buffer)) abort();"),
+        ("        if (k < 0 && (fwp_socket_again(errno))) {\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);",
+         "        if (k < 0 && (fwp_socket_again(errno))) {\n            int pressure_errno = errno;\n            fprintf(stderr, \"http-wait-pressure-write\\n\"); fflush(stderr); errno = pressure_errno;\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);"),
+        ("            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);\n        if (k > 0)",
+         "            k = fwp_socket_send(fd, STR(data)->d + off, len - off > 16384 ? 16384 : len - off, MSG_NOSIGNAL);\n        if (len >= 1048576 && (off == 0 || (k > 0 && off + (size_t)k == len))) { int saved = errno; fprintf(stderr, \"http-wait-pressure-send %zu/%zu %lld error=%d\\n\", off, len, (long long)k, k < 0 ? saved : 0); fflush(stderr); errno = saved; }\n        if (k > 0)"),
+    ] {
+        assert_eq!(code.matches(before).count(), 1, "{before}");
+        code = code.replacen(before, after, 1);
+    }
+    let artifact = artifacts.join("apiO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    let mut server = Observed::start(&binary, artifact);
+    const BODY_BYTES: usize = 8 * 1024 * 1024;
+    for round in 0..8 {
+        if round == 6 {
+            cohort(&server.address, 0, true, true);
+            server.checkpoint(56, true);
+            continue;
+        }
+        let mut large = connection(&server.address);
+        // Constrain the unread client's buffering as well as the sender. A large
+        // nonblocking Winsock send need not stop at the requested SO_SNDBUF size.
+        // The diagnostic also limits each actual send above; the real would-block
+        // branch and readiness wait must still occur before the client reads.
+        #[cfg(windows)]
+        {
+            const SOL_SOCKET: i32 = 0xffff;
+            const SO_RCVBUF: i32 = 0x1002;
+            let requested = 256 * 1024_i32;
+            let socket = large.get_ref().as_raw_socket();
+            let mut size = std::mem::size_of_val(&requested) as i32;
+            let result = unsafe {
+                setsockopt(
+                    socket,
+                    SOL_SOCKET,
+                    SO_RCVBUF,
+                    (&requested as *const i32).cast(),
+                    size,
+                )
+            };
+            assert_eq!(result, 0, "pressure receive buffer: {}", unsafe {
+                WSAGetLastError()
+            });
+            let mut actual = 0_i32;
+            let result = unsafe {
+                getsockopt(
+                    socket,
+                    SOL_SOCKET,
+                    SO_RCVBUF,
+                    (&mut actual as *mut i32).cast(),
+                    &mut size,
+                )
+            };
+            assert_eq!(result, 0, "read pressure receive buffer: {}", unsafe {
+                WSAGetLastError()
+            });
+            assert_eq!(size, std::mem::size_of_val(&actual) as i32);
+            assert_eq!(actual, requested);
+        }
+        let path = format!("/pressure/{BODY_BYTES}");
+        if round == 1 {
+            write!(large.get_mut(), "GET {path} HTTP/1.1\r\nhost:").unwrap();
+        } else if round == 3 {
+            large
+                .get_mut()
+                .write_all(b"POST /items HTTP/1.1\r\nhost: test\r\ncontent-length: 10000\r\n\r\n{")
+                .unwrap();
+        } else {
+            send(large.get_mut(), "GET", &path, "", "");
+        }
+        let mut controls: Vec<_> = (0..7)
+            .map(|_| {
+                let mut reader = connection(&server.address);
+                send(reader.get_mut(), "GET", "/items/42", "", "");
+                assert_eq!(
+                    response(&mut reader),
+                    (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+                );
+                reader
+            })
+            .collect();
+        if round == 1 {
+            large
+                .get_mut()
+                .write_all(b" test\r\ncontent-length: 0\r\n\r\n")
+                .unwrap();
+        }
+        if round != 3 {
+            let deadline = Instant::now() + Duration::from_secs(15);
+            loop {
+                let line = server
+                    .lines
+                    .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                    .unwrap_or_else(|error| {
+                        let log = server.log.lock().unwrap().clone();
+                        panic!("pressure round {round}: waiting for blocked write: {error}; {log}")
+                    });
+                if line == "http-wait-pressure-write" {
+                    break;
+                }
+                assert!(line.starts_with("http-wait"), "{line}");
+            }
+            // Other requests must finish before the large response is consumed.
+            send(controls[0].get_mut(), "GET", "/items/42", "", "");
+            assert_eq!(
+                response(&mut controls[0]),
+                (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+            );
+            pressure_header(&mut large, BODY_BYTES);
+            let mut remaining = if matches!(round, 2 | 5) {
+                32768
+            } else {
+                BODY_BYTES
+            };
+            let deadline = Instant::now() + Duration::from_secs(30);
+            let mut buffer = [0; 32768];
+            while remaining > 0 {
+                assert!(Instant::now() < deadline, "pressure response deadline");
+                large
+                    .get_mut()
+                    .set_read_timeout(Some(deadline.saturating_duration_since(Instant::now())))
+                    .unwrap();
+                let count = remaining.min(buffer.len());
+                large.read_exact(&mut buffer[..count]).unwrap();
+                assert!(buffer[..count].iter().all(|byte| *byte == b'x'));
+                remaining -= count;
+                if round == 4 && remaining == BODY_BYTES - buffer.len() {
+                    send(controls[0].get_mut(), "GET", "/items/42", "", "");
+                    assert_eq!(
+                        response(&mut controls[0]),
+                        (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+                    );
+                }
+            }
+        }
+        drop(large);
+        drop(controls);
+        server.checkpoint((round + 1) * 8, true);
+    }
+    verify_finish(&mut server);
+}
+
 // Diagnostic entry only: exercise an explicitly selected saved executable.
 // It does not replace the ordinary tests that compile this revision.
 #[test]
@@ -408,7 +732,7 @@ fn api_saved_binary_idle_memory() {
     let binary = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_BINARY").unwrap());
     let artifacts = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS").unwrap());
     std::fs::create_dir(&artifacts).unwrap();
-    exercise(&binary, artifacts.join("api-saved"), "healthy");
+    exercise(&binary, artifacts.join("api-saved"), "healthy", false);
 }
 
 #[test]

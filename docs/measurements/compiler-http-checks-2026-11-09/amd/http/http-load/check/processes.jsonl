@@ -1,0 +1,2 @@
+{"monotonicNs": 239502087643, "unixNs": 1794268233489656064, "server": {"pid": 2921, "cpuTicks": 0, "rssBytes": 6504448, "threads": 2, "descriptors": 5}, "generator": {"pid": 2923, "cpuTicks": 0, "rssBytes": 442368, "threads": 1, "descriptors": 3}}
+{"monotonicNs": 240502544050, "unixNs": 1794268234490112850, "server": {"pid": 2921, "cpuTicks": 99, "rssBytes": 11350016, "threads": 2, "descriptors": 7}, "generator": {"pid": 2923, "cpuTicks": 14, "rssBytes": 2396160, "threads": 3, "descriptors": 9}}

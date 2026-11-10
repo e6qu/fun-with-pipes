@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+    "build",
+    "--target",
+    "native",
+    "-O2",
+    "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/api.fwp",
+    "-o",
+    "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/api.exe"
+  ],
+  "elapsedNs": 40784476256,
+  "status": 0
+}

@@ -447,6 +447,12 @@ impl Env {
     /// Register all declarations of all modules. `modules` holds
     /// `(module name, imports, decls)`.
     pub fn collect(&mut self, modules: Vec<(String, HashSet<String>, Vec<Decl>)>) {
+        let phase = crate::compile_profile::phase("collect-declarations");
+        phase.count("modules", modules.len());
+        phase.count(
+            "declarations",
+            modules.iter().map(|(_, _, decls)| decls.len()).sum(),
+        );
         for (name, imports, _) in &modules {
             self.modules.insert(
                 name.clone(),

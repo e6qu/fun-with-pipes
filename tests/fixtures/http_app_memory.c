@@ -1,7 +1,9 @@
 /* Test-only observation: selected cleartext HTTP/1 API, eight connections per
    cohort. Charge excludes allocator pages, task stacks and raw C buffers.
    Metric names/table are measured separately; the driver also samples RSS. */
-static double http_app_start, http_app_baseline;
+static double http_app_start, http_app_baseline, http_app_alloc_start, http_app_free_start;
+static unsigned long long http_app_count_start;
+static struct { unsigned long long events; double charged, freed; size_t peak; } http_app_traffic[8];
 static size_t http_app_metric_baseline;
 static unsigned http_app_busy;
 static double http_app_charge(void) {
@@ -58,6 +60,16 @@ static void http_app_checkpoint(void) {
         fprintf(stderr, "http-memory changed\n");
         exit(241);
     }
+    if (http_app_active && http_app_allocations == http_app_count_start) {
+        fprintf(stderr, "http-allocation observation missing\n");
+        exit(241);
+    }
+    if (http_app_opened > 64) exit(241);
+    size_t index = http_app_opened / 8 - 1;
+    http_app_traffic[index].events = http_app_allocations - http_app_count_start;
+    http_app_traffic[index].charged = fwp_heap.total_alloc - http_app_alloc_start;
+    http_app_traffic[index].freed = fwp_heap.freed - http_app_free_start;
+    http_app_traffic[index].peak = fwp_heap.peak;
     http_app_sampled = http_app_opened;
     http_app_active = 1;
     /* The driver samples resident memory before releasing the next cohort. */
@@ -70,6 +82,18 @@ static void http_app_finish(void) {
         http_app_opened, http_app_closed, charge, http_app_metric_bytes());
     if (!http_app_active || http_app_shutdown_cancelled != 1 || http_app_opened != http_app_closed || charge ||
         http_app_metric_bytes() != http_app_metric_baseline || fwp_tasks_active) exit(241);
+    /* Print saved checkpoints after the driver handshakes, preserving their
+       protocol. Counts include one event per physical heap-slot charge, reuse
+       included; raw malloc buffers, task stacks and allocator pages are outside
+       this counter. Peak is the whole-run live slot peak, not process RSS. */
+    for (size_t i = 0; i < http_app_sampled / 8; i++)
+        fprintf(stderr, "http-traffic\t%zu\t%llu\t%.0f\t%.0f\t%zu\n",
+            (i + 1) * 8, http_app_traffic[i].events, http_app_traffic[i].charged,
+            http_app_traffic[i].freed, http_app_traffic[i].peak);
+    fprintf(stderr, "http-traffic\t%llu\t%llu\t%.0f\t%.0f\t%zu\n",
+        http_app_opened, http_app_allocations - http_app_count_start,
+        fwp_heap.total_alloc - http_app_alloc_start, fwp_heap.freed - http_app_free_start,
+        fwp_heap.peak);
     /* Executable metrics storage is released by its existing atexit callback;
        its separate final record must follow this pre-teardown observation. */
 }

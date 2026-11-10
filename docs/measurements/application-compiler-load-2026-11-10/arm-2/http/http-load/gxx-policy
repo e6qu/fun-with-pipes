@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/g++ -march=armv8-a -ffp-contract=off -fno-fast-math -fno-lto "$@"

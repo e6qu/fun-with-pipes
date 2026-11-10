@@ -11,6 +11,21 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current five milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Ownership comparisons and parser input cleanup (PR #273)
+
+[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273) fixes an owning parser
+entry releasing an input already consumed by its worker. Alias, error and
+allocation-failure checks accompany the repair. It completes buffer, returned
+function, weak-registration and parser comparisons with C/Rust/Swift.
+[All final delivery gates and the complete-log audit pass](measurements/ownership-peer-final-gates-2026-11-09/README.md).
+
+The [measurements](measurements/ownership-peers.md) separate actual allocation
+events, allocator slots, process memory and phase timings. They expose a large
+remaining callback-service gap: 18.65–20.23 times C's time and 5.12–6.70 times
+Swift's for the 4,096-message case. Different representations and queues matter;
+these are not isolated ARC costs. Original noisy or missed timing results remain
+open. Milestone 5 moves to application workflows, compiler costs and sustained load.
+
 ## Known array callbacks and structured gradients (PR #272)
 
 [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272) removes temporary

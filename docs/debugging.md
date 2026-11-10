@@ -3,6 +3,8 @@
 Use the debugger to follow a calculation and inspect its values. Use the
 disassembler to see what ahead-of-time compilation produced. The debugger runs
 the interpreter; it is not a native-process debugger. Neither tool uses a JIT.
+The [application walkthroughs](application-workflows.md) apply these tools to
+word counts, numerical optimization and queued callbacks.
 
 ## Stop inside a function
 

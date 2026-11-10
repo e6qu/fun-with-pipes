@@ -1,0 +1,272 @@
+{
+  "source": "ea531da149d085dbb146a64cd6ff1f92b61b170b",
+  "tag": "roadmap/compiler-application-attribution-2026-11-10",
+  "run": {
+    "conclusion": "success",
+    "headSha": "ea531da149d085dbb146a64cd6ff1f92b61b170b",
+    "jobs": [
+      {
+        "completedAt": "2026-11-10T02:21:01Z",
+        "conclusion": "success",
+        "databaseId": 129584368434,
+        "name": "compiler_checking / applications (ubuntu-24.04-arm)",
+        "startedAt": "2026-11-10T02:18:45Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-10T02:18:47Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-10T02:18:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:19:27Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-11-10T02:18:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:19:28Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-11-10T02:19:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:19:29Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-11-10T02:19:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:19:37Z",
+            "conclusion": "success",
+            "name": "Native compiler observation dependencies",
+            "number": 5,
+            "startedAt": "2026-11-10T02:19:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:52Z",
+            "conclusion": "success",
+            "name": "Verify phase reader and build release compiler",
+            "number": 6,
+            "startedAt": "2026-11-10T02:19:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:58Z",
+            "conclusion": "success",
+            "name": "Observe all maintained application compiles",
+            "number": 7,
+            "startedAt": "2026-11-10T02:20:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:58Z",
+            "conclusion": "success",
+            "name": "Retain exact source and build settings",
+            "number": 8,
+            "startedAt": "2026-11-10T02:20:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:59Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 9,
+            "startedAt": "2026-11-10T02:20:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 17,
+            "startedAt": "2026-11-10T02:20:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "2026-11-10T02:20:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:59Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-10T02:20:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42741790147/job/129584368434"
+      },
+      {
+        "completedAt": "2026-11-10T02:21:50Z",
+        "conclusion": "success",
+        "databaseId": 129584369033,
+        "name": "compiler_checking / applications (ubuntu-latest)",
+        "startedAt": "2026-11-10T02:19:13Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-10T02:19:15Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-10T02:19:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:06Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-11-10T02:19:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:07Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-11-10T02:20:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:09Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@v6",
+            "number": 4,
+            "startedAt": "2026-11-10T02:20:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:20:15Z",
+            "conclusion": "success",
+            "name": "Native compiler observation dependencies",
+            "number": 5,
+            "startedAt": "2026-11-10T02:20:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:39Z",
+            "conclusion": "success",
+            "name": "Verify phase reader and build release compiler",
+            "number": 6,
+            "startedAt": "2026-11-10T02:20:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:45Z",
+            "conclusion": "success",
+            "name": "Observe all maintained application compiles",
+            "number": 7,
+            "startedAt": "2026-11-10T02:21:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:45Z",
+            "conclusion": "success",
+            "name": "Retain exact source and build settings",
+            "number": 8,
+            "startedAt": "2026-11-10T02:21:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:47Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 9,
+            "startedAt": "2026-11-10T02:21:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:47Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@v6",
+            "number": 17,
+            "startedAt": "2026-11-10T02:21:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "2026-11-10T02:21:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-10T02:21:48Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-10T02:21:48Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42741790147/job/129584369033"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42741790147"
+  },
+  "artifacts": {
+    "total_count": 2,
+    "artifacts": [
+      {
+        "id": 13729872451,
+        "node_id": "MDg6QXJ0aWZhY3QxMzcyOTg3MjQ1MQ==",
+        "name": "compiler-checking-ubuntu-latest",
+        "size_in_bytes": 2563732,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13729872451",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13729872451/zip",
+        "expired": false,
+        "digest": "sha256:e5ab30bbff8d02a4440388fe53e716ed10b699c96247665b8d1f1e2f91fba7dc",
+        "created_at": "2026-11-10T02:21:47Z",
+        "updated_at": "2026-11-10T02:21:47Z",
+        "expires_at": "2027-02-08T02:18:02Z",
+        "workflow_run": {
+          "id": 42741790147,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/compiler-application-attribution-2026-11-10",
+          "head_sha": "ea531da149d085dbb146a64cd6ff1f92b61b170b"
+        }
+      },
+      {
+        "id": 13729852189,
+        "node_id": "MDg6QXJ0aWZhY3QxMzcyOTg1MjE4OQ==",
+        "name": "compiler-checking-ubuntu-24.04-arm",
+        "size_in_bytes": 2562196,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13729852189",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13729852189/zip",
+        "expired": false,
+        "digest": "sha256:37f24085b45f3fc0758cf403aec65efa404a3ad1303e997ea5ba1260d8b1bd39",
+        "created_at": "2026-11-10T02:20:59Z",
+        "updated_at": "2026-11-10T02:20:59Z",
+        "expires_at": "2027-02-08T02:18:02Z",
+        "workflow_run": {
+          "id": 42741790147,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/compiler-application-attribution-2026-11-10",
+          "head_sha": "ea531da149d085dbb146a64cd6ff1f92b61b170b"
+        }
+      }
+    ]
+  },
+  "verification": "Selected ZIP members passed CRC; archive SHA-256 values are GitHub metadata. All eight ordinary/observed pairs pass exact C comparison on runners. Summary hashes and group partitions were independently checked locally. Complete job logs are clean. No timing qualification."
+}

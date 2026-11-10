@@ -1,0 +1,5 @@
+GET /items/42 HTTP/1.1
+host: test
+content-length: 0
+connection: keep-alive
+

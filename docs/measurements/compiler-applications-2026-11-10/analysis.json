@@ -1,0 +1,66 @@
+[
+  {
+    "arch": "arm",
+    "program": "words",
+    "processMs": 282.026601,
+    "libraryMs": 208.073069,
+    "userMs": 0.289065,
+    "peakRssKiB": 42616
+  },
+  {
+    "arch": "arm",
+    "program": "numerical",
+    "processMs": 588.341331,
+    "libraryMs": 208.255434,
+    "userMs": 1.667259,
+    "peakRssKiB": 67284
+  },
+  {
+    "arch": "arm",
+    "program": "callbacks",
+    "processMs": 378.834214,
+    "libraryMs": 208.611111,
+    "userMs": 2.141018,
+    "peakRssKiB": 57816
+  },
+  {
+    "arch": "arm",
+    "program": "http",
+    "processMs": 1213.955415,
+    "libraryMs": 207.933376,
+    "userMs": 2.274718,
+    "peakRssKiB": 130128
+  },
+  {
+    "arch": "amd",
+    "program": "words",
+    "processMs": 313.341984,
+    "libraryMs": 230.956477,
+    "userMs": 0.320848,
+    "peakRssKiB": 43104
+  },
+  {
+    "arch": "amd",
+    "program": "numerical",
+    "processMs": 629.049092,
+    "libraryMs": 233.592216,
+    "userMs": 1.8699,
+    "peakRssKiB": 67768
+  },
+  {
+    "arch": "amd",
+    "program": "callbacks",
+    "processMs": 410.0256,
+    "libraryMs": 228.98605,
+    "userMs": 2.469155,
+    "peakRssKiB": 58456
+  },
+  {
+    "arch": "amd",
+    "program": "http",
+    "processMs": 1372.773173,
+    "libraryMs": 231.679995,
+    "userMs": 2.786718,
+    "peakRssKiB": 130708
+  }
+]

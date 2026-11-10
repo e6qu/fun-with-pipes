@@ -4,13 +4,13 @@
 
 normalize = lower | replace "," "" | replace "." ""
 
-main =
-    ()
-    | read-all
-    | words
+count-words : String -> List[(String, I64)]
+count-words =
+    words
     | map normalize
     | frequencies
     | map.to-list
-    | sort-by (.1 | neg)
+    | sort-by (both (.1 | neg) .0)
     | take 5
-    | each (format "{}: {}" | print)
+
+main = () | read-all | count-words | each (format "{}: {}" | print)

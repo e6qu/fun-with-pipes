@@ -13,6 +13,7 @@ const FLAGS: &[&str] = &[
 ];
 
 fn run(command: &mut Command) -> Result<Vec<u8>, String> {
+    let _phase = crate::compile_profile::phase("exact-float-toolchain-process");
     let result = command.output().map_err(|e| format!("{command:?}: {e}"))?;
     if !result.status.success() {
         return Err(crate::cgen::compiler_failure(

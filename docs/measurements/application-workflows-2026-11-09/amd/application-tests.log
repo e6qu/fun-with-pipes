@@ -1,0 +1,8 @@
+test_callback_application_delivery_cancellation_and_errors (test_applications.Applications.test_callback_application_delivery_cancellation_and_errors) ... ok
+test_numerical_application_across_execution_tools (test_applications.Applications.test_numerical_application_across_execution_tools) ... ok
+test_word_count_application_across_native_notebook_and_debugger (test_applications.Applications.test_word_count_application_across_native_notebook_and_debugger) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 31.914s
+
+OK

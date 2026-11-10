@@ -1,0 +1,90 @@
+[
+  {
+    "arch": "arm",
+    "program": "words",
+    "processMs": 290.40479,
+    "libraryMs": 209.471706,
+    "bodyMs": 156.821014,
+    "constraintsMs": 18.048182,
+    "validationMs": 30.608818,
+    "remainingMs": 3.993692,
+    "peakRssKiB": 43536
+  },
+  {
+    "arch": "arm",
+    "program": "numerical",
+    "processMs": 602.04162,
+    "libraryMs": 210.627972,
+    "bodyMs": 158.029598,
+    "constraintsMs": 18.227619,
+    "validationMs": 30.326229,
+    "remainingMs": 4.044526,
+    "peakRssKiB": 68036
+  },
+  {
+    "arch": "arm",
+    "program": "callbacks",
+    "processMs": 384.350708,
+    "libraryMs": 208.393372,
+    "bodyMs": 155.768176,
+    "constraintsMs": 18.160446,
+    "validationMs": 30.621799,
+    "remainingMs": 3.842951,
+    "peakRssKiB": 58696
+  },
+  {
+    "arch": "arm",
+    "program": "http",
+    "processMs": 1219.693167,
+    "libraryMs": 209.748926,
+    "bodyMs": 156.996305,
+    "constraintsMs": 18.340045,
+    "validationMs": 30.569412,
+    "remainingMs": 3.843164,
+    "peakRssKiB": 131024
+  },
+  {
+    "arch": "amd",
+    "program": "words",
+    "processMs": 208.70573,
+    "libraryMs": 142.636027,
+    "bodyMs": 108.579727,
+    "constraintsMs": 11.502796,
+    "validationMs": 20.248775,
+    "remainingMs": 2.304729,
+    "peakRssKiB": 44180
+  },
+  {
+    "arch": "amd",
+    "program": "numerical",
+    "processMs": 423.240275,
+    "libraryMs": 142.719524,
+    "bodyMs": 108.476866,
+    "constraintsMs": 11.513293,
+    "validationMs": 20.417434,
+    "remainingMs": 2.311931,
+    "peakRssKiB": 69232
+  },
+  {
+    "arch": "amd",
+    "program": "callbacks",
+    "processMs": 295.391042,
+    "libraryMs": 144.750574,
+    "bodyMs": 110.208143,
+    "constraintsMs": 11.745719,
+    "validationMs": 20.54708,
+    "remainingMs": 2.249632,
+    "peakRssKiB": 59404
+  },
+  {
+    "arch": "amd",
+    "program": "http",
+    "processMs": 910.562665,
+    "libraryMs": 138.54267,
+    "bodyMs": 104.884823,
+    "constraintsMs": 11.349673,
+    "validationMs": 20.128818,
+    "remainingMs": 2.179356,
+    "peakRssKiB": 131896
+  }
+]

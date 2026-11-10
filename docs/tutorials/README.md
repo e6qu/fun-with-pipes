@@ -51,6 +51,8 @@ Tests compare interpreter/native output, replay sessions and check README source
 copies. A transcript is an expected result, not a benchmark. The larger
 [example applications](../../examples/README.md) have a separate guide; their
 general gate checks types, not every external deployment.
+The [application workflows](../application-workflows.md) follow word counts,
+numerical optimization and queued callbacks through the interactive tools.
 
 ## Lessons
 

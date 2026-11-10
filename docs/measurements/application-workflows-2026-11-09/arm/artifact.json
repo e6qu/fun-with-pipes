@@ -1,0 +1,20 @@
+{
+  "id": 13715565238,
+  "node_id": "MDg6QXJ0aWZhY3QxMzcxNTU2NTIzOA==",
+  "name": "application-tooling-ubuntu-24.04-arm",
+  "size_in_bytes": 13843294,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13715565238",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13715565238/zip",
+  "expired": false,
+  "digest": "sha256:4f2a6aec7993347baae0b4032d300f048b4d8cad95227ecb0e29d0690e9fc853",
+  "created_at": "2026-11-09T22:04:40Z",
+  "updated_at": "2026-11-09T22:04:40Z",
+  "expires_at": "2027-02-07T22:00:16Z",
+  "workflow_run": {
+    "id": 42707776942,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "application-tooling-costs",
+    "head_sha": "cafc157a0076bec270324b9c2c116f5fc376f889"
+  }
+}

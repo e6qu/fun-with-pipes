@@ -245,9 +245,6 @@ jobs:
           )
           python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-tls-tests 2>&1 | Tee-Object windows-tls_tests.log
           exit $LASTEXITCODE
-      - name: Native commands, test recovery and executable cache
-        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
-        run: python scripts/run-native-tests.py --targets aot --idle-timeout 600 --logs windows-command-tests
       - name: Publish failed native tls and executable ownership log
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && steps.tls_tests.outcome == 'failure' }}
@@ -257,6 +254,9 @@ jobs:
             windows-tls_tests.log
             windows-tls-tests/
           if-no-files-found: error
+      - name: Native commands, test recovery and executable cache
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        run: python scripts/run-native-tests.py --targets aot --idle-timeout 600 --logs windows-command-tests
       - name: Remote stream and queued response lifetimes
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh

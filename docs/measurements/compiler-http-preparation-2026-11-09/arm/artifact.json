@@ -1,0 +1,20 @@
+{
+  "id": 13717623883,
+  "node_id": "MDg6QXJ0aWZhY3QxMzcxNzYyMzg4Mw==",
+  "name": "http-load-ubuntu-24.04-arm-0",
+  "size_in_bytes": 9156198,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13717623883",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13717623883/zip",
+  "expired": false,
+  "digest": "sha256:35e69da39427ffdb767c7d712572edb8ac9bb88826ab8338f05cbf4cf4ed5bb1",
+  "created_at": "2026-11-09T22:56:50Z",
+  "updated_at": "2026-11-09T22:56:50Z",
+  "expires_at": "2027-02-07T22:49:28Z",
+  "workflow_run": {
+    "id": 42715271649,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "application-tooling-costs",
+    "head_sha": "e560937cbdb2b5e8072c7a2fe46fe2e4dd69e969"
+  }
+}

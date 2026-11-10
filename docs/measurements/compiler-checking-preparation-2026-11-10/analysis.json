@@ -1,0 +1,242 @@
+[
+  {
+    "arch": "arm",
+    "case": "definitions-16",
+    "emitMs": 278.735643,
+    "libraryMs": 209.173567,
+    "userMs": 0.47514,
+    "dependenciesMs": 3.27222,
+    "superclassesMs": 0.366215,
+    "fwpPeakKiB": 42056
+  },
+  {
+    "arch": "arm",
+    "case": "definitions-64",
+    "emitMs": 281.33614,
+    "libraryMs": 207.81138,
+    "userMs": 1.611033,
+    "dependenciesMs": 3.341815,
+    "superclassesMs": 0.366063,
+    "fwpPeakKiB": 43088
+  },
+  {
+    "arch": "arm",
+    "case": "definitions-256",
+    "emitMs": 304.368032,
+    "libraryMs": 207.417759,
+    "userMs": 7.761794,
+    "dependenciesMs": 3.603389,
+    "superclassesMs": 0.379048,
+    "fwpPeakKiB": 47072
+  },
+  {
+    "arch": "arm",
+    "case": "definitions-1024",
+    "emitMs": 421.760566,
+    "libraryMs": 206.298431,
+    "userMs": 58.980435,
+    "dependenciesMs": 4.450955,
+    "superclassesMs": 0.382167,
+    "fwpPeakKiB": 62716
+  },
+  {
+    "arch": "arm",
+    "case": "generic-8",
+    "emitMs": 278.08323,
+    "libraryMs": 208.727725,
+    "userMs": 0.273211,
+    "dependenciesMs": 3.264167,
+    "superclassesMs": 0.400807,
+    "fwpPeakKiB": 42068
+  },
+  {
+    "arch": "arm",
+    "case": "generic-32",
+    "emitMs": 281.3377,
+    "libraryMs": 208.078981,
+    "userMs": 0.77607,
+    "dependenciesMs": 3.302671,
+    "superclassesMs": 0.371006,
+    "fwpPeakKiB": 42968
+  },
+  {
+    "arch": "arm",
+    "case": "generic-128",
+    "emitMs": 298.148092,
+    "libraryMs": 206.955618,
+    "userMs": 3.565012,
+    "dependenciesMs": 3.355556,
+    "superclassesMs": 0.377535,
+    "fwpPeakKiB": 46616
+  },
+  {
+    "arch": "arm",
+    "case": "generic-512",
+    "emitMs": 400.79753,
+    "libraryMs": 207.997283,
+    "userMs": 30.120271,
+    "dependenciesMs": 3.66956,
+    "superclassesMs": 0.382711,
+    "fwpPeakKiB": 60900
+  },
+  {
+    "arch": "arm",
+    "case": "nesting-8",
+    "emitMs": 275.948842,
+    "libraryMs": 207.598839,
+    "userMs": 0.210825,
+    "dependenciesMs": 3.264792,
+    "superclassesMs": 0.395664,
+    "fwpPeakKiB": 41908
+  },
+  {
+    "arch": "arm",
+    "case": "nesting-32",
+    "emitMs": 276.573696,
+    "libraryMs": 207.545619,
+    "userMs": 0.860106,
+    "dependenciesMs": 3.220394,
+    "superclassesMs": 0.362646,
+    "fwpPeakKiB": 42192
+  },
+  {
+    "arch": "arm",
+    "case": "nesting-128",
+    "emitMs": 299.761438,
+    "libraryMs": 209.812726,
+    "userMs": 4.951769,
+    "dependenciesMs": 3.470289,
+    "superclassesMs": 0.376446,
+    "fwpPeakKiB": 46032
+  },
+  {
+    "arch": "arm",
+    "case": "nesting-512",
+    "emitMs": 459.454895,
+    "libraryMs": 207.568044,
+    "userMs": 48.908522,
+    "dependenciesMs": 5.017115,
+    "superclassesMs": 0.375366,
+    "fwpPeakKiB": 56420
+  },
+  {
+    "arch": "amd",
+    "case": "definitions-16",
+    "emitMs": 292.098354,
+    "libraryMs": 225.417514,
+    "userMs": 0.513255,
+    "dependenciesMs": 3.283561,
+    "superclassesMs": 0.362055,
+    "fwpPeakKiB": 42624
+  },
+  {
+    "arch": "amd",
+    "case": "definitions-64",
+    "emitMs": 296.937414,
+    "libraryMs": 223.599334,
+    "userMs": 1.802458,
+    "dependenciesMs": 3.22959,
+    "superclassesMs": 0.358267,
+    "fwpPeakKiB": 43752
+  },
+  {
+    "arch": "amd",
+    "case": "definitions-256",
+    "emitMs": 322.62276,
+    "libraryMs": 226.971075,
+    "userMs": 8.782949,
+    "dependenciesMs": 3.873981,
+    "superclassesMs": 0.365081,
+    "fwpPeakKiB": 47932
+  },
+  {
+    "arch": "amd",
+    "case": "definitions-1024",
+    "emitMs": 431.886433,
+    "libraryMs": 222.818386,
+    "userMs": 67.333084,
+    "dependenciesMs": 4.385174,
+    "superclassesMs": 0.338882,
+    "fwpPeakKiB": 63052
+  },
+  {
+    "arch": "amd",
+    "case": "generic-8",
+    "emitMs": 289.785231,
+    "libraryMs": 225.134084,
+    "userMs": 0.290381,
+    "dependenciesMs": 3.307125,
+    "superclassesMs": 0.347398,
+    "fwpPeakKiB": 42672
+  },
+  {
+    "arch": "amd",
+    "case": "generic-32",
+    "emitMs": 299.617806,
+    "libraryMs": 226.499108,
+    "userMs": 0.865514,
+    "dependenciesMs": 3.355064,
+    "superclassesMs": 0.399294,
+    "fwpPeakKiB": 43520
+  },
+  {
+    "arch": "amd",
+    "case": "generic-128",
+    "emitMs": 316.001896,
+    "libraryMs": 225.089881,
+    "userMs": 4.250994,
+    "dependenciesMs": 3.35261,
+    "superclassesMs": 0.351044,
+    "fwpPeakKiB": 47128
+  },
+  {
+    "arch": "amd",
+    "case": "generic-512",
+    "emitMs": 407.310027,
+    "libraryMs": 222.638677,
+    "userMs": 33.916408,
+    "dependenciesMs": 3.569323,
+    "superclassesMs": 0.459497,
+    "fwpPeakKiB": 61408
+  },
+  {
+    "arch": "amd",
+    "case": "nesting-8",
+    "emitMs": 289.397095,
+    "libraryMs": 224.326452,
+    "userMs": 0.22553,
+    "dependenciesMs": 3.168526,
+    "superclassesMs": 0.347458,
+    "fwpPeakKiB": 42568
+  },
+  {
+    "arch": "amd",
+    "case": "nesting-32",
+    "emitMs": 292.475511,
+    "libraryMs": 225.697525,
+    "userMs": 0.954489,
+    "dependenciesMs": 3.211746,
+    "superclassesMs": 0.342187,
+    "fwpPeakKiB": 42712
+  },
+  {
+    "arch": "amd",
+    "case": "nesting-128",
+    "emitMs": 310.279098,
+    "libraryMs": 224.970616,
+    "userMs": 5.721082,
+    "dependenciesMs": 3.503509,
+    "superclassesMs": 0.398934,
+    "fwpPeakKiB": 46464
+  },
+  {
+    "arch": "amd",
+    "case": "nesting-512",
+    "emitMs": 497.956959,
+    "libraryMs": 224.360371,
+    "userMs": 56.881964,
+    "dependenciesMs": 5.43961,
+    "superclassesMs": 0.341997,
+    "fwpPeakKiB": 56868
+  }
+]

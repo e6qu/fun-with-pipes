@@ -1,0 +1,41 @@
+{
+  "source": "e560937cbdb2b5e8072c7a2fe46fe2e4dd69e969",
+  "programSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+  "machine": "aarch64",
+  "phase": "check",
+  "session": 0,
+  "compilerSha256": "26247a1f890180a130a85a44965a082ca8b5f4ac33f01799211923b6adbf786e",
+  "generatorSha256": "0926e2827a228a63b88977761a58a270586ec7e91e5f920db88d21655fff27ba",
+  "gccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "gxxVersion": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "topology": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+  "allowedCpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "serverCpu": 0,
+  "generatorCpu": 1,
+  "clockTicksPerSecond": 100,
+  "environment": {
+    "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+    "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+    "FWP_LTO": "0",
+    "FWP_ADDR": "127.0.0.1:0"
+  },
+  "flags": [
+    "-march=armv8-a",
+    "-ffp-contract=off",
+    "-fno-fast-math",
+    "-fno-lto"
+  ],
+  "optimization": "O2",
+  "requestDeadlineSeconds": 5,
+  "shutdownDeadlineSeconds": 20,
+  "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+  "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+  "binarySha256": "064e8812fe3c25b02db0e25f399965a5b2c732cd53347c312e329c6ee5184726",
+  "binaryBytes": 2529336,
+  "generatedCSha256": "3f1537812b98c50c9571555bb8e8343a5d23ed5a8cc3430e55bbc80f6e26b633"
+}

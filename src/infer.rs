@@ -98,9 +98,33 @@ pub const COMPTIME_EFFECTS: &[&str] = &["IO", "FileIO", "Alloc", "Error"];
 type IResult<T> = Result<T, Diagnostic>;
 
 pub fn check_program(env: &mut Env, out: &mut Typed) {
-    check_superclasses(env, out);
-    let order = binding_order(env);
+    let phase = crate::compile_profile::phase("type-check");
+    phase.count("bindings", env.bindings.len());
+    phase.count("types", env.types.len());
+    {
+        let _phase = crate::compile_profile::phase("type-check-superclasses");
+        check_superclasses(env, out);
+    }
+    let order = {
+        let phase = crate::compile_profile::phase("type-check-dependencies");
+        let order = binding_order(env);
+        phase.count("groups", order.len());
+        order
+    };
     for group in order {
+        let library = group
+            .iter()
+            .filter(|&&i| env.bindings[i].module == "std")
+            .count();
+        let phase = crate::compile_profile::phase(if library == 0 {
+            "type-check-user-group"
+        } else if library == group.len() {
+            "type-check-library-group"
+        } else {
+            "type-check-mixed-group"
+        });
+        phase.count("bindings", group.len());
+        phase.count("library_bindings", library);
         let mut inf = Infer {
             env,
             out,
@@ -683,6 +707,8 @@ impl<'a> Infer<'a> {
         }
         let mut failed = false;
         let mut wanted_per: Vec<(usize, Vec<(Pred, Span)>)> = Vec::new();
+        let bodies = crate::compile_profile::phase("type-check-bodies");
+        bodies.count("bindings", group.len());
         for &i in group {
             let b = self.env.bindings[i].clone();
             self.scope = Scope {
@@ -700,6 +726,7 @@ impl<'a> Infer<'a> {
             }
             wanted_per.push((i, std::mem::take(&mut self.wanted)));
         }
+        drop(bodies);
         if !failed {
             if let Err(d) = self.resolve_deferred() {
                 self.env.errors.push(d);
@@ -708,6 +735,7 @@ impl<'a> Infer<'a> {
         }
         // Constraints of annotated bindings are checked one by one against
         // their signature; unannotated ones are solved for the group.
+        let constraints = crate::compile_profile::phase("type-check-constraints");
         let mut group_wanted = Vec::new();
         if !failed {
             for (i, w) in wanted_per {
@@ -755,6 +783,8 @@ impl<'a> Infer<'a> {
                 }
             }
         }
+        drop(constraints);
+        let validation = crate::compile_profile::phase("type-check-validation");
         if !failed {
             let sized = std::mem::take(&mut self.sized);
             for (id, sp, what) in std::mem::take(&mut self.size_uses) {
@@ -790,6 +820,8 @@ impl<'a> Infer<'a> {
                 failed = true;
             }
         }
+        drop(validation);
+        let _generalization = crate::compile_profile::phase("type-check-generalization");
         self.level = 0;
         for &i in group {
             let b = self.env.bindings[i].clone();
@@ -1174,6 +1206,7 @@ impl<'a> Infer<'a> {
     }
 
     fn resolve_deferred(&mut self) -> IResult<()> {
+        let _phase = crate::compile_profile::phase("type-check-deferred");
         loop {
             let mut progress = self.resolve_field_reqs(false)?;
             let pending = std::mem::take(&mut self.deferred);

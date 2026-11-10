@@ -1,0 +1,114 @@
+name: HTTP sustained load and driver controls
+on:
+  workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  load:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        session: ${{ fromJSON(inputs.phase == 'check' && '[0]' || '[1,2]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CC: gcc
+      CXX: g++
+      FWP_LTO: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Explicit selection and measurement reader controls
+        env:
+          PHASE: ${{ inputs.phase }}
+        run: |
+          test "$PHASE" = check || test "$PHASE" = measure
+          python3 scripts/test-http-load.py
+      - name: Native dependencies and driver
+        id: driver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev
+          rustc --edition 2021 -C opt-level=2 -D warnings scripts/load/http-load.rs -o http-load-driver
+          rustc --edition 2021 -C opt-level=2 -D warnings --test scripts/load/http-load.rs -o http-load-driver-tests
+          ./http-load-driver-tests
+      - name: Real driver controls for success, wrong bytes, partial replies and timeout
+        id: driver_controls
+        run: python3 -W error::ResourceWarning scripts/check-http-load-driver.py --driver ./http-load-driver --output http-driver-controls
+      - name: Build current compiler
+        id: compiler
+        if: ${{ !cancelled() }}
+        run: |
+          cargo fetch --locked
+          cargo build --locked --offline --bin fwp
+      - name: Retain source and toolchains
+        if: always()
+        run: |
+          git rev-parse HEAD > http-load-source.txt
+          rustc -Vv > http-load-toolchains.txt
+          gcc --version >> http-load-toolchains.txt
+          g++ --version >> http-load-toolchains.txt
+      - name: Fixed API load protocol
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && steps.driver_controls.outcome == 'success' }}
+        env:
+          PHASE: ${{ inputs.phase }}
+          SESSION: ${{ matrix.session }}
+        run: |
+          set -o pipefail
+          python3 -W error::ResourceWarning scripts/measure-http-load.py --compiler target/debug/fwp --driver ./http-load-driver --cc gcc --cxx g++ --output http-load --requests-per-connection 10000000 --phase "$PHASE" --session "$SESSION" 2>&1 | tee http-load.log
+      - name: Independent physical cleanup, socket and cancellation controls
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
+        run: |
+          set -o pipefail
+          cargo test --locked --offline --test http_server http_application::api_live_memory_o2 -- --exact --nocapture 2>&1 | tee http-cleanup.log
+      - name: Endpoint allocation traffic and broken-counter control
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
+        run: |
+          set -o pipefail
+          failed=0
+          cargo test --locked --offline --test http_server http_application::api_item_allocation_traffic_o2 -- --exact --nocapture 2>&1 | tee http-item-traffic.log || failed=1
+          cargo test --locked --offline --test http_server http_application::api_allocation_observer_rejects_missing_counts_o2 -- --exact --nocapture 2>&1 | tee http-count-control.log || failed=1
+          exit "$failed"
+      - name: Slow clients, actual write pressure and partial-response cleanup
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
+        run: |
+          set -o pipefail
+          cargo test --locked --offline --test http_server http_application::api_slow_clients_release_backpressured_output_o2 -- --exact --nocapture 2>&1 | tee http-pressure.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: http-load-${{ matrix.runner }}-${{ matrix.session }}
+          path: |
+            http-load-source.txt
+            http-load-toolchains.txt
+            http-load.log
+            http-load/
+            http-driver-controls/
+            http-cleanup.log
+            http-item-traffic.log
+            http-count-control.log
+            http-pressure.log
+            http-cleanup/
+          if-no-files-found: error

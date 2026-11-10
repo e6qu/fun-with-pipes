@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/gcc -march=x86-64 -ffp-contract=off -fno-fast-math -fno-lto "$@"

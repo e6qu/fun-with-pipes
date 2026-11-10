@@ -40,6 +40,11 @@ class EvidenceRejections(unittest.TestCase):
     def test_complete_observations_pass(self):
         self.assertEqual(self.verify(self.files)['commands'], 18510)
 
+    def test_changed_measured_source_with_updated_manifest_is_rejected(self):
+        for name in ['wordfreq.fwp', 'c.c', 'rust.rs']:
+            with self.subTest(name=name), self.assertRaisesRegex(AssertionError, name):
+                self.verify(self.rewrite(name, self.files[name] + b'\nchanged\n'))
+
     def test_missing_observation_is_rejected(self):
         rows = self.files['commands.jsonl'].splitlines()
         with self.assertRaises(AssertionError):

@@ -148,10 +148,12 @@ static u128 fwp_float_total_key(int k, V v) {
 #endif
 
 static void fwp_fmt_u128(char *out, u128 x) {
-    char tmp[64];
+    /* 2^128 - 1 has 39 decimal digits. Bound the conversion by that
+     * capacity so inlined callers retain the same provable write limit. */
+    char tmp[39];
     int i = 0;
-    if (x == 0) tmp[i++] = '0';
-    while (x > 0) { tmp[i++] = (char)('0' + (int)(x % 10)); x /= 10; }
+    do { tmp[i++] = (char)('0' + (int)(x % 10)); x /= 10; }
+    while (x > 0 && i < (int)sizeof(tmp));
     int j = 0;
     while (i > 0) out[j++] = tmp[--i];
     out[j] = 0;
@@ -167,18 +169,17 @@ static void fwp_fmt_i128(char *out, i128 x) {
 }
 
 static void fwp_fmt_duration(char *out, i128 ns) {
+    char n[41]; /* 39 digits, optional minus sign and terminating NUL. */
     static const struct { const char *u; long long s; } units[] = {
         {"h", 3600000000000LL}, {"min", 60000000000LL}, {"s", 1000000000LL},
         {"ms", 1000000LL}, {"us", 1000LL}};
     for (int i = 0; i < 5; i++) {
         if (ns != 0 && ns % units[i].s == 0) {
-            char n[64];
             fwp_fmt_i128(n, ns / units[i].s);
             sprintf(out, "%s%s", n, units[i].u);
             return;
         }
     }
-    char n[64];
     fwp_fmt_i128(n, ns);
     sprintf(out, "%sns", n);
 }

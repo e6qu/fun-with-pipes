@@ -1,0 +1,150 @@
+name: Application tooling checks
+
+on:
+  workflow_call:
+    inputs:
+      evidence_run:
+        description: Previous application run to inspect, or empty for a first run
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  applications:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: gcc
+      FWP_LTO: '0'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+      PYTHONPATH: sdk/python
+      FWP_OBJDUMP: llvm-objdump
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Read previous application diagnostics on the runner
+        if: inputs.evidence_run != '' && runner.arch == 'ARM64'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import io
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+          run = os.environ['EVIDENCE_RUN']
+          assert run.isdecimal()
+          def api(path):
+              return subprocess.check_output(['gh', 'api', '--allow-escape-sequences', 'repos/e6qu/fun-with-pipes/' + path])
+          artifacts = json.loads(api(f'actions/runs/{run}/artifacts?per_page=100'))
+          assert artifacts['total_count'] == len(artifacts['artifacts'])
+          records = []
+          for artifact in artifacts['artifacts']:
+              if not artifact['name'].startswith('application-tooling-'):
+                  continue
+              data = api(f"actions/artifacts/{artifact['id']}/zip")
+              assert artifact['digest'] == 'sha256:' + hashlib.sha256(data).hexdigest()
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  assert archive.testzip() is None
+                  for name in archive.namelist():
+                      if not name.endswith('/report.json'):
+                          continue
+                      report = json.loads(archive.read(name))
+                      for variant in report['variants']:
+                          row = {'artifact': artifact['id'], 'source': artifact['workflow_run']['head_sha'],
+                                 'report': name, 'level': variant['optimization'], 'stderr': variant['compiler_stderr']}
+                          records.append(row)
+                          print(json.dumps(row), flush=True)
+          assert records, 'no application reports found'
+          Path('previous-application-diagnostics.json').write_text(json.dumps(records, indent=2) + '\n')
+          PY
+      - name: Native compiler and inspection dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm libssl-dev
+      - name: Build production compiler
+        id: compiler
+        run: cargo build --locked --bin fwp
+      - name: Source formatting
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          cargo fmt --all -- --check
+          "$FWP_TEST_BIN" fmt --check examples/wordfreq.fwp tests/run/wordfreq.fwp
+      - name: Compiler observation lint
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo clippy --lib --bin fwp --test compiler_options --test integer_output -- -D warnings
+      - name: Compiler observation command contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --test compiler_options 2>&1 | tee application-compiler-options.log
+      - name: Three applications through native and interactive tools
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -p test_applications.py -v 2>&1 | tee application-tests.log
+      - name: Integer formatting boundaries and existing output contracts
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo test --test integer_output 2>&1 | tee application-integers.log
+      - name: Retain C and actual native instructions at four levels
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          python3 scripts/check-application-disassembly.py --fwp "$FWP_TEST_BIN" --cc gcc --objdump llvm-objdump --timeout 180 --output application-code 2>&1 | tee application-code.log
+      - name: Real notebook browser applications
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && runner.arch == 'X64' }}
+        env:
+          FWP_NOTEBOOK_EVIDENCE: notebook-evidence
+        run: |
+          set -o pipefail
+          python3 -m venv "$RUNNER_TEMP/fwp-tools-env"
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m pip install ./sdk/python -r sdk/python/browser/requirements.txt
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m playwright install --with-deps chromium
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" sdk/python/browser/check_notebook.py 2>&1 | tee application-browser.log
+      - name: Retain exact source and toolchain
+        if: always()
+        run: |
+          git rev-parse HEAD > application-source.txt
+          gcc --version > application-toolchain.txt
+          rustc -Vv >> application-toolchain.txt
+          uname -a >> application-toolchain.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: application-tooling-${{ matrix.runner }}
+          path: |
+            application-source.txt
+            application-toolchain.txt
+            application-tests.log
+            application-integers.log
+            application-compiler-options.log
+            previous-application-diagnostics.json
+            application-code.log
+            application-code/
+            application-browser.log
+            notebook-evidence/
+          if-no-files-found: error

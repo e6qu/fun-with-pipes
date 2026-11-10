@@ -41,6 +41,92 @@ must themselves be compiled before they can generate the final program. Thus
 “macros run before type checking” means before checking the final expanded user
 program, not that macro implementations are untyped.
 
+## Observe compiler phases
+
+`--profile-compile` records the actual build path without changing the generated
+program. Select a new report file explicitly; an existing file is rejected.
+For example, on a native host with GCC installed:
+
+```sh
+CC=gcc FWP_LTO=0 fwp build examples/wordfreq.fwp -O2 -o wordfreq --profile-compile compiler.json
+```
+
+The report file is created after compilation finishes, so it cannot change
+which source files the compiler sees. It refuses the root source and output
+destinations, including auxiliary C/C++ and browser loader files.
+
+The JSON report records phase start/end times in nanoseconds, parent phase IDs,
+source/token/declaration counts where available, function counts and emitted C
+bytes. It also records the build status, including ordinary compilation errors.
+Invalid command-line settings fail before observation starts.
+
+- **Inclusive time** includes nested work. **Exclusive time** subtracts direct
+  children. For example, an illustrative 20 ms macro phase containing 14 ms of
+  checking/lowering has 6 ms exclusive time. Adding 20 and 14 would double-count
+  that nested work; these numbers are an explanation, not a measured result.
+- Bundled-library parsing and input/import parsing have separate parent phases.
+  `parse-module` includes lexing and counts the end-of-file token explicitly.
+- `optimization` covers the existing ordered passes. Debug builds additionally
+  report `debug-ownership-verification`; release benchmarks must not silently
+  mix that work into a comparison with release compilation.
+- `representation-and-ownership` ends after entry lifetime checks and code
+  generator setup. `c-emission` includes on-demand helper analysis while producing
+  C; it is not a measurement of string formatting alone.
+- `native-build` (or `wasm-build` for a WebAssembly target) includes source/library
+  preparation and compilation/linking. `c-toolchain-process` records the C driver.
+  `exact-float-toolchain-process` separately records exact-arithmetic tool queries,
+  C/C++ helper builds and archive commands, including cache-identity checks.
+  A cached library can still require identity queries. Other preparation remains
+  in the enclosing build phase's exclusive time.
+- Exclusive phase times plus `unassigned_ns` equal the observed build action's
+  `wall_ns`. That interval excludes observer setup, report serialization, process
+  startup and compilation-worker creation. Measure complete child-process time
+  separately when comparing compiler overhead.
+
+The reporter runs on the compilation worker and uses no clock reads when it is
+disabled. It does not measure per-phase CPU time, peak memory or runtime program
+performance. Whole-process RSS and observer overhead require the separate
+[compiler-cost protocol](measurements/application-tooling.md#compiler-phases-and-growth).
+The prepared [checking-cost investigation](measurements/compiler-checking.md)
+adds children beneath `type-check`: superclass validation, dependency ordering
+and each library/user/mixed binding group. A group contains mutually dependent
+definitions; its classification describes source modules, not independence from
+the rest of the type environment. Group counts sum to the parent's binding count.
+Use the parent's inclusive time for all type checking; its exclusive time now
+excludes those children. [Focused native checks](measurements/compiler-checking-preparation-2026-11-10/README.md)
+pass on Linux ARM64/AMD64. The group report further separates expression bodies,
+deferred operations, constraints, validation and generalization, with remaining
+group setup/cleanup explicit. [Their focused checks also pass](measurements/compiler-checking-parts-2026-11-10/README.md).
+Full platform verification belongs to this combined
+delivery batch. The earlier coarse report's overhead measurement does not cover
+these additional spans.
+The native compiler supports one ordinary build, including `--emit-c`; profiling
+rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
+Cross-target output from a native compiler remains a build of that selected
+target, not execution on its hardware.
+
+## Specialization bounds
+
+Specialization makes concrete versions of a generic function. For example,
+`keep : a -> a` used with 512 distinct record types needs 512 concrete versions
+before optimization. Those independent uses do not imply recursion.
+
+The compiler tracks which queued specialization requested each new version,
+including work lifted from `fn` and `match`. Repeated use of an already-created
+version reuses it. The existing limit of 500 dependent instantiations of one
+binding applies along an expansion path, rather than across unrelated callers.
+The parent links take space proportional to created instances; checking a new
+instance walks its ancestry. This is a resource bound, not a proof that arbitrary
+polymorphic recursion terminates or that compilation is always linear.
+
+The first growth run exposed the old global cap incorrectly rejecting 512
+independent uses. The corrected case passes on both Linux architectures; the
+[checks](measurements/compiler-http-checks-2026-11-09/README.md) retain the original
+results. Corrected direct/mutual recursion fixtures and all timed growth sessions
+[now pass](measurements/application-compiler-load-2026-11-10/README.md).
+
+## Lowering and execution details
+
 Self-tail analysis follows fusion, before native reference-count insertion.
 It marks eligible functions without changing their expression trees: native
 representation selection still sees their original record/variant fields and

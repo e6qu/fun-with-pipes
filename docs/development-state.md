@@ -1,95 +1,123 @@
 # Current work
 
-**Next:** run and audit the final nine production jobs and documentation for
-[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273), fixing every failure
-before squash merge. Use the PR's exact head, not an earlier preparation source.
-All focused comparison/observer checks now pass; milestone 4 still needs final
-delivery gates. Do not rerun unchanged timing samples to obtain qualification.
+**Next:** monitor and audit the final native gates for the combined repair and
+compiler-checking work in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274).
+Audit all failures before the push. Merge only after nine production jobs,
+documentation and the complete-log audit pass for that exact final commit.
 
-Worktree: `.worktrees/recording-capacity-gate`, branch `ownership-buffer-review`.
-The complete batch goes to the normal PR branch `ownership-peer-comparisons`.
-Its prior head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011` is an ancestor. Resolve
-the current PR head and its runs when resuming; do not reuse earlier green gates.
-Preserve unrelated root-worktree changes.
+Worktree `.worktrees/application-milestone`, branch `application-tooling-costs`.
+The branch combines the repair and `compiler-checking-costs` preparation. Its
+delivery candidate is retained by `roadmap/application-delivery-format-2026-11-10`.
+It supersedes the failed matrix at `a0261f9ccaa4a87651fbcae11966afee68208d4d`;
+the seven earlier passing jobs are not passing gates for this new combined source.
+Preserve unrelated root-worktree changes and the preparation worktree's local
+handoff. There is one active PR; no separate preparation PR.
 
 ## Roadmap status
 
 | Step | Status | Delivered | Remaining |
 |---|---|---|---|
-| 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
+| 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffer/closure comparisons; weak phases, storage/reuse and service timings; parser cleanup repair, process accounting and heap/region traces | Final production/docs/audit gates |
-| 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
+| 4 | Verified | #273 ownership/peer comparisons and parser cleanup repair | Recorded measurement limits still apply |
+| 5 | In progress | Applications, compiler reports/growth, HTTP load and verified Windows pressure repair | Exact-head final delivery |
 
-Keep original noisy/unmet timing results. Fewer operations or smaller binaries do
-not complete runtime acceptance. Do not rerun unchanged samples for qualification.
+#273 merged as `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`; its
+[receipt](measurements/ownership-peer-final-gates-2026-11-09/README.md) retains
+passing source, all gates and audit. Original milestone 1–3 timing limits remain
+open. Do not repeat unchanged noisy measurements to obtain qualification.
 
-## Final observer checks
+## Current failure and focused repair
 
-[Run 42686754531](https://github.com/e6qu/fun-with-pipes/actions/runs/42686754531)
-passes at `bb0add788321eb30068889b4961667d1f858d3a1`, tag
-`roadmap/parser-mapped-boundary-2026-11-09`: AMD64 `129395531588`, ARM64
-`129395531599`. [Documentation 42686761614](https://github.com/e6qu/fun-with-pipes/actions/runs/42686761614),
-job `129395546461`, also passes. Both native jobs pass eight parser traces,
-four actual missing releases, successful mapped resize and two-arena retry.
-All 35 complete command records and 36 compact file hashes per host pass audit.
+Combined head `88a3036592aba12030b9e74d4b506de502a4115c` exposed one formatting
+omission in the newly fixed timeout panic. Full-tree `cargo fmt --all -- --check`
+reproduced exactly that difference; formatting it and repeating the full check
+passes under the local guard. The repair has no behavior change.
+Production `42747990312` reports only formatting failures in both Linux and both
+regular macOS jobs so far. Benchmark `129604605646` and documentation
+`42747989925`/`129604600440` pass; both full logs audited, with only intentional
+runner controls in docs. Native work continues. After replacement jobs exist,
+cancel the superseded run and audit all available logs; never count cancellations
+as passes. Record any additional failure and fix it before final acceptance.
 
-The original mapped observation stopped inside an inlined helper with no usable
-parameter. The repair observes the real `__mremap` call and confirms the returned
-extent against the final live header, without reading the old mapping after a
-move. The control warms unrelated libc thread-cache metadata before measurement;
-the reader rejects unattributed internal storage. [Original failures, complete
-passing records and scope limits](measurements/parser-allocator-paths-2026-11-09/README.md).
+Production `42730888995` at published head `a0261f9cc` is complete:
+seven jobs pass; both Windows jobs fail only
+`http_application::api_slow_clients_release_backpressured_output_o2`.
+All nine complete logs have been inspected: no other failed target or compiler
+warning. Docs `42730888467`, job `129548275958`, passes; deliberate runner-failure
+controls are expected. The passing matrix-wide log audit has not been run.
 
-## Verified comparison results
+[The repair contract](measurements/http-backpressure.md) records the exact
+failure and acceptance. Both Windows server logs show eight connections waiting
+for reads, no blocked writes and no first cleanup checkpoint. Do not infer a
+runtime deadlock or accept absence of backpressure as a successful test.
 
-| Work | Source / native run | Result and retained evidence |
-|---|---|---|
-| Complete callback service | `069e76ed8` / `42675215554` | Both sessions and six corruption controls pass on each host. Full delivery of 4,096 messages takes 18.65–20.23× C and 5.12–6.70× Swift. [Time, RSS, allocation and build scopes](measurements/weak-callback-time-2026-11-09/README.md). |
-| Actual C/Rust parser allocations | `62775d559` / `42680540810` | Eight traces and four missing-release controls pass per host. Largest requested peak is 425,984 bytes, 30% above endpoint capacity. [All raw records](measurements/parser-native-allocator-2026-11-09/README.md). |
-| Actual fwp heap/region events | `823791751` / `42682917578` | Ten builds, eight O1/O2 traces, eight wrong results and 24 actual release/observer faults pass per host. Largest charged peak is 458,704 bytes above baseline, during tokenization; evaluation allocates nothing. [Tables and complete records](measurements/parser-heap-events-2026-11-09/README.md). |
-| Parser process accounting | `6d1608c4f` / `42673573956`, attempt 3 | Both hosts pass six parser tests, snapshots and seven corruption controls. Earlier attempts failed internally before jobs. [Kernel policy, RSS and mapping scopes](measurements/parser-process-accounting-2026-11-09/README.md). |
-| Service allocation profiles | `c0ac432fc` / `42664664795`; audit `f3f023820` / `42669442687` | Both native profiles and all 954 command records pass. [Payloads, metadata and actual missing releases](measurements/weak-callback-profiles-2026-11-09/README.md). |
+- Original Windows jobs: ARM64 `129548282561`, AMD64 `129548282333`.
+- Failure-group artifacts: ARM64 `13729108766`, AMD64 `13730116338`.
+- Server artifacts: ARM64 `13729304404`, AMD64 `13730133131`; only small stderr,
+  RSS and exit-status members were downloaded from these large archives.
+- Original-send diagnostic: source `9054528ba`, immutable tag
+  `roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`, ARM64 job
+  `129586576306`. It confirms one successful send of all 8,388,717 bytes;
+  the small requested send buffer did not force a partial/blocked send.
+  It also reproduces the diagnostic mutex-poisoning bug repaired below.
+- Candidate: source `924eb8795`, tag `roadmap/http-pressure-bounds-2026-11-10`.
+  Diagnostic sends are capped at 16 KiB; the unread Windows client requests and
+  verifies a 256 KiB receive buffer. Same deadlines, exact bytes, real would-block
+  branch, other-client progress and cleanup. Ordinary runtime writes are unchanged.
+  Focused ARM64 `42744070652` and AMD64 `42744095817` both pass: 11 HTTP tests,
+  linting, real blocked writes in all six large-response cohorts, 72/72 sockets
+  closed, zero final managed bytes. Complete logs are clean; the
+  [receipt](measurements/http-pressure-repair-2026-11-10/README.md) retains originals
+  and repair evidence. RSS rises at most 96 KiB on ARM64 and 172 KiB on AMD64.
+- Subsequent local `e58842d01` fixes diagnostic error reporting: clone the log
+  before panicking, so the mutex is released and cleanup can retain evidence.
+  This does not change the candidate's success path. Final gates must test it.
+- Failure logs now publish before the next Windows test group.
 
-Documentation passes for all five rows. Complete native logs have no outstanding
-compiler/debugger warnings. Receipts retain original failures and exact job/artifact
-IDs, including the service ARM link repair and parser debugger repairs.
+## Completed measurements and prepared compiler work
 
-[Weak lookup timings](measurements/weak-operation-time-2026-11-09/README.md) and
-[the allocation census](measurements/weak-operation-census-2026-11-09/README.md)
-separate a temporary 16-byte successful-lookup result from target/weak metadata.
-[Buffer phases](measurements/returned-buffer-time-2026-11-09/README.md) retain both
-sessions and all original noisy cases. ARC-operation counts, maximum dynamic
-stack and a universal allocator-internal peak remain unmeasured. Failed mapped
-remap followed by copy is a reader model, not native evidence.
+[Application/compiler/load results](measurements/application-compiler-load-2026-11-10/README.md)
+retain the original full source `7a65a8bb2ac23df0554610dfb90609c5fed30ee8`, ten
+focused logs, all 48 compiler comparisons and 34 HTTP trials. All timed runs pass
+at that source. Raw HTTP streams remain in identified artifacts until February 8,
+2027. Keep CPU models separate and distinguish tracked summaries from archives.
+No unchanged timing reruns are needed for the diagnostic-only transport repair.
 
-## Compiler repair and final delivery
+[Initial checking attribution](measurements/compiler-checking-preparation-2026-11-10/README.md)
+at `f43dfcd1c52292dfe84253cba5801bf3749597e6` passes application/report contracts
+and all growth/error observations on both Linux architectures: runs `42736751196`
+and `42737726682`. Library checking accounts for about 206–227 ms; ordering 3–5 ms.
 
-The consuming parser worker and owning function entry both released its input.
-The entry now follows `rc::consumes_arg`. Source `ee30d13b0`, run `42645911091`,
-passes both Linux hosts, six parser tests, primitive inventory and actual extra-drop
-controls. Regressions cover caller aliases, parse errors and allocation failure.
-[Repair evidence](measurements/parser-entry-cleanup-2026-11-09/README.md).
-Remaining platforms require the final exact-head gates.
+[Complete applications](measurements/compiler-applications-2026-11-10/README.md)
+at `ea531da149d085dbb146a64cd6ff1f92b61b170b`, run `42741790147`, also pass.
+All eight ordinary/observed builds preserve exact C. Library checking costs
+208–234 ms; the full HTTP compile costs 1.2–1.4 seconds. These single observations
+are attribution, not speedup or observer-overhead measurements.
 
-Source comparisons confirm no production/compiler or service timing-source changes
-since `069e76ed8`, and no generated fwp heap-observer source changes since
-`823791751`. The stricter heap reader adds a useful missing-allocation diagnostic;
-all original fault streams still fail for their intended causes. Earlier
-[passing production head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
-does not verify this later batch.
+Finer parts (bodies, deferred operations, constraints, validation, generalization)
+are prepared at `7761a41544c0c9538880f75cb5b1a177de3d2f6c`, tag
+`roadmap/compiler-checking-parts-2026-11-10`, run `42743138148`. ARM64 job
+`129588849571` and AMD64 `129588850096` both pass. They verify eight report
+contracts at production Rust O1, then use release fwp on all four applications.
+No solver algorithm or trait lookup changed. Select an optimization only from
+attributed costs under the [investigation contract](measurements/compiler-checking.md).
+The original coarse report's measured overhead does not cover these added spans.
+The [receipt](measurements/compiler-checking-parts-2026-11-10/README.md) retains
+both clean logs and all group partitions. ARM64 body checking is 156–158 ms;
+AMD64 (different EPYC 9V45 host) is 105–110 ms. Bodies dominate, validation is
+next. These are observed boundaries, not ordinary timings or function-level CPU
+attribution. Keep the new observer's overhead explicitly unmeasured.
 
-## Local verification and resources
+## Delivery and local limits
 
-- Through `python3 scripts/local-guard.py`: eight native-allocator reader tests,
-  five fwp heap-reader tests, Python syntax checks and 433 documentation link sets,
-  106 immutable preparation pairs and all five roadmap rows pass.
-- All retained positive traces reconstruct. All 61 fwp command records and 24 fault
-  causes per host are checked. A bounded download stopped before one duplicate
-  generated C file; source reconstruction matches its original native hash.
-  Complete compact records are retained without raising any limits.
-- No local fwp compiler build, full suite or benchmark ran. Native execution stays
-  on GitHub. Preserve 64 GiB free disk, 2 GiB target data, 1 GiB workload RSS and
-  the guard's 180-second limit. Last observed disk free space: about 126 GiB.
-- Keep the numerical dispatcher below 512,000 bytes; it is currently 502,158.
+After final production/docs pass, dispatch `suite=production-log-audit` with the
+exact source, production run/attempt, documentation job and `audit_host=all`.
+Squash-merge with one subject of at most 80 characters and an empty body, without
+trailers or attribution. Verify the merged tree/message and continue PLAN.md.
+
+Guarded formatting, actionlint and roadmap checks pass for the repair/preparation.
+No local fwp build or full suite ran. Keep local checks serial through
+`python3 scripts/local-guard.py`; retain 64 GiB free, target data below 2 GiB,
+sampled RSS below 1 GiB and the 180-second deadline. Do not raise limits.

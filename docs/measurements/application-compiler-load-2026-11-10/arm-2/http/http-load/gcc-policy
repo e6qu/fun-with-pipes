@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/gcc -march=armv8-a -ffp-contract=off -fno-fast-math -fno-lto "$@"

@@ -9,6 +9,27 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
+now separates bodies, constraints and validation on four complete programs.
+Bodies dominate; no optimization or ordinary-speedup claim follows yet.
+[Windows backpressure](http-backpressure.md) records a test assumption exposed
+by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
+
+[The complete ownership comparison passes all delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
+[Milestone 5 measurements now pass](application-compiler-load-2026-11-10/README.md):
+all 48 compiler comparisons qualify under their copy controls, and 34 HTTP trials
+complete with zero failed requests and flat sampled server memory. The report
+separates compiler phases, GCC cost, HTTP latency and differing host CPUs.
+Final platform delivery remains in progress; the [protocol](application-tooling.md)
+retains the explicit measurement settings.
+[Application workflows pass on both Linux architectures](application-workflows-2026-11-09/README.md).
+
+[Compiler and HTTP correctness](compiler-http-checks-2026-11-09/README.md) now
+verifies all growth sizes, exact responses, allocation controls and slow-client
+cleanup. The corrected recursive fixtures now pass on both native Linux hosts.
+[Preparation](compiler-http-preparation-2026-11-09/README.md) retains the original
+generic-cap and connection-policy failures.
+
 [Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
 now separate construction, reading, release and RSS. ARM64 shows lower overall
 time on some large cases but slower reading and costly empty-array churn. Many

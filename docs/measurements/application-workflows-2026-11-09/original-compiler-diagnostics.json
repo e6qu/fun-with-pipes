@@ -1,0 +1,58 @@
+[
+  {
+    "artifact": 13713551833,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O0",
+    "stderr": ""
+  },
+  {
+    "artifact": 13713551833,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O1",
+    "stderr": ""
+  },
+  {
+    "artifact": 13713551833,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O2",
+    "stderr": ""
+  },
+  {
+    "artifact": 13713551833,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O3",
+    "stderr": "In function \u2018fwp_fmt_u128\u2019,\n    inlined from \u2018fwp_fmt_i128\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2107:9,\n    inlined from \u2018fwp_fmt_i128\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2104:13,\n    inlined from \u2018fwp_fmt_duration\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2126:5,\n    inlined from \u2018fwp_write\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2273:13:\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2100:28: warning: writing 16 bytes into a region of size 15 [-Wstringop-overflow=]\n 2100 |     while (i > 0) out[j++] = tmp[--i];\n      |                   ~~~~~~~~~^~~~~~~~~~\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c: In function \u2018fwp_write\u2019:\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2125:10: note: at offset 49 into destination object \u2018n\u2019 of size 64\n 2125 |     char n[64];\n      |          ^\n"
+  },
+  {
+    "artifact": 13712373073,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O0",
+    "stderr": ""
+  },
+  {
+    "artifact": 13712373073,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O1",
+    "stderr": ""
+  },
+  {
+    "artifact": 13712373073,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O2",
+    "stderr": ""
+  },
+  {
+    "artifact": 13712373073,
+    "source": "d11df79f042c7af01c93a6fd3ce59568b28e3624",
+    "report": "application-code/words/report.json",
+    "level": "O3",
+    "stderr": "In function \u2018fwp_fmt_u128\u2019,\n    inlined from \u2018fwp_fmt_i128\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2107:9,\n    inlined from \u2018fwp_fmt_i128\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2104:13,\n    inlined from \u2018fwp_fmt_duration\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2126:5,\n    inlined from \u2018fwp_write\u2019 at /home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2273:13:\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2100:28: warning: writing 32 bytes into a region of size 31 [-Wstringop-overflow=]\n 2100 |     while (i > 0) out[j++] = tmp[--i];\n      |                   ~~~~~~~~~^~~~~~~~~~\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c: In function \u2018fwp_write\u2019:\n/home/runner/work/fun-with-pipes/fun-with-pipes/application-code/words/native.c:2125:10: note: at offset 33 into destination object \u2018n\u2019 of size 64\n 2125 |     char n[64];\n      |          ^\n"
+  }
+]
