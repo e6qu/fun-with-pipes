@@ -112,7 +112,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE/perf-source"
           python3 scripts/prepare-perf-symbol-reader.py --checkout perf-source --output service-perf-build
           make -C perf-source/tools/perf -j2 CC=gcc CXX=g++ \
-            NO_LIBBFD=1 NO_LIBUNWIND=1 NO_LIBPYTHON=1 NO_LIBPERL=1 \
+            NO_LIBBFD=1 NO_LIBUNWIND=1 NO_LIBPYTHON=1 NO_LIBPERL=1 NO_JEVENTS=1 BUILD_BPF_SKEL=0 \
             NO_LIBBABELTRACE=1 NO_LIBTRACEEVENT=1 NO_LIBPFM4=1 NO_LIBNUMA=1 \
             NO_GTK2=1 NO_JVMTI=1 NO_SLANG=1 NO_LIBAUDIT=1 NO_LIBCRYPTO=1 NO_LIBBPF=1 \
             2>&1 | tee service-perf-build/build.log

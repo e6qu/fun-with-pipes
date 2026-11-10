@@ -54,6 +54,11 @@ replay controls pass, including altered-period, wrong-phase and skipped-pilot fa
 The test exposed differing unresolved/resolved temporary paths on macOS; matching
 the actual retained recording path fixes that without changing source identities.
 
+Run `42780806078` at `830e0b6e9` reaches perf configuration, then both hosts stop
+because hardware-event database generation expects `python`. Disable that unused
+database explicitly (`NO_JEVENTS=1`) and BPF skeletons (`BUILD_BPF_SKEL=0`); the
+saved recordings use software CPU-clock events. Both complete logs are retained.
+
 The repair builds Linux perf source
 `e8f897f4afef0031fe618a8e94127a0934896aba` with exactly one condition changed:
 require the `0x` prefix before reading an end marker. GNU addr2line stays explicit.

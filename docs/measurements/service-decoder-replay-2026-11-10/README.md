@@ -58,3 +58,12 @@ the Swift image has compilers but no `make`. Both jobs (`129707755121` AMD,
 The workflow now explicitly installs `make`. The complete
 [AMD](gnu-build-amd.log.gz)/[ARM](gnu-build-arm.log.gz) logs retain both failures;
 optional bison/g++ manual-page notices are the only other package warnings.
+
+Run `42780806078` at `830e0b6e9` (`roadmap/service-cpu-reader-audit-2026-11-10`)
+reaches perf configuration on both hosts. It rejects a missing `python` executable
+for hardware-event database generation and warns that BPF skeletons were disabled.
+This experiment uses saved software CPU-clock events, with neither hardware-event
+generation nor BPF. The build now explicitly sets `NO_JEVENTS=1` and
+`BUILD_BPF_SKEL=0`. [AMD](gnu-config-amd.log.gz)/[ARM](gnu-config-arm.log.gz) logs
+retain the original configuration failures (jobs `129710136119`/`129710136553`).
+No recording was decoded or rerun in these setup attempts.
