@@ -14,7 +14,14 @@ measurement scripts/workflows/docs: no compiler algorithm or runtime change.
 Use the new `compiler-sampling` suite on this branch; retain all four original
 applications, raw recordings and unknown samples. Review actual hot functions
 before selecting an optimization. Parser controls and workflow lint pass locally
-under the guard; no local fwp build or full suite ran. Native sampling is pending.
+under the guard; no local fwp build or full suite ran.
+Initial source `f26b3723a0ac5049bfaa40180593be1618e8695c`, tag
+`roadmap/compiler-cpu-samples-2026-11-10`, run `42750772791`, failed on both hosts.
+All completed logs and all four ARM64 recording errors are audited. AMD64 needs
+Ubuntu 26.04's separate profiler package; ARM64 rejects the implicit extended
+register recording. The revised workflow asserts OS versions and explicitly
+selects packages and ordinary registers. Verify this repair before interpretation
+of samples; no compiler or runtime behavior changed.
 Preserve unrelated root changes and the saved preparation handoff stash
 `451bbf713d451f2d62d80fd7676839404875846a`.
 

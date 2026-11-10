@@ -43,6 +43,7 @@ def main():
     parser.add_argument('--frequency', type=int, required=True)
     parser.add_argument('--stack-bytes', type=int, required=True)
     parser.add_argument('--ring-bytes', type=int, required=True)
+    parser.add_argument('--user-registers', required=True)
     parser.add_argument('--deadline', type=float, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -65,6 +66,7 @@ def main():
         kernel=platform.platform(), topology=subprocess.check_output(['lscpu'], text=True),
         affinity=sorted(os.sched_getaffinity(0)), event='cpu-clock:u', frequency=args.frequency,
         stackBytes=args.stack_bytes, ringBytes=args.ring_bytes, deadlineSeconds=args.deadline,
+        userRegisters=args.user_registers,
         releaseDebug=os.environ.get('CARGO_PROFILE_RELEASE_DEBUG'),
         scope='One ordinary and one sampled fresh-process emit-C build for each original application. '
               'No phase reporter, GCC compilation or application execution. User CPU stacks include '
@@ -91,6 +93,7 @@ def main():
                 if sampled:
                     command = [str(perf), 'record', '--event', 'cpu-clock:u', '--freq', str(args.frequency),
                         '--strict-freq', '--inherit', '--call-graph', f'dwarf,{args.stack_bytes}',
+                        '--user-regs', args.user_registers,
                         '--mmap-pages', str(args.ring_bytes)+'B', '--no-buildid-cache',
                         '--output', str(directory/'perf.data'), '--', *command]
                 entry = dict(role=role, command=command)
@@ -100,7 +103,7 @@ def main():
                 entry['status'] = result.returncode
                 (directory/(role+'.stdout')).write_bytes(result.stdout)
                 (directory/(role+'.stderr')).write_bytes(result.stderr)
-                assert result.returncode == 0 and not result.stdout, entry
+                assert result.returncode == 0 and not result.stdout, (entry, result.stderr.decode())
                 if sampled:
                     assert all(re.fullmatch(r'\[ perf record: (Woken up \d+ times to write data|Captured and wrote .+) \]', line)
                                for line in result.stderr.decode().splitlines()), result.stderr
