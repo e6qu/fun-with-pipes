@@ -1,8 +1,19 @@
 name: Compiler CPU samples on maintained applications
 on:
   workflow_call:
+    inputs:
+      replay:
+        type: boolean
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
 permissions:
   contents: read
+  actions: read
 jobs:
   samples:
     name: samples (${{ matrix.runner }})
@@ -28,7 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+        if: ${{ !inputs.replay }}
       - uses: actions/cache@v6
+        if: ${{ !inputs.replay }}
         with:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
@@ -72,6 +85,7 @@ jobs:
               output.write(f'COMPILER_CPU={min(os.sched_getaffinity(0))}\n')
           PY
       - name: Diagnose profiler event and stack support before building
+        if: ${{ !inputs.replay }}
         env:
           COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
           PYTHONPATH: scripts
@@ -115,17 +129,35 @@ jobs:
           assert records[2]['status'] == 0, 'configured recording unsupported; inspect retained event attributes'
           PY
       - name: Verify report readers and build the release compiler
+        if: ${{ !inputs.replay }}
         run: |
           python3 scripts/test-compiler-sampling.py
           python3 scripts/test-compiler-scaling.py
           cargo fetch --locked
           cargo build --release --locked --offline --bin fwp
       - name: Sample each original application compile
+        if: ${{ !inputs.replay }}
         env:
           COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
         run: |
           set -o pipefail
           python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --demangler /usr/bin/c++filt --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
+      - uses: actions/download-artifact@v8
+        if: inputs.replay
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.evidence_run }}
+          name: compiler-sampling-${{ matrix.runner }}
+          path: recordings
+      - name: Decode existing user stacks without rebuilding
+        if: inputs.replay
+        env:
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          set -o pipefail
+          python3 scripts/test-compiler-sampling.py
+          python3 scripts/replay-compiler-samples.py --recordings recordings --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --perf "$COMPILER_PERF" --demangler /usr/bin/c++filt --deadline 120 --output compiler-stacks 2>&1 | tee compiler-stacks.log
       - name: Retain exact source and build settings
         if: always()
         run: |
@@ -142,5 +174,7 @@ jobs:
             compiler-build.txt
             compiler-sampling.log
             compiler-sampling/
+            compiler-stacks/
+            compiler-stacks.log
             profiler-capabilities/
           if-no-files-found: error

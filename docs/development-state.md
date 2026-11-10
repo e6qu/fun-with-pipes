@@ -17,7 +17,13 @@ before selecting an optimization. Parser controls and workflow lint pass locally
 under the guard; no local fwp build or full suite ran.
 Current profiler repair: `f7f4336f7`, immutable tag
 `roadmap/compiler-cpu-flow-2026-11-10`, run `42754692740`.
-Both native jobs are queued. The obsolete `42753509308` was cancelled after
+Both native jobs recorded all four applications but caller attribution failed.
+`perf report --parent` does not attach parents reconstructed from DWARF user
+stacks; a direct `perf script` reader is prepared, retaining all samples and
+cross-checking their counts/periods against the original flat report. Replay the
+existing recordings on runners; no compiler rebuild or new timing is needed.
+Five focused reader/control tests and workflow lint pass under the guard.
+The obsolete `42753509308` was cancelled after
 publishing the bookkeeping fix; its ARM64 failure is audited and its queued
 AMD64 job is not a pass. [The checking contract](measurements/compiler-checking.md)
 records all earlier source IDs and repaired causes. The latest local regression
@@ -55,8 +61,9 @@ Current published source: `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`, retained b
 `roadmap/application-delivery-format-2026-11-10`. Preserve this head.
 Production `42749157893`, attempt 1, has all nine jobs; docs `42749157995`, job
 `129608390924`, passes. Benchmark `129608390557` passes. Both complete logs are
-clean apart from deliberate documentation failure controls. Eight native jobs
-are running, with no reported failure at the last check.
+clean apart from deliberate documentation failure controls. All four macOS jobs also pass. Both Linux and both Windows jobs remain running;
+Windows ARM64 has passed the repaired TLS/executable group. No final-head
+failure is reported. Audit each completed log and preserve the delivery head.
 
 | Gate | Job |
 |---|---|

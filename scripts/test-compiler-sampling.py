@@ -12,6 +12,8 @@ import unittest
 from unittest.mock import patch
 
 import compiler_sampling
+import compiler_sample_stacks
+from compiler_sample_stacks import attribute, stacks
 from compiler_sampling import REGISTER_WARNING, histogram, recording_messages
 
 
@@ -41,6 +43,9 @@ class CompilerSamplingTests(unittest.TestCase):
                         caller = '<fwp::infer::Infer>::check_binding\t' if parent else ''
                         text = '# Total Lost Samples: 0\n# Event count (approx.): 7000\n'+heading+'100%\t7\t7000\t'+caller+'fwp\t[.] clone\t- -\n'
                         return subprocess.CompletedProcess(command, 0, text, '')
+                    if 'script' in command:
+                        sample = '1000 cpu-clock:u:\n 123 clone (fwp)\n 456 <fwp::infer::Infer>::check_binding (fwp)\n\n'
+                        return subprocess.CompletedProcess(command, 0, sample * 7, '')
                     self.assertIn('--format=rust', command)
                     return subprocess.CompletedProcess(command, 0, settings['input_data'], '')
 
@@ -59,6 +64,7 @@ class CompilerSamplingTests(unittest.TestCase):
                     stack.enter_context(patch.object(os, 'sched_setaffinity', create=True))
                     stack.enter_context(patch.object(subprocess, 'check_output', return_value='test identity\n'))
                     stack.enter_context(patch.object(compiler_sampling, 'run_capture', side_effect=child))
+                    stack.enter_context(patch.object(compiler_sample_stacks, 'run_capture', side_effect=child))
                     stack.enter_context(redirect_stdout(io.StringIO()))
                     if failed:
                         with self.assertRaises(AssertionError):
@@ -72,7 +78,28 @@ class CompilerSamplingTests(unittest.TestCase):
                     self.assertEqual(application['correct'], not (failed and name == 'words'))
                     if application['correct']:
                         self.assertEqual(application['all-symbols']['samples'], 7)
-                        self.assertEqual(application['checking-parents']['samples'], 7)
+                        self.assertEqual(application['checking-callers']['samples'], 7)
+
+    def test_stack_accounting_keeps_unknown_and_unmatched_callers(self):
+        text = ('2000 cpu-clock:u:\n 123 clone (fwp)\n'
+                ' 456 <fwp::infer::Infer>::check_binding (fwp)\n\n'
+                '1000 cpu-clock:u: 789 [unknown] ([unknown])\n')
+        samples = stacks(text)
+        flat = [dict(samples=2, period=3000)]
+        report = attribute(samples, flat)
+        self.assertEqual(report['samplesWithUnknownFrames'], 1)
+        self.assertEqual(report['period'], 3000)
+        self.assertEqual(report['rows'][1]['parent'], '[other]')
+        for invalid in ('', '1000 cpu-clock:u:\n', text+'unexpected warning\n',
+                        text.replace('2000 cpu-clock', '0 cpu-clock'),
+                        text.replace('cpu-clock:u', 'cycles:u')):
+            with self.subTest(text=invalid), self.assertRaises(AssertionError):
+                stacks(invalid)
+        for wrong in ([dict(samples=1, period=3000)], [dict(samples=2, period=2999)]):
+            with self.assertRaises(AssertionError):
+                attribute(samples, wrong)
+        with self.assertRaises(AssertionError):
+            attribute(stacks(text.replace('check_binding', 'another_function')), flat)
 
     def test_recording_diagnostics_remain_strict(self):
         recording_messages(REGISTER_WARNING+'\n[ perf record: Woken up 1 times to write data ]\n')

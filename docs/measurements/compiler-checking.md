@@ -123,11 +123,20 @@ reader now recognizes that exact placeholder column, rejects lost samples and
 requires row periods to equal the complete event total. Rust symbols are decoded
 explicitly with GNU `c++filt --format=rust`, retaining the original names too;
 perf 6.8 does not decode the compiler's current Rust symbol format itself.
-Caller matching accepts encoded names, then requires decoded checking functions.
+Caller attribution requires decoded checking functions.
 The next attempt (`7a2cfc919`, run `42753509308`) decoded the first ARM64
 report but exposed a Python variable overwriting its application record. The
 repair now has a complete reporting-flow regression, including continuation
-after a child failure. Native caller-report verification remains pending.
+after a child failure. The next attempt (`f7f4336f7`, run `42754692740`) retains all four
+application recordings on each host, but every reported parent is `[other]`.
+This is a profiler-interface limitation: the
+[DWARF unwind path](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/util/machine.c)
+builds the call cursor without assigning the `perf report --parent` field.
+The replacement reads `perf script` user stacks, keeps unknown/unmatched samples
+and requires both sample and period totals to match the flat report. The
+`compiler-sampling-replay` suite decodes the existing binary/recordings on runners;
+it does not rebuild the compiler or repeat measurements. Native verification is
+pending. A valid stack report is required before attributing costs to checking.
 
 ## Questions and boundaries
 

@@ -14,10 +14,12 @@ tree copies its nested nodes, strings and buffers.
 Two existing traversals are candidates for borrowing:
 
 - `free_vars` finds unresolved type variables, in their first-appearance order.
-  Inspecting a type need not produce a copy of it.
+  For `a -> List[a]`, it returns `[a]` once. If `a` has already become `I64`,
+  it returns `[]`. Inspecting a type need not produce a copy of it.
 - `zonk` substitutes resolved variables throughout a type and returns a new type.
+  If `a` has become `I64`, `a -> List[a]` produces `I64 -> List[I64]`.
   It needs that output, but may not need temporary copies of every subtree on
-  the way to producing it.
+  the way to producing it. The input tree remains unchanged.
 
 Both currently call `resolve`, which returns an owned type. This is a hypothesis
 about removable copies, not proof of their cost or of a safe replacement.

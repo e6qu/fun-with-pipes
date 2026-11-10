@@ -1,0 +1,79 @@
+"""Account for DWARF user stacks directly, including unmatched samples."""
+import re
+import subprocess
+
+from compiler_scaling import ROOT
+from process_wait import run_capture
+
+
+def stacks(text):
+    samples = []
+    current = None
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        header = re.fullmatch(r'\s*(\d+)\s+cpu-clock:u:\s*(.*)', line)
+        if header:
+            current = dict(period=int(header[1]), frames=[])
+            assert current['period'] > 0
+            samples.append(current)
+            line = header[2]
+            if not line:
+                continue
+        frame = re.fullmatch(r'\s*([0-9a-f]+)\s+(.+)\s+\((.+)\)\s*', line)
+        assert current is not None and frame is not None, f'unexpected stack line: {line}'
+        current['frames'].append(dict(ip=frame[1], symbol=frame[2], dso=frame[3]))
+    assert samples and all(sample['frames'] for sample in samples), 'missing sample frames'
+    assert all(len(sample['frames']) < 512 for sample in samples), 'stack depth reached decoding limit'
+    return samples
+
+
+def attribute(samples, flat):
+    assert len(samples) == sum(row['samples'] for row in flat), 'stack sample count differs from flat report'
+    assert sum(sample['period'] for sample in samples) == sum(row['period'] for row in flat), 'stack periods differ from flat report'
+    groups = {}
+    unresolved = 0
+    for sample in samples:
+        frames = sample['frames']
+        leaf = frames[0]
+        parent = next((frame['symbol'] for frame in frames
+                       if re.search(r'::infer::Infer>?::check_(binding|effects)\b', frame['symbol'])), '[other]')
+        key = (parent, leaf['dso'], leaf['symbol'])
+        row = groups.setdefault(key, dict(parent=parent, dso=leaf['dso'], symbol=leaf['symbol'], samples=0, period=0))
+        row['samples'] += 1
+        row['period'] += sample['period']
+        if any(frame['symbol'] == '[unknown]' or re.fullmatch(r'(0x)?[0-9a-f]+', frame['symbol']) for frame in frames):
+            unresolved += 1
+    rows = sorted(groups.values(), key=lambda row: (-row['period'], row['parent'], row['symbol']))
+    total = sum(row['period'] for row in rows)
+    for row in rows:
+        row['overheadPercent'] = row['period'] * 100 / total
+    assert any(re.search(r'::infer::Infer>?::check_binding\b', row['parent']) for row in rows), 'no decoded body-checking caller stacks'
+    return dict(samples=len(samples), period=total, samplesWithUnknownFrames=unresolved, rows=rows)
+
+
+def decode(recording, output, perf, demangler, environment, deadline, flat, commands):
+    command = [str(perf), 'script', '--input', str(recording), '--inline', '--max-stack', '512',
+               '--fields', 'period,event,ip,sym,dso']
+    entry = dict(role='user-stacks', command=command)
+    commands.append(entry)
+    result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
+        input_stream=subprocess.DEVNULL, text=True, encoding='utf-8', timeout=deadline, check=False)
+    entry['status'] = result.returncode
+    (output/'user-stacks.txt').write_text(result.stdout)
+    (output/'user-stacks.stderr').write_text(result.stderr)
+    assert result.returncode == 0 and not result.stderr, entry
+    raw = stacks(result.stdout)
+    command = [str(demangler), '--no-strip-underscore', '--format=rust']
+    decoded = run_capture(command, env=environment, cwd=ROOT, input_data=result.stdout,
+        input_stream=None, text=True, encoding='utf-8', timeout=deadline, check=False)
+    entry.update(demangleCommand=command, demangleStatus=decoded.returncode)
+    (output/'user-stacks.demangled.txt').write_text(decoded.stdout)
+    (output/'user-stacks.demangle.stderr').write_text(decoded.stderr)
+    assert decoded.returncode == 0 and not decoded.stderr, entry
+    samples = stacks(decoded.stdout)
+    assert len(samples) == len(raw)
+    for original, sample in zip(raw, samples):
+        assert original['period'] == sample['period'] and len(original['frames']) == len(sample['frames'])
+        assert all(a['ip'] == b['ip'] and a['dso'] == b['dso'] for a, b in zip(original['frames'], sample['frames']))
+    return attribute(samples, flat)
