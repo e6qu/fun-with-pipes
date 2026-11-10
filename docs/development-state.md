@@ -1,73 +1,82 @@
 # Current work
 
-**Next:** publish the combined compiler change as a normal PR, verify its nine
-production jobs plus documentation and complete-log audit, then squash-merge.
-Use one subject of at most 80 characters and an empty body; verify the resulting
-message and tree. Keep four noisy growth comparisons open after delivery.
+**Next: complete final-head delivery of [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276).**
+Publish the combined compiler/profiler changes, runtime/load reports and corrected
+memory diagnostic, then require nine production jobs, documentation and the
+complete-log audit on that exact head. Squash only after they pass: one subject,
+at most 80 characters, empty body, no trailers. Verify equal trees and the message.
 
-## Current branch and verified baseline
+Worktree `.worktrees/service-cpu-costs`, local branch `service-cpu-costs`.
+The last published PR head is `d80357c8c81d206c9d9934b141b5a5fafe97c430`.
+Diagnostic branch `service-memory-diagnosis` at `94882ca7c860771ee9106211fc2567789c187070`
+kept the earlier passing PR head intact while the additional investigation ran.
+Do not repeat unchanged timings to obtain qualification or erase missed limits.
 
-Worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`.
-PR #274 is merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree equals
-passing source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
-[All production/docs/audit gates pass](measurements/application-final-gates-2026-11-10/README.md).
-The redundant post-merge run `42760668107` was cancelled to free six runner slots;
-its complete logs are audited and retained. Interrupted uploads add no coverage.
+## Delivered implementation and measured limits
 
-## Compiler change and results
+`src/cgen/resource_borrows.rs` proves when an enclosing resource owner protects an
+inner parameter through initialized aliases and immutable projections. Scoped
+rollback separates branches; reassigned IDs and loop/tail rebinding reject selection.
+All three native result representations use it. Ordinary argument owners and
+interpreter/debugger metadata remain intact. A frame disappears only when the
+proof removes its last parameter and it has no bindings.
 
-Candidate `c65ecb37691538ef5a24619376f68b1d243cbdea`, retained by
-`roadmap/compiler-borrowed-types-2026-11-10`, borrows input type trees in
-`free_vars` and `zonk`. Variable chains stay iterative; normalization, variable
-order, rows, effects and diagnostics are preserved. Row flattening is unchanged.
-Reference `35a12dfee0266134237d03d1262649be69df7c41` has ordinary compiler sources
-identical to merged #274. Later branch commits retain evidence and clarify docs.
+- [Ordinary service/compiler measurements](measurements/nested-resource-time-2026-11-10/README.md),
+  run `42798403679` at `d80357c8c`: 31/32 service comparisons qualify and meet their
+  targets, using 16–21% less time. Compiler cost qualifies in 63/64 comparisons.
+  One runtime and one compiler comparison are noisy. Four ARM64 RSS limits miss 5%.
+- [Counts and cleanup](measurements/nested-resource-counts-2026-11-10/README.md),
+  run `42790112990` at `c49af8a6e`: 29.7–36.9% fewer large-case cleanup registrations,
+  4.85–5.34% fewer actual count increments/decrements, unchanged heap requests/peak.
+- [Omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md),
+  run `42792514554` at `cd661ff84`: removing a necessary file hold exposes premature
+  closure at O1/O2 on both architectures.
+- [HTTP correctness](measurements/nested-resource-http-checks-2026-11-10/README.md),
+  run `42793407188` at `cd661ff84`: responses, cancellation, physical cleanup,
+  broken counters and real slow-client backpressure pass.
+- [HTTP load](measurements/nested-resource-http-load-2026-11-10/README.md),
+  run `42797169205` at `cd661ff84`: all 34 trials pass, 26,228,542 attempts without
+  failures, successful shutdowns and flat sampled RSS. This is not an HTTP speedup.
 
-[Focused run `42763406320`](measurements/compiler-borrowed-types-2026-11-10/README.md)
-passes ARM64 `129654174367` and AMD64 `129654174360`: seven type tests, eight
-report/option tests, signature/error snapshots, sixteen exact-C comparisons and
-all growth error locations. Both hosts remove the same 1.09–1.10 million copies
-per application (29–32%), with unchanged visit counts and C. Separate observer
-patch/source hashes and every complete log are verified.
+Production compiler/runtime/library/input sources are unchanged from `c49af8a6e`
+through the final report/diagnostic work; static diffs verify this. The ordinary
+reference is `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`, built from Rust source.
+The separate proof observer preserves exact C on all 16 application/growth inputs.
 
-[Timing run `42764964658`](measurements/compiler-type-time-2026-11-10/README.md)
-passes its four execution jobs at that same candidate. Recomputed raw samples
-verify all sixteen complete-application targets: word counting uses 11–14% less
-emit-C time, callbacks 8–10%, numerical 5–7%, HTTP 3–4%. Peak RSS growth is at most
-0.18% across all 64 comparisons. ARM64 uses Neoverse-N2; AMD64 session 1 uses
-Xeon 8573C and session 2 EPYC 7763. Do not pool different CPUs.
+## Memory investigation and observer repair
 
-Four AMD64 growth comparisons fail the frozen 2% copy-noise control: generic-8
-in both sessions, generic-128 and nesting-8 in session 2. Retain those as
-inconclusive, following the user's preference to keep verified gains while leaving
-timing goals open. Do not weaken the [contract](measurements/compiler-type-walks.md)
-or rerun unchanged noise to qualify it. All raw samples and failures are retained;
-copy reductions do not imply lower allocation bytes or application runtime cost.
+[Initial diagnostic](measurements/nested-resource-host-memory-2026-11-10/README.md),
+run `42810648965` at `4eeb66992`: controls pass, but it used host libraries while
+original measurements used a container. Preserve that limitation and its data.
 
-## Profiler and documentation repairs
+[Corrected diagnostic](measurements/nested-resource-memory-2026-11-10/README.md),
+run `42812351743` at `94882ca7c`: both jobs pass with the original container digest
+and libc package. Each host runs all 128 original-binary executions. Five observer
+controls, eleven mapping-reader tests, real omitted-touch/unmap controls, raw audits
+and three altered-report controls pass. Complete logs are clean.
 
-[Replay `42763409910`](measurements/compiler-cpu-samples-2026-11-10/README.md)
-passes AMD64 `129654190514` and ARM64 `129654190596`, reusing source `5cab084d5`
-recordings from `42761474854`. Direct DWARF stack reading replaces the unavailable
-parent column; explicit Ubuntu 24.04/perf 6.8 avoids the original libdw load-base
-problem. A ten-second addr2line read deadline preserves the 120-second total limit.
-All eight reports retain exact sample/period totals with no empty stacks. Unnamed
-leaf frames account for 25–42% of periods; attribution is incomplete. Original
-failed replays and the ineffective per-thread experiment remain retained.
+Candidate resident-page peaks are lower in every case. Fast RSS matches every
+page walk. The original four high-water misses remain unexplained: do not call
+counter error proved or substitute snapshots for their acceptance limits. No
+compiler repair or relaxed gate follows from these data. `wait4` includes pre-exec
+memory; an actual allocate-then-exec control verifies this. It is not fwp-only RSS.
 
-The docs explain type variables/substitution with examples, remove stale #274
-instructions, and distinguish measured gains from open acceptance. Recurring docs
-CI now runs all three compiler measurement-reader control suites.
+## Production checks and retained evidence
 
-## Verification and local limits
+[All pre-publication gates pass](measurements/nested-resource-prepublication-gates-2026-11-10/README.md)
+at `d80357c8c`: production `42798426347`, docs `42798426476`, complete-log audit
+`42810654258`. All ten reports have no issues. The small complete audit archive
+passes local size/SHA/CRC verification. Later combined publication needs exact-head gates.
 
-Guarded local checks pass: sampling reader (5 controls), ordinary comparison
-reader (4), growth reader (3), changed workflow lint, Rust formatting and roadmap
-links. A renamed heading exposed one stale link; it was repaired. Small artifact
-members passed CRC; source/observer hashes, schedules, counts and timing results
-were rechecked. Full compiler builds, tests and measurements run only on GitHub.
-The final staged documentation check passes: 452 document link sets, 106
-immutable preparation anchors and all six milestone rows.
+[CPU attribution](measurements/service-cpu-attribution-2026-11-10/README.md) passes
+native replay `42781360626` and independent reconstruction. The Linux reader's
+address-marker repair decodes saved recordings without resampling. Earlier failed
+attempts remain recorded. CPU samples selected this proof; they are not speed ratios.
+
+Small reports, complete logs, identities and checked readers are retained with each
+measurement. Full timing and page-walk archives remain on GitHub. Local readers
+reconstruct reference timing/compiler/load summaries and one raw memory snapshot
+per host; full raw-data and binary audits ran on runners. Keep these scopes explicit.
 
 ## Roadmap status
 
@@ -75,18 +84,26 @@ immutable preparation anchors and all six milestone rows.
 |---|---|---|---|
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
-| 3 | In progress | #272 structured gradients and known callbacks; all gates | Original AMD timing acceptance |
+| 3 | In progress | #272 structured gradients and known callbacks | Original AMD timing acceptance |
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup; all gates | Recorded comparison limits apply |
-| 5 | Verified | #274 applications, compiler reports/growth, HTTP load and pressure repair; all gates | Recorded observation limits apply |
-| 6 | In progress | Borrowed types: native correctness, fewer copies and all application speed/memory targets | Four noisy growth comparisons; final delivery gates |
+| 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
+| 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
+| 7 | In progress | #276 nested lifetime borrowing, gains and memory diagnosis | Original noisy/RSS acceptance; final combined-head delivery |
 
-After delivery, attribute the queued service and HTTP cost to payloads, queues,
-protocol work and cleanup before selecting another implementation. Keep the public
-gradient API unchanged without representative evidence. Earlier noisy goals stay open.
+Do not treat this PR or the earlier delivered code as completing every timing goal.
+[PLAN.md](../PLAN.md) owns scope; measurement contracts retain original limits.
 
-Preserve unrelated root-worktree changes, old worktrees and handoff stash
-`451bbf713d451f2d62d80fd7676839404875846a`. Local checks remain serial through
-`python3 scripts/local-guard.py`: 64 GiB free, target data <2 GiB, sampled RSS
-<1 GiB, 180-second deadline. Last disk check: about 114 GiB free. Never raise or
-bypass limits. A guard serialization refusal earlier was resolved by waiting for
-the previous download to finish; no limits changed.
+## Local checks and preservation
+
+All checks use `python3 scripts/local-guard.py` serially. Formatting, focused Python
+reader tests, changed-workflow actionlint and documentation checks pass. New observer
+syntax and reader tests pass; macOS skips its three Linux process controls, which
+pass on both native runners. Final `python3 scripts/check-roadmap.py` verifies
+469 doc link sets, 106 preparation anchors and seven milestone statuses. The
+shortened handoff initially omitted the required status column; restoring it fixes
+the check. `git diff --cached --check` passes. No local full suite or build was run.
+
+Keep 64 GiB free, generated targets below 2 GiB, sampled workload RSS below 1 GiB
+and the 180-second guard deadline. Last free space: about 107 GiB. Preserve unrelated
+root edits, old worktrees, stash `451bbf713d451f2d62d80fd7676839404875846a` and backup
+`540b0682408d751afb6e439d58a3b887bdcba373`.

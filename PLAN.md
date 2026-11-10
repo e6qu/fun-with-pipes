@@ -51,12 +51,13 @@ implementation; do not invent a universal language-overhead target.
 | 4 | Complete ownership and peer comparisons | Complete the [buffer, returned-function, weak-registration and parser comparisons](docs/measurements/ownership-peers.md). Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
 | 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#sustained-service-load). Add syntax only for a demonstrated need. |
 | 6 | Reduce repeated compiler type-copy work | Borrow inputs while finding unresolved variables and substituting resolved types, under the [frozen contract](docs/measurements/compiler-type-walks.md). Preserve inference, diagnostics, effects and exact C; verify copy reductions on four applications and compiler growth. Require qualified ordinary-build timing and memory results, then all final delivery gates. |
+| 7 | Reduce measured queued-service costs | Deliver [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md), selected from verified CPU attribution, under its frozen correctness and measurement contract. Preserve delivery/cancellation/expiration/error results, verify whole-service time and working memory on both architectures, check the same mechanism in HTTP, and pass all final delivery gates. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: remove measured compiler copies
+## Current work: verify queued-service gains
 
 #270–272 delivered fresh-array stores, captured-map ownership and known array
 callbacks with structured-gradient comparisons. Their original noisy or unmet
@@ -73,36 +74,36 @@ retain all 48 qualifying compiler comparisons and 34 successful HTTP trials.
 The later checking subdivisions have unmeasured reporter overhead; they establish
 no ordinary-build speedup.
 
-**Milestone 6:** measure and deliver the [borrowed type traversals](docs/measurements/compiler-type-walks.md).
-The [exact counters](docs/measurements/compiler-type-copies-2026-11-10/README.md)
-match on both architectures: each complete application makes roughly 804,000–810,000
-type-node copies while searching for unresolved variables, and 469,000–471,000
-while substituting resolved types. Borrow the existing input trees and build only
-required outputs. Keep row flattening unchanged initially; report remaining copies.
-[Focused checks pass](docs/measurements/compiler-borrowed-types-2026-11-10/README.md)
-on both architectures: 29–32% fewer total type copies, unchanged visit counts,
-exact C and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
+#275 delivers milestone 6's compiler change: 29–32% fewer type copies, exact C
+and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
 verify 11–14% less word-count compilation time and 8–10% less callback compilation
-time. All complete-application targets and memory limits pass; four noisy AMD64
-growth comparisons leave full timing acceptance open. Retain the verified gains
-without repeating those unchanged cases to obtain qualification.
+time. All complete-application targets and memory limits pass. [All delivery gates
+pass](docs/measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
+Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
+those results; do not repeat unchanged cases to obtain qualification.
 
-The frozen target is at least 5% less ordinary emit-C time for word counting and
-queued callbacks, with numerical/HTTP/growth regressions limited to 2% and peak
-RSS growth to 5%. Two sessions per architecture and the existing 2% copy-control
-limit distinguish a measured gain from noise. Preserve language behavior and
-exact C; no count reduction alone completes timing acceptance. Bundle the compiler
-change, profiler/observation repairs, docs and final delivery evidence in one PR.
+**Current:** verify [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
+Both Linux architectures pass [native counts and cleanup checks](docs/measurements/nested-resource-counts-2026-11-10/README.md):
+large-case cleanup registrations fall by 29.7–36.9%, actual count increments by
+4.85–5.34%, with unchanged heap use. The [omitted-owner control](docs/measurements/nested-resource-lifetime-2026-11-10/README.md)
+detects premature file closure. [Ordinary timing](docs/measurements/nested-resource-time-2026-11-10/README.md)
+shows 16–21% gains in qualified cases. One runtime and one compiler comparison
+are noisy, and four ARM64 RSS limits are missed. The [memory diagnostic](docs/measurements/nested-resource-memory-2026-11-10/README.md)
+finds lower observed resident-page peaks, but does not establish the cause of those
+misses. Keep their acceptance open; finish final delivery without repeating timings.
+[Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
+identify substantial count work and cleanup bookkeeping. Prove that an enclosing
+owner protects an inner parameter for its full lifetime; remove only that duplicate
+protection. Preserve original disposal/weak-expiration timing. Require fewer cleanup
+registrations, ordinary whole-service gains, complete cleanup and bounded compiler
+cost. The contract defines exact targets and negative lifetime controls.
 
-[Caller decoding now passes](docs/measurements/compiler-cpu-samples-2026-11-10/README.md)
-on both architectures with every sample accounted for. Unnamed frames remain
-visible; independent counters quantify copies. Neither proves a compiler speedup.
-
-After this compiler milestone, attribute CPU time in the queued service and HTTP
-endpoint to payload construction, queues/channels, protocol work and cleanup.
-The 4,096-message service still takes 18.65–20.23 times C's time and 5.12–6.70 times
-Swift's, with differing representations and synchronization. Do not call that gap
-an ARC cost or choose another optimization before attribution. Keep the experimental
+Check the same selected mechanism in the maintained HTTP endpoint. Keep profile
+limitations explicit: inlining erased fwp phase boundaries, and peer libraries have
+substantial unresolved leaf work.
+The new 4,096-message full-delivery comparison takes 14.93–16.78 times C's time
+and 4.32–5.34 times Swift's, with differing representations and synchronization. Do not call that entire gap
+an ARC cost or infer peer timing ratios from CPU samples. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.
 
 ## Earlier contracts

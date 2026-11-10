@@ -25,6 +25,7 @@ mod packed_records;
 mod range_zip;
 mod recording;
 mod regions;
+mod resource_borrows;
 mod scalar_map_zip;
 mod scalar_text;
 mod scoped_calls;
@@ -2556,6 +2557,7 @@ struct FnGen<'g, 'p, 'e> {
     /// not a closure object. Their owners use the existing stack-child ledger.
     callback_captures: HashMap<Local, Vec<String>>,
     resource_slots: HashMap<Local, ResourceSlot>,
+    resource_parameter_borrows: Option<HashMap<*const Expr, HashSet<Local>>>,
     /// The function being generated.
     me: FuncId,
     tail_calls: std::collections::HashSet<*const Expr>,
@@ -3760,7 +3762,9 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                     self.begin_resource_region(e as *const Expr, parameters, bindings, body);
                 let values = self.expr_fields(body, n);
                 let result = values.into_iter().map(|v| self.bind(v)).collect();
-                self.end_resource_region(frame);
+                if let Some(frame) = frame {
+                    self.end_resource_region(frame);
+                }
                 result
             }
             Expr::Trace(_, body) => self.expr_fields(body, n),
@@ -4275,7 +4279,9 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                 let (tag, fields) = self.expr_variant(body, m, ty);
                 let tag = self.bind(tag);
                 let fields = fields.into_iter().map(|v| self.bind(v)).collect();
-                self.end_resource_region(frame);
+                if let Some(frame) = frame {
+                    self.end_resource_region(frame);
+                }
                 (tag, fields)
             }
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
@@ -4565,12 +4571,41 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         parameters: &[Local],
         bindings: &[Local],
         body: &Expr,
-    ) -> (HashMap<Local, ResourceSlot>, String, String, usize) {
+    ) -> Option<(HashMap<Local, ResourceSlot>, String, String, usize)> {
+        let inherited = if self.in_loop.is_none() && !self.g.uncounted.self_tail.contains(&self.me)
+        {
+            self.resource_parameter_borrows
+                .get_or_insert_with(|| {
+                    resource_borrows::parameters(
+                        self.root,
+                        self.locals.len(),
+                        self.g.prog.funcs[self.me].arity,
+                    )
+                })
+                .get(&key)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            HashSet::new()
+        };
+        for local in parameters.iter().filter(|local| inherited.contains(*local)) {
+            self.line(&format!(
+                "/* resource parameter l{local} protected by enclosing frame */"
+            ));
+        }
+        let parameters: Vec<_> = parameters
+            .iter()
+            .copied()
+            .filter(|local| !inherited.contains(local))
+            .collect();
+        if !inherited.is_empty() && parameters.is_empty() && bindings.is_empty() {
+            return None;
+        }
         let saved = self.resource_slots.clone();
         let mut entries = Vec::new();
         let mut initial = Vec::new();
         let mut variants = Vec::new();
-        for &l in parameters {
+        for &l in &parameters {
             let ty = self.locals[l as usize].clone();
             let parts: Vec<(String, MT)> = if let Some(fs) = self.fields.get(&l) {
                 fs.iter()
@@ -4671,7 +4706,7 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         self.line(&format!(
             "fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});"
         ));
-        (saved, ctx, node, id)
+        Some((saved, ctx, node, id))
     }
 
     fn end_resource_region(
@@ -6753,7 +6788,9 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                     self.begin_resource_region(e as *const Expr, parameters, bindings, body);
                 let value = self.expr(body);
                 let result = self.bind(value);
-                self.end_resource_region(frame);
+                if let Some(frame) = frame {
+                    self.end_resource_region(frame);
+                }
                 result
             }
             Expr::Dup(l, b) => {
@@ -8273,6 +8310,7 @@ impl<'p> Gen<'p> {
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
+            resource_parameter_borrows: None,
             me: *id,
             tail_calls: tail_calls(&body),
         };
@@ -8444,6 +8482,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
+            resource_parameter_borrows: None,
             me: step,
             tail_calls: tail_calls(e),
         };
@@ -9608,6 +9647,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
+            resource_parameter_borrows: None,
             me: id,
             tail_calls: tail_calls(e),
         };
@@ -9695,6 +9735,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             known_callbacks: HashMap::new(),
             callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
+            resource_parameter_borrows: None,
             me: id,
             tail_calls: tail_calls(e),
         };

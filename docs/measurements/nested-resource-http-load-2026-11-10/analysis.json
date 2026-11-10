@@ -1,0 +1,1214 @@
+{
+  "arm-1": {
+    "identity": {
+      "source": "cd661ff84b88736ceec83c75e0e2ecf7e6de551d",
+      "programSha256": "715e3a7593121256222f0ce526de5a428699a4195a83d1c312a4f96f28cd553a",
+      "maintainedProgramSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+      "maxRequestsPerConnection": 10000000,
+      "machine": "aarch64",
+      "phase": "measure",
+      "session": 1,
+      "compilerSha256": "5ac9bb1394ffd158fa694e285f5e4b1ae2cdbb15445662a60667d45db2dfb080",
+      "generatorSha256": "0926e2827a228a63b88977761a58a270586ec7e91e5f920db88d21655fff27ba",
+      "gccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "gxxVersion": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "topology": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "allowedCpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "serverCpu": 0,
+      "generatorCpu": 1,
+      "clockTicksPerSecond": 100,
+      "environment": {
+        "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+        "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+        "FWP_LTO": "0",
+        "FWP_ADDR": "127.0.0.1:0"
+      },
+      "flags": [
+        "-march=armv8-a",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto"
+      ],
+      "optimization": "O2",
+      "requestDeadlineSeconds": 5,
+      "shutdownDeadlineSeconds": 20,
+      "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+      "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+      "binarySha256": "66210ac31829deeb006c4cf828236089fa0fb1871292485947cbd605d0acb90e",
+      "binaryBytes": 1957008,
+      "generatedCSha256": "225665e276be8049b05cb39d035c74eca5f245ae4df2e5b5122a2050f69c27f4"
+    },
+    "trials": [
+      {
+        "name": "connections-1-run-1",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 445086,
+        "responsesPerSecond": 12673.966666666667,
+        "p99Ms": 0.109315,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9211904,
+          "lastRssBytes": 9211904,
+          "peakRssBytes": 9211904,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 27.05,
+          "sampledElapsedSeconds": 29.014597227,
+          "sampledCpuFraction": 0.9322893503697577
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 1888256,
+          "lastRssBytes": 1888256,
+          "peakRssBytes": 1888256,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.26,
+          "sampledElapsedSeconds": 29.014597227,
+          "sampledCpuFraction": 0.14682264815434998
+        }
+      },
+      {
+        "name": "connections-1-run-2",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 445901,
+        "responsesPerSecond": 12706.366666666667,
+        "p99Ms": 0.106555,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9207808,
+          "lastRssBytes": 9207808,
+          "peakRssBytes": 9207808,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 26.95,
+          "sampledElapsedSeconds": 29.014460241,
+          "sampledCpuFraction": 0.9288471946797503
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 1892352,
+          "lastRssBytes": 1892352,
+          "peakRssBytes": 1892352,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.28,
+          "sampledElapsedSeconds": 29.014460241,
+          "sampledCpuFraction": 0.14751265280999376
+        }
+      },
+      {
+        "name": "connections-8-run-1",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 608446,
+        "responsesPerSecond": 17374.266666666666,
+        "p99Ms": 0.740903,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9764864,
+          "lastRssBytes": 9764864,
+          "peakRssBytes": 9764864,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 29.0,
+          "sampledElapsedSeconds": 29.016859994,
+          "sampledCpuFraction": 0.9994189587018207
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2125824,
+          "lastRssBytes": 2125824,
+          "peakRssBytes": 2125824,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.15,
+          "sampledElapsedSeconds": 29.016859994,
+          "sampledCpuFraction": 0.14302029926250193
+        }
+      },
+      {
+        "name": "connections-8-run-2",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 598613,
+        "responsesPerSecond": 17116.933333333334,
+        "p99Ms": 0.732462,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9781248,
+          "lastRssBytes": 9781248,
+          "peakRssBytes": 9781248,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 29.01,
+          "sampledElapsedSeconds": 29.021642631,
+          "sampledCpuFraction": 0.9995988293582128
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2125824,
+          "lastRssBytes": 2125824,
+          "peakRssBytes": 2125824,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.96,
+          "sampledElapsedSeconds": 29.021642631,
+          "sampledCpuFraction": 0.17090693531943243
+        }
+      },
+      {
+        "name": "connections-32-run-1",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 638442,
+        "responsesPerSecond": 18248.6,
+        "p99Ms": 2.610825,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11694080,
+          "lastRssBytes": 11694080,
+          "peakRssBytes": 11694080,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.023614819,
+          "sampledCpuFraction": 0.9998710081114323
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2920448,
+          "lastRssBytes": 2920448,
+          "peakRssBytes": 2920448,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.02,
+          "sampledElapsedSeconds": 28.023614819,
+          "sampledCpuFraction": 0.21481882472629626
+        }
+      },
+      {
+        "name": "connections-32-run-2",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 630510,
+        "responsesPerSecond": 18023.133333333335,
+        "p99Ms": 2.634161,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11694080,
+          "lastRssBytes": 11694080,
+          "peakRssBytes": 11694080,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.02344158,
+          "sampledCpuFraction": 0.9998771892456473
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2920448,
+          "lastRssBytes": 2920448,
+          "peakRssBytes": 2920448,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.39,
+          "sampledElapsedSeconds": 28.02344158,
+          "sampledCpuFraction": 0.1923389739483954
+        }
+      },
+      {
+        "name": "connections-64-run-1",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 664148,
+        "responsesPerSecond": 19002.133333333335,
+        "p99Ms": 4.963832,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 14262272,
+          "lastRssBytes": 14262272,
+          "peakRssBytes": 14262272,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.031902623,
+          "sampledCpuFraction": 0.9995753901131835
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3739648,
+          "lastRssBytes": 3739648,
+          "peakRssBytes": 3739648,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.31,
+          "sampledElapsedSeconds": 28.031902623,
+          "sampledCpuFraction": 0.2251006677949389
+        }
+      },
+      {
+        "name": "connections-64-run-2",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 663233,
+        "responsesPerSecond": 18934.8,
+        "p99Ms": 4.224602,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 14262272,
+          "lastRssBytes": 14262272,
+          "peakRssBytes": 14262272,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.03,
+          "sampledElapsedSeconds": 28.032417694,
+          "sampledCpuFraction": 0.9999137536395758
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3739648,
+          "lastRssBytes": 3739648,
+          "peakRssBytes": 3739648,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.08,
+          "sampledElapsedSeconds": 28.032417694,
+          "sampledCpuFraction": 0.18121876091648395
+        }
+      },
+      {
+        "name": "soak",
+        "connections": 32,
+        "seconds": 300,
+        "attempts": 5736040,
+        "responsesPerSecond": 18812.61,
+        "p99Ms": 2.563903,
+        "server": {
+          "samples": 299,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11689984,
+          "lastRssBytes": 11689984,
+          "peakRssBytes": 11689984,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 298.19,
+          "sampledElapsedSeconds": 298.248971005,
+          "sampledCpuFraction": 0.9998022759146451
+        },
+        "generator": {
+          "samples": 299,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2920448,
+          "lastRssBytes": 2920448,
+          "peakRssBytes": 2920448,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 59.79,
+          "sampledElapsedSeconds": 298.248971005,
+          "sampledCpuFraction": 0.20047009650537118
+        }
+      }
+    ],
+    "attempts": 10430419
+  },
+  "arm-2": {
+    "identity": {
+      "source": "cd661ff84b88736ceec83c75e0e2ecf7e6de551d",
+      "programSha256": "715e3a7593121256222f0ce526de5a428699a4195a83d1c312a4f96f28cd553a",
+      "maintainedProgramSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+      "maxRequestsPerConnection": 10000000,
+      "machine": "aarch64",
+      "phase": "measure",
+      "session": 2,
+      "compilerSha256": "5ac9bb1394ffd158fa694e285f5e4b1ae2cdbb15445662a60667d45db2dfb080",
+      "generatorSha256": "0926e2827a228a63b88977761a58a270586ec7e91e5f920db88d21655fff27ba",
+      "gccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "gxxVersion": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "topology": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "allowedCpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "serverCpu": 0,
+      "generatorCpu": 1,
+      "clockTicksPerSecond": 100,
+      "environment": {
+        "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+        "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+        "FWP_LTO": "0",
+        "FWP_ADDR": "127.0.0.1:0"
+      },
+      "flags": [
+        "-march=armv8-a",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto"
+      ],
+      "optimization": "O2",
+      "requestDeadlineSeconds": 5,
+      "shutdownDeadlineSeconds": 20,
+      "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+      "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+      "binarySha256": "66210ac31829deeb006c4cf828236089fa0fb1871292485947cbd605d0acb90e",
+      "binaryBytes": 1957008,
+      "generatedCSha256": "225665e276be8049b05cb39d035c74eca5f245ae4df2e5b5122a2050f69c27f4"
+    },
+    "trials": [
+      {
+        "name": "connections-64-run-1",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 699451,
+        "responsesPerSecond": 19984.966666666667,
+        "p99Ms": 4.770454,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 14258176,
+          "lastRssBytes": 14258176,
+          "peakRssBytes": 14258176,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.03,
+          "sampledElapsedSeconds": 28.031084608,
+          "sampledCpuFraction": 0.999961306955647
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3735552,
+          "lastRssBytes": 3735552,
+          "peakRssBytes": 3735552,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.14,
+          "sampledElapsedSeconds": 28.031084608,
+          "sampledCpuFraction": 0.21904254101704146
+        }
+      },
+      {
+        "name": "connections-64-run-2",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 684137,
+        "responsesPerSecond": 19546.266666666666,
+        "p99Ms": 4.849127,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 14262272,
+          "lastRssBytes": 14262272,
+          "peakRssBytes": 14262272,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.032756084,
+          "sampledCpuFraction": 0.9995449579070365
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3739648,
+          "lastRssBytes": 3739648,
+          "peakRssBytes": 3739648,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.03,
+          "sampledElapsedSeconds": 28.032756084,
+          "sampledCpuFraction": 0.21510549950676053
+        }
+      },
+      {
+        "name": "connections-32-run-1",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 666805,
+        "responsesPerSecond": 19047.333333333332,
+        "p99Ms": 2.525643,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11685888,
+          "lastRssBytes": 11685888,
+          "peakRssBytes": 11685888,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.03,
+          "sampledElapsedSeconds": 28.025052434,
+          "sampledCpuFraction": 1.000176540829376
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2916352,
+          "lastRssBytes": 2916352,
+          "peakRssBytes": 2916352,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.84,
+          "sampledElapsedSeconds": 28.025052434,
+          "sampledCpuFraction": 0.2083849803226384
+        }
+      },
+      {
+        "name": "connections-32-run-2",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 663013,
+        "responsesPerSecond": 18959.166666666668,
+        "p99Ms": 2.522195,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11689984,
+          "lastRssBytes": 11689984,
+          "peakRssBytes": 11689984,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.023875438,
+          "sampledCpuFraction": 0.9998617094195777
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2920448,
+          "lastRssBytes": 2920448,
+          "peakRssBytes": 2920448,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.77,
+          "sampledElapsedSeconds": 28.023875438,
+          "sampledCpuFraction": 0.2058958623608481
+        }
+      },
+      {
+        "name": "connections-8-run-1",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 619030,
+        "responsesPerSecond": 17690.966666666667,
+        "p99Ms": 0.703951,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9764864,
+          "lastRssBytes": 9764864,
+          "peakRssBytes": 9764864,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 29.01,
+          "sampledElapsedSeconds": 29.017096767,
+          "sampledCpuFraction": 0.9997554280823824
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2117632,
+          "lastRssBytes": 2117632,
+          "peakRssBytes": 2117632,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.2,
+          "sampledElapsedSeconds": 29.017096767,
+          "sampledCpuFraction": 0.17920469583000304
+        }
+      },
+      {
+        "name": "connections-8-run-2",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 653557,
+        "responsesPerSecond": 18703.266666666666,
+        "p99Ms": 0.671865,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9768960,
+          "lastRssBytes": 9768960,
+          "peakRssBytes": 9768960,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 29.02,
+          "sampledElapsedSeconds": 29.018612445,
+          "sampledCpuFraction": 1.0000478160354025
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2125824,
+          "lastRssBytes": 2125824,
+          "peakRssBytes": 2125824,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.51,
+          "sampledElapsedSeconds": 29.018612445,
+          "sampledCpuFraction": 0.15541749311921657
+        }
+      },
+      {
+        "name": "connections-1-run-1",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 499519,
+        "responsesPerSecond": 14295.466666666667,
+        "p99Ms": 0.096219,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9211904,
+          "lastRssBytes": 9211904,
+          "peakRssBytes": 9211904,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 26.84,
+          "sampledElapsedSeconds": 28.018025925,
+          "sampledCpuFraction": 0.9579547135778446
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 1892352,
+          "lastRssBytes": 1892352,
+          "peakRssBytes": 1892352,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 3.92,
+          "sampledElapsedSeconds": 28.018025925,
+          "sampledCpuFraction": 0.1399099283615928
+        }
+      },
+      {
+        "name": "connections-1-run-2",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 440004,
+        "responsesPerSecond": 12562.866666666667,
+        "p99Ms": 0.102618,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 9207808,
+          "lastRssBytes": 9207808,
+          "peakRssBytes": 9207808,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 26.84,
+          "sampledElapsedSeconds": 29.019414544,
+          "sampledCpuFraction": 0.9248980526228221
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 1892352,
+          "lastRssBytes": 1892352,
+          "peakRssBytes": 1892352,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 4.73,
+          "sampledElapsedSeconds": 29.019414544,
+          "sampledCpuFraction": 0.16299432894582522
+        }
+      }
+    ],
+    "attempts": 4925516
+  },
+  "amd-1": {
+    "identity": {
+      "source": "cd661ff84b88736ceec83c75e0e2ecf7e6de551d",
+      "programSha256": "715e3a7593121256222f0ce526de5a428699a4195a83d1c312a4f96f28cd553a",
+      "maintainedProgramSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+      "maxRequestsPerConnection": 10000000,
+      "machine": "x86_64",
+      "phase": "measure",
+      "session": 1,
+      "compilerSha256": "ae122c37dcc3b6cdddd0ca2d8cfcdd2ec886ab7753e10d72053f3100d8c2acd5",
+      "generatorSha256": "f2fdf5694661629d29364af201bd30d070da5a11adacc7776c78cf19e8dc6b93",
+      "gccVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "gxxVersion": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "topology": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      101%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5586.87\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2.5 MiB (2 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "allowedCpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "serverCpu": 0,
+      "generatorCpu": 1,
+      "clockTicksPerSecond": 100,
+      "environment": {
+        "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+        "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+        "FWP_LTO": "0",
+        "FWP_ADDR": "127.0.0.1:0"
+      },
+      "flags": [
+        "-march=x86-64",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto"
+      ],
+      "optimization": "O2",
+      "requestDeadlineSeconds": 5,
+      "shutdownDeadlineSeconds": 20,
+      "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+      "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+      "binarySha256": "ac0956dfd192288706bbd3fb392a5a9a050c744ba702a79876aa57dfb81949f2",
+      "binaryBytes": 2146944,
+      "generatedCSha256": "225665e276be8049b05cb39d035c74eca5f245ae4df2e5b5122a2050f69c27f4"
+    },
+    "trials": [
+      {
+        "name": "connections-1-run-1",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 359569,
+        "responsesPerSecond": 10278.166666666666,
+        "p99Ms": 0.124453,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10051584,
+          "lastRssBytes": 10051584,
+          "peakRssBytes": 10051584,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 25.62,
+          "sampledElapsedSeconds": 29.013845421,
+          "sampledCpuFraction": 0.8830266939196016
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2428928,
+          "lastRssBytes": 2428928,
+          "peakRssBytes": 2428928,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.27,
+          "sampledElapsedSeconds": 29.013845421,
+          "sampledCpuFraction": 0.2161037225166238
+        }
+      },
+      {
+        "name": "connections-1-run-2",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 358485,
+        "responsesPerSecond": 10240.466666666667,
+        "p99Ms": 0.124837,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10276864,
+          "lastRssBytes": 10276864,
+          "peakRssBytes": 10276864,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 25.72,
+          "sampledElapsedSeconds": 29.013924556,
+          "sampledCpuFraction": 0.8864709064214195
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2433024,
+          "lastRssBytes": 2433024,
+          "peakRssBytes": 2433024,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.25,
+          "sampledElapsedSeconds": 29.013924556,
+          "sampledCpuFraction": 0.21541380890878195
+        }
+      },
+      {
+        "name": "connections-8-run-1",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 462698,
+        "responsesPerSecond": 13220.4,
+        "p99Ms": 0.851303,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10698752,
+          "lastRssBytes": 10698752,
+          "peakRssBytes": 10698752,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 29.0,
+          "sampledElapsedSeconds": 29.015165041,
+          "sampledCpuFraction": 0.9994773408671441
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2600960,
+          "lastRssBytes": 2600960,
+          "peakRssBytes": 2600960,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.04,
+          "sampledElapsedSeconds": 29.015165041,
+          "sampledCpuFraction": 0.20816700478750175
+        }
+      },
+      {
+        "name": "connections-8-run-2",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 461129,
+        "responsesPerSecond": 13172.733333333334,
+        "p99Ms": 0.856009,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10670080,
+          "lastRssBytes": 10670080,
+          "peakRssBytes": 10670080,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.99,
+          "sampledElapsedSeconds": 29.015688695,
+          "sampledCpuFraction": 0.9991146618896408
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2629632,
+          "lastRssBytes": 2629632,
+          "peakRssBytes": 2629632,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.97,
+          "sampledElapsedSeconds": 29.015688695,
+          "sampledCpuFraction": 0.20575075996830477
+        }
+      },
+      {
+        "name": "connections-32-run-1",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 472699,
+        "responsesPerSecond": 13520.666666666666,
+        "p99Ms": 3.430118,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 12722176,
+          "lastRssBytes": 12722176,
+          "peakRssBytes": 12722176,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.01,
+          "sampledElapsedSeconds": 28.019882208,
+          "sampledCpuFraction": 0.9996473144345633
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3338240,
+          "lastRssBytes": 3338240,
+          "peakRssBytes": 3338240,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.73,
+          "sampledElapsedSeconds": 28.019882208,
+          "sampledCpuFraction": 0.20449764768689926
+        }
+      },
+      {
+        "name": "connections-32-run-2",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 472142,
+        "responsesPerSecond": 13488.1,
+        "p99Ms": 3.440807,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 13361152,
+          "lastRssBytes": 13361152,
+          "peakRssBytes": 13361152,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.01,
+          "sampledElapsedSeconds": 28.019782131,
+          "sampledCpuFraction": 0.9996508848300724
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3297280,
+          "lastRssBytes": 3297280,
+          "peakRssBytes": 3297280,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.74,
+          "sampledElapsedSeconds": 28.019782131,
+          "sampledCpuFraction": 0.20485526879416693
+        }
+      },
+      {
+        "name": "connections-64-run-1",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 469225,
+        "responsesPerSecond": 13395.1,
+        "p99Ms": 6.88522,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 16072704,
+          "lastRssBytes": 16072704,
+          "peakRssBytes": 16072704,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.027404357,
+          "sampledCpuFraction": 0.9997358172413796
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3997696,
+          "lastRssBytes": 3997696,
+          "peakRssBytes": 3997696,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.81,
+          "sampledElapsedSeconds": 28.027404357,
+          "sampledCpuFraction": 0.20729711271136386
+        }
+      },
+      {
+        "name": "connections-64-run-2",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 471231,
+        "responsesPerSecond": 13480.6,
+        "p99Ms": 6.880224,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 16011264,
+          "lastRssBytes": 16011264,
+          "peakRssBytes": 16011264,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.026312916,
+          "sampledCpuFraction": 0.9997747503919292
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 4026368,
+          "lastRssBytes": 4026368,
+          "peakRssBytes": 4026368,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 5.75,
+          "sampledElapsedSeconds": 28.026312916,
+          "sampledCpuFraction": 0.20516434028385414
+        }
+      },
+      {
+        "name": "soak",
+        "connections": 32,
+        "seconds": 300,
+        "attempts": 4119748,
+        "responsesPerSecond": 13507.116666666667,
+        "p99Ms": 3.436015,
+        "server": {
+          "samples": 299,
+          "sufficientForTrend": true,
+          "firstRssBytes": 12795904,
+          "lastRssBytes": 12795904,
+          "peakRssBytes": 12795904,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 298.13,
+          "sampledElapsedSeconds": 298.212509423,
+          "sampledCpuFraction": 0.9997233200473058
+        },
+        "generator": {
+          "samples": 299,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3301376,
+          "lastRssBytes": 3301376,
+          "peakRssBytes": 3301376,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 60.89,
+          "sampledElapsedSeconds": 298.212509423,
+          "sampledCpuFraction": 0.20418325213054858
+        }
+      }
+    ],
+    "attempts": 7646926
+  },
+  "amd-2": {
+    "identity": {
+      "source": "cd661ff84b88736ceec83c75e0e2ecf7e6de551d",
+      "programSha256": "715e3a7593121256222f0ce526de5a428699a4195a83d1c312a4f96f28cd553a",
+      "maintainedProgramSha256": "c9b1feac9fe13c57f79df1726eb0b2c638965e96021cfaa8e3db018d623ea0bf",
+      "maxRequestsPerConnection": 10000000,
+      "machine": "x86_64",
+      "phase": "measure",
+      "session": 2,
+      "compilerSha256": "ae122c37dcc3b6cdddd0ca2d8cfcdd2ec886ab7753e10d72053f3100d8c2acd5",
+      "generatorSha256": "f2fdf5694661629d29364af201bd30d070da5a11adacc7776c78cf19e8dc6b93",
+      "gccVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "gxxVersion": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "topology": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "allowedCpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "serverCpu": 0,
+      "generatorCpu": 1,
+      "clockTicksPerSecond": 100,
+      "environment": {
+        "CC": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gcc-policy",
+        "CXX": "/home/runner/work/fun-with-pipes/fun-with-pipes/http-load/gxx-policy",
+        "FWP_LTO": "0",
+        "FWP_ADDR": "127.0.0.1:0"
+      },
+      "flags": [
+        "-march=x86-64",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto"
+      ],
+      "optimization": "O2",
+      "requestDeadlineSeconds": 5,
+      "shutdownDeadlineSeconds": 20,
+      "placement": "Distinct allowed logical CPUs, not exclusive physical cores",
+      "scope": "fwp API only; no C/Rust/Swift peer throughput claim. Closed loop, one request outstanding per persistent connection. Setup excluded; request send, response consumption and validation included. Native logging overhead is included in throughput, outside request latency.",
+      "binarySha256": "ac0956dfd192288706bbd3fb392a5a9a050c744ba702a79876aa57dfb81949f2",
+      "binaryBytes": 2146944,
+      "generatedCSha256": "225665e276be8049b05cb39d035c74eca5f245ae4df2e5b5122a2050f69c27f4"
+    },
+    "trials": [
+      {
+        "name": "connections-64-run-1",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 453399,
+        "responsesPerSecond": 12954.466666666667,
+        "p99Ms": 6.994196,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 16023552,
+          "lastRssBytes": 16023552,
+          "peakRssBytes": 16023552,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.03,
+          "sampledElapsedSeconds": 28.026938469,
+          "sampledCpuFraction": 1.0001092352988674
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 4034560,
+          "lastRssBytes": 4034560,
+          "peakRssBytes": 4034560,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.5,
+          "sampledElapsedSeconds": 28.026938469,
+          "sampledCpuFraction": 0.26759968836038195
+        }
+      },
+      {
+        "name": "connections-64-run-2",
+        "connections": 64,
+        "seconds": 30,
+        "attempts": 453116,
+        "responsesPerSecond": 12944.633333333333,
+        "p99Ms": 7.013976,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 15577088,
+          "lastRssBytes": 15577088,
+          "peakRssBytes": 15577088,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.027638854,
+          "sampledCpuFraction": 0.9997274528175637
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3997696,
+          "lastRssBytes": 3997696,
+          "peakRssBytes": 3997696,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.47,
+          "sampledElapsedSeconds": 28.027638854,
+          "sampledCpuFraction": 0.2665226292843398
+        }
+      },
+      {
+        "name": "connections-32-run-1",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 451864,
+        "responsesPerSecond": 12906.0,
+        "p99Ms": 3.510312,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 12668928,
+          "lastRssBytes": 12668928,
+          "peakRssBytes": 12668928,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.021370976,
+          "sampledCpuFraction": 0.9999510739142216
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3325952,
+          "lastRssBytes": 3325952,
+          "peakRssBytes": 3325952,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.47,
+          "sampledElapsedSeconds": 28.021370976,
+          "sampledCpuFraction": 0.2665822456152475
+        }
+      },
+      {
+        "name": "connections-32-run-2",
+        "connections": 32,
+        "seconds": 30,
+        "attempts": 452712,
+        "responsesPerSecond": 12928.533333333333,
+        "p99Ms": 3.508593,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 13324288,
+          "lastRssBytes": 13324288,
+          "peakRssBytes": 13324288,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.02,
+          "sampledElapsedSeconds": 28.020845433,
+          "sampledCpuFraction": 0.9999698284264112
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 3293184,
+          "lastRssBytes": 3293184,
+          "peakRssBytes": 3293184,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.49,
+          "sampledElapsedSeconds": 28.020845433,
+          "sampledCpuFraction": 0.2673009998184804
+        }
+      },
+      {
+        "name": "connections-8-run-1",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 428020,
+        "responsesPerSecond": 12225.066666666668,
+        "p99Ms": 0.903686,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 11309056,
+          "lastRssBytes": 11309056,
+          "peakRssBytes": 11309056,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.01,
+          "sampledElapsedSeconds": 28.016126759,
+          "sampledCpuFraction": 0.9997813131325147
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2641920,
+          "lastRssBytes": 2641920,
+          "peakRssBytes": 2641920,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.23,
+          "sampledElapsedSeconds": 28.016126759,
+          "sampledCpuFraction": 0.25806565133695397
+        }
+      },
+      {
+        "name": "connections-8-run-2",
+        "connections": 8,
+        "seconds": 30,
+        "attempts": 431776,
+        "responsesPerSecond": 12335.0,
+        "p99Ms": 0.898138,
+        "server": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10809344,
+          "lastRssBytes": 10809344,
+          "peakRssBytes": 10809344,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 28.0,
+          "sampledElapsedSeconds": 28.015584658,
+          "sampledCpuFraction": 0.999443714697007
+        },
+        "generator": {
+          "samples": 29,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2637824,
+          "lastRssBytes": 2637824,
+          "peakRssBytes": 2637824,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 7.23,
+          "sampledElapsedSeconds": 28.015584658,
+          "sampledCpuFraction": 0.25807064490212006
+        }
+      },
+      {
+        "name": "connections-1-run-1",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 278913,
+        "responsesPerSecond": 7968.933333333333,
+        "p99Ms": 0.152199,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10711040,
+          "lastRssBytes": 10711040,
+          "peakRssBytes": 10711040,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 27.03,
+          "sampledElapsedSeconds": 29.014618558,
+          "sampledCpuFraction": 0.9315993572676904
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2437120,
+          "lastRssBytes": 2437120,
+          "peakRssBytes": 2437120,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.54,
+          "sampledElapsedSeconds": 29.014618558,
+          "sampledCpuFraction": 0.22540361807364762
+        }
+      },
+      {
+        "name": "connections-1-run-2",
+        "connections": 1,
+        "seconds": 30,
+        "attempts": 275881,
+        "responsesPerSecond": 7884.8,
+        "p99Ms": 0.152539,
+        "server": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 10264576,
+          "lastRssBytes": 10264576,
+          "peakRssBytes": 10264576,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 26.53,
+          "sampledElapsedSeconds": 29.014430802,
+          "sampledCpuFraction": 0.9143725817351294
+        },
+        "generator": {
+          "samples": 30,
+          "sufficientForTrend": true,
+          "firstRssBytes": 2424832,
+          "lastRssBytes": 2424832,
+          "peakRssBytes": 2424832,
+          "rssSlopeBytesPerSecond": 0.0,
+          "sampledCpuSeconds": 6.84,
+          "sampledElapsedSeconds": 29.014430802,
+          "sampledCpuFraction": 0.23574475910547624
+        }
+      }
+    ],
+    "attempts": 3225681
+  }
+}

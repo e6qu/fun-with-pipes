@@ -3,6 +3,9 @@
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Command, Output};
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -96,19 +99,60 @@ main = "{}" | file.open | reopen
     assert_eq!(optimized.stderr, reference.stderr);
     for opt in ["-O1", "-O2"] {
         let exe = dir.0.join(opt);
+        let cfile = dir.0.join(format!("{opt}.c"));
         checked(
             Command::new(fwp)
-                .args(["build"])
+                .args(["build", "--emit-c"])
                 .arg(&src)
                 .args([opt, "-o"])
-                .arg(&exe),
+                .arg(&cfile),
         );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            code.contains("protected by enclosing frame"),
+            "the lifetime control must exercise the nested borrow proof"
+        );
+        fwp::cgen::compile_c(&code, &exe, opt).unwrap();
         let native = limit_descriptors(&mut Command::new(&exe), 4)
             .output()
             .unwrap();
+        record_probe::save("nested-file-lifetime", opt, &code, &exe, &native);
         assert_eq!(native.status.code(), reference.status.code());
         assert_eq!(native.stdout, reference.stdout);
         assert_eq!(native.stderr, reference.stderr);
+
+        // Remove the actual protecting parameter hold, including its saved
+        // owner. The inner borrowed hold is already absent. Ordinary last-use
+        // cleanup now closes the first file too soon, allowing the second open.
+        // This must change the result, proving that the lifetime check detects
+        // an unsound removal rather than merely looking for generated comments.
+        let holds: Vec<_> = code
+            .lines()
+            .filter(|line| {
+                line.trim_start().starts_with("fwp_file_dup(")
+                    && line.split("; ").count() == 2
+                    && line.contains(".v")
+                    && line.contains(" = ")
+            })
+            .collect();
+        assert!(!holds.is_empty(), "expected original file parameter holds");
+        let mut omitted = code.clone();
+        for hold in holds {
+            omitted = omitted.replace(hold, "/* actual omitted file lifetime owner */");
+        }
+        fwp::cgen::compile_c(&omitted, &exe, opt).unwrap();
+        let premature = limit_descriptors(&mut Command::new(&exe), 4)
+            .output()
+            .unwrap();
+        record_probe::save(
+            "nested-file-lifetime",
+            &format!("omitted-{opt}"),
+            &omitted,
+            &exe,
+            &premature,
+        );
+        assert!(premature.status.success(), "{premature:?}");
+        assert!(premature.stdout.is_empty() && premature.stderr.is_empty());
     }
 }
 

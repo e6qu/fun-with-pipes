@@ -1,0 +1,242 @@
+name: Queued service CPU attribution
+on:
+  workflow_call:
+    inputs:
+      replay:
+        type: boolean
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+      source_tag:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  samples:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+            registers: ax,bx,cx,dx,si,di,bp,sp,ip,r8,r9,r10,r11,r12,r13,r14,r15
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+            registers: x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20,x21,x22,x23,x24,x25,x26,x27,x28,x29,lr,sp,pc
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: swift:6.4.2-noble
+      options: --cap-add=PERFMON
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      SOURCE_TAG: ${{ inputs.source_tag }}
+      SAMPLE_ARCH: ${{ matrix.arch }}
+      SAMPLE_C_ARCH: ${{ matrix.c_arch }}
+      SAMPLE_RUST_CPU: ${{ matrix.rust_cpu }}
+      SAMPLE_REGISTERS: ${{ matrix.registers }}
+    steps:
+      - name: Install native compilers and profiler
+        run: apt-get update && apt-get install -y git gh make gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        if: ${{ !inputs.replay }}
+        env:
+          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        if: ${{ !inputs.replay }}
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Select the installed profiler and exact source
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_TAG")" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import platform
+          import re
+          import subprocess
+
+          assert platform.machine() == os.environ['SAMPLE_ARCH']
+          release = platform.freedesktop_os_release()
+          assert release['ID'] == 'ubuntu' and release['VERSION_ID'] == '24.04'
+          dependencies = subprocess.check_output(['dpkg-query', '-W', '-f', '${Depends}', 'linux-tools-generic'], text=True)
+          packages = re.findall(r'\b(linux-tools-\d[\w.+~-]*-generic)\b', dependencies)
+          assert len(packages) == 1, dependencies
+          files = subprocess.check_output(['dpkg-query', '-L', packages[0]], text=True).splitlines()
+          profilers = [Path(p).resolve() for p in files if p.endswith('/perf')]
+          assert len(profilers) == 1 and profilers[0].is_file(), profilers
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'SERVICE_PERF={profilers[0]}\n')
+              output.write(f'SERVICE_CPU={min(os.sched_getaffinity(0))}\n')
+          PY
+      - name: Check out the pinned profiler source
+        uses: actions/checkout@v7
+        with:
+          repository: torvalds/linux
+          ref: e8f897f4afef0031fe618a8e94127a0934896aba
+          path: perf-source
+          sparse-checkout: |
+            tools
+            include
+            scripts
+            arch
+            lib
+      - name: Build the repaired GNU inline-name reader
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/perf-source"
+          python3 scripts/prepare-perf-symbol-reader.py --checkout perf-source --output service-perf-build
+          make -C perf-source/tools/perf -j2 CC=gcc CXX=g++ \
+            NO_LIBBFD=1 NO_LIBUNWIND=1 NO_LIBPYTHON=1 NO_LIBPERL=1 NO_JEVENTS=1 BUILD_BPF_SKEL=0 \
+            NO_LIBBABELTRACE=1 NO_LIBTRACEEVENT=1 NO_LIBPFM4=1 NO_LIBNUMA=1 \
+            NO_GTK2=1 NO_JVMTI=1 NO_SLANG=1 NO_LIBAUDIT=1 NO_LIBCRYPTO=1 NO_LIBBPF=1 \
+            2>&1 | tee service-perf-build/build.log
+          perf-source/tools/perf/perf version --build-options > service-perf-build/features.txt
+          sha256sum perf-source/tools/perf/perf > service-perf-build/binary.sha256
+          cp perf-source/tools/perf/.config-detected service-perf-build/config.txt
+          python3 - <<'PYCONFIG'
+          from pathlib import Path
+          config = Path('service-perf-build/config.txt').read_text().splitlines()
+          for setting in ('CONFIG_DWARF_UNWIND=y', 'CONFIG_LIBDW_DWARF_UNWIND=y'):
+              assert setting in config, (setting, config)
+          PYCONFIG
+          echo "SERVICE_REFERENCE_PERF=$SERVICE_PERF" >> "$GITHUB_ENV"
+          echo "SERVICE_PERF=$GITHUB_WORKSPACE/perf-source/tools/perf/perf" >> "$GITHUB_ENV"
+      - name: Check recording and decoding before compiler builds
+        if: ${{ !inputs.replay }}
+        run: >-
+          python3 scripts/service_cpu_collect.py probe
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
+          --arch "$SAMPLE_ARCH" --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
+          --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
+          --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
+          --addr2line /usr/bin/addr2line --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-probe
+      - name: Check readers and build fwp
+        if: ${{ !inputs.replay }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir service-cpu-setup
+          python3 scripts/test-compiler-sampling.py
+          python3 scripts/test-service-cpu-samples.py
+          python3 scripts/test-service-cpu-collect.py
+          cargo fetch --locked 2>&1 | tee service-cpu-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee service-cpu-setup/build.log
+      - name: Verify every case and sample each large service call
+        if: ${{ !inputs.replay }}
+        run: >-
+          python3 scripts/service_cpu_collect.py collect
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
+          --arch "$SAMPLE_ARCH" --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
+          --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
+          --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
+          --addr2line /usr/bin/addr2line --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-evidence
+      - name: Reconstruct sample accounting and exact service results
+        if: ${{ !inputs.replay }}
+        run: >-
+          python3 scripts/service_cpu_audit.py collection --input service-cpu-evidence
+          --source "$GITHUB_SHA" --arch "$SAMPLE_ARCH"
+      - name: Download and verify the original recordings
+        if: inputs.replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          python3 - <<'PYDOWNLOAD'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+
+          repository = 'repos/' + os.environ['GITHUB_REPOSITORY']
+          run = int(os.environ['RECORDING_RUN'])
+          listing = json.loads(subprocess.check_output([
+              'gh', 'api', f'{repository}/actions/runs/{run}/artifacts?per_page=100']))
+          assert listing['total_count'] == len(listing['artifacts'])
+          entries = [a for a in listing['artifacts'] if a['name'] == 'service-cpu-' + os.environ['SAMPLE_ARCH']]
+          assert len(entries) == 1
+          artifact = entries[0]
+          assert not artifact['expired']
+          assert artifact['workflow_run']['id'] == run
+          assert artifact['workflow_run']['head_sha'] == os.environ['RECORDING_SOURCE']
+          archive = Path('service-recordings.zip')
+          with archive.open('wb') as output:
+              subprocess.run(['gh', 'api',
+                  f"{repository}/actions/artifacts/{artifact['id']}/zip"], stdout=output, check=True)
+          assert archive.stat().st_size == artifact['size_in_bytes']
+          with archive.open('rb') as source:
+              assert 'sha256:' + hashlib.file_digest(source, 'sha256').hexdigest() == artifact['digest']
+          destination = Path('service-recordings').resolve()
+          assert not destination.exists()
+          with zipfile.ZipFile(archive) as contents:
+              assert all((destination/name).resolve().is_relative_to(destination) for name in contents.namelist())
+              assert contents.testzip() is None
+              contents.extractall(destination)
+          Path('service-recording-download.json').write_text(json.dumps(artifact, indent=2) + '\n')
+          archive.unlink()
+          print('Verified original recording source, archive SHA-256 and all ZIP CRCs')
+          PYDOWNLOAD
+      - name: Verify saved outputs and decode all original samples
+        if: inputs.replay
+        env:
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+        run: >-
+          python3 scripts/service_cpu_replay.py --recordings service-recordings
+          --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --arch "$SAMPLE_ARCH"
+          --perf "$SERVICE_PERF" --addr2line /usr/bin/addr2line
+          --reference-perf "$SERVICE_REFERENCE_PERF"
+          --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-replayed
+      - name: Independently reconstruct every replayed result and attribution
+        if: inputs.replay
+        env:
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/service_cpu_audit.py replay --decoder "$GITHUB_SHA"
+          --functions service-recordings/service-cpu-evidence/function-names.json
+          --input service-cpu-replayed --source "$RECORDING_SOURCE" --arch "$SAMPLE_ARCH"
+      - name: Retain complete and failed observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: service-cpu-${{ matrix.arch }}
+          path: |
+            service-cpu-probe/
+            service-cpu-setup/
+            service-perf-build/
+            service-recording-download.json
+            ${{ !inputs.replay && 'service-cpu-evidence/' || 'service-cpu-replayed/' }}
+          if-no-files-found: error

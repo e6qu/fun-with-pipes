@@ -35,8 +35,8 @@ verify three known allocations and a real omitted free before observing services
 
 These are not ARC operation counts, fwp managed-slot charges or RSS. fwp's
 [separate physical-ownership check](../weak-callback-service-2026-11-09/README.md)
-verifies cleanup; the four-language [service timings](../weak-callback-time.md)
-remain pending.
+verifies cleanup; the later four-language [service timings](../weak-callback-time-2026-11-09/README.md)
+report the complete elapsed-time comparison.
 
 ## Verification and audit repair
 

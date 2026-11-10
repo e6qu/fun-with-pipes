@@ -1,0 +1,34 @@
+{
+  "amd-job.log.gz": {
+    "bytes": 62433,
+    "sha256": "ed4736a1a4a260b8a47824f6e98e3dc06ed77368cb1eb667da6489d5079bd17d"
+  },
+  "amd-reports.zip": {
+    "bytes": 251397,
+    "sha256": "cd2e05c8b6c9c223d3b3e6d901cce060829fbfc83acd49e9671f7658a75ab552"
+  },
+  "analysis.json": {
+    "bytes": 243910,
+    "sha256": "735b2ff09c44f0a349e7c7d68bdd146efbd78e79779fb01596bd3e43dbd36fb6"
+  },
+  "arm-job.log.gz": {
+    "bytes": 61781,
+    "sha256": "6faf0325e0fc3aa9ce1c901b5edf896c8645556e7f3ae216a44d2643a70da2e9"
+  },
+  "arm-reports.zip": {
+    "bytes": 237405,
+    "sha256": "f8b693d6d333dd51bd4760b401a7272ee0b149a8f74c6592ebcaf7cbdacc3730"
+  },
+  "artifacts.json": {
+    "bytes": 1450,
+    "sha256": "5d90f98d340eb2e4f6f3f580834be0fa7dd1b85c6eba91168333ef9fb3716946"
+  },
+  "review-summaries.py": {
+    "bytes": 4711,
+    "sha256": "0ea41b279d11a83f26441492499779b6523c6b725549794b16384e67aa1b944a"
+  },
+  "run.json": {
+    "bytes": 48853,
+    "sha256": "9a94dfb6a8d75d20a19ddfd0ce4e25ec8b287ed83ca1c636c1b8919d26cde3c2"
+  }
+}

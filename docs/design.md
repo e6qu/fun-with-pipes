@@ -301,6 +301,15 @@ arguments. C generation uses the shared direct-call ownership contract for this
 decision, including region and numeric-array workers. Dropping both would free a
 caller's surviving alias ([regression and verification](measurements/parser-entry-cleanup-2026-11-09/README.md)).
 
+Original resource frames have a separate native proof in
+`src/cgen/resource_borrows.rs`. It follows initialized enclosing owners through
+aliases and immutable projections, then omits a nested parameter's duplicate
+lifetime hold. Scoped rollback separates branches; repeated local IDs and
+loop/tail-call rebinding prevent selection. It does not change ordinary argument
+contracts or interpreter metadata. [The lifetime example](ownership.md#keeping-a-resource-alive-through-nested-calls)
+and [measurement contract](measurements/nested-resource-owners.md) distinguish
+passing focused checks from still-open performance and final delivery requirements.
+
 The [gradient-storage group](measurements/gradient-call-storage.md) adds a
 private direct entry for known `ad.scope` callbacks returning arrays. It keeps
 read-only list inputs borrowed only when every caller retains the input beyond

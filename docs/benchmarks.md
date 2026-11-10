@@ -41,21 +41,31 @@ a complete iterative solve. [All #272 platform gates pass](measurements/structur
 ## Complete callback service
 
 Each call creates 4,096 messages containing 16 integers, delivers them and frees
-the service's data. The [four-language comparison](measurements/weak-callback-time-2026-11-09/README.md)
+the service's data. The [current comparison](measurements/nested-resource-time-2026-11-10/README.md)
 uses ordinary C owners, Rust `Rc`/`Weak`, Swift weak references and fwp channels.
-Two sessions per host pass all identical-copy noise controls:
+Full-delivery ratios qualify in both sessions per host:
 
-| Host | fwp call time | fwp / C | fwp / Rust | fwp / Swift |
-|---|---|---|---|---|
-| ARM64, Neoverse N2 | 6.47 ms | 20.22–20.23× | 17.21–17.28× | 5.12× |
-| AMD64, EPYC 7763 | 7.78–7.84 ms | 18.65–18.79× | 15.54–15.66× | 6.64–6.70× |
+| Host | fwp / C time | fwp / Rust time | fwp / Swift time |
+|---|---:|---:|---:|
+| ARM64, Neoverse N2 | 16.70–16.78× | 14.35–14.41× | 4.32–4.34× |
+| AMD64, EPYC 7763 | 14.93–14.94× | 12.64–12.66× | 5.33–5.34× |
 
-These ratios include construction, delivery and cleanup; 5.12× means 412% extra
-time. Representations and synchronization differ, so the gap is not an isolated
-ARC cost. The report also retains cancellation, expiration and handled-error
-cases, full-process time, allocation profiles, RSS and build costs. fwp's process
-RSS is lower than Swift's here but higher than C/Rust's. This is a serial queued
-service, not the network throughput/latency experiment below.
+The ratios include construction, delivery and cleanup; 4.32× means 332% extra
+time. Queue layouts and synchronization differ, so this is not an isolated ARC
+cost. It is a serial queued service, not network throughput or latency.
+
+Nested resource borrowing removes duplicate lifetime holds. Compared with the
+previous fwp compiler, 31/32 service comparisons qualify and meet their targets,
+using 16–21% less time. One cancellation comparison and one compiler-growth
+comparison are noisy. Heap requests and charged peak storage are unchanged;
+four ARM64 process-RSS comparisons miss the 5% limit. A [separate diagnostic](measurements/nested-resource-memory-2026-11-10/README.md)
+finds lower observed resident-page peaks but cannot explain the original misses.
+Snapshots do not replace whole-process high-water limits.
+
+[Earlier peer results](measurements/weak-callback-time-2026-11-09/README.md) and
+[CPU attribution](measurements/service-cpu-attribution-2026-11-10/README.md)
+retain their measured sources. CPU samples selected this optimization; they do
+not establish elapsed-time ratios. [How to read a CPU sample](terminology.md#cpu-samples-where-running-time-goes).
 
 ## Sustained service load
 
@@ -63,25 +73,27 @@ The native HTTP correctness test runs 64 clients with 200 requests each and
 checks shutdown with a request in flight. Its 12,800 successful requests do not
 establish throughput, latency or sustained capacity.
 
-The [November 10 measurements](measurements/application-compiler-load-2026-11-10/README.md#what-http-load-means)
-follow a [separate fixed protocol](measurements/application-tooling.md#sustained-http-load):
+The [latest load measurements](measurements/nested-resource-http-load-2026-11-10/README.md)
+follow the [fixed protocol](measurements/application-tooling.md#sustained-http-load):
 plain loopback HTTP, one small JSON endpoint, 1/8/32/64 persistent connections,
 two sessions per architecture and a five-minute soak on each.
 
-- All 34 trials have zero failures across 26.8 million attempts, including warmup
+- All 34 trials have zero failures across 26,228,542 attempts, including warmup
   and late replies. Correct replies within the window define throughput.
-- Sampled server RSS stays flat within each trial, at 9.24–16.99 MiB across
+- Sampled server RSS stays flat within each trial, at 8.78–15.33 MiB across
   hosts/connection counts. This does not mean zero allocation or transient peaks.
-- Five-minute, 32-connection soaks sustain about 16,249 replies/s on Neoverse N2
-  and 20,815 replies/s on EPYC 9V45. Their p99 latencies are 8.90 and 2.28 ms.
+- Five-minute, 32-connection soaks sustain about 18,813 replies/s on Neoverse N2
+  and 13,507 replies/s on Xeon Platinum 8370C. Their p99 latencies are 2.564 and
+  3.436 ms, respectively.
 - Separate allocation/backpressure controls cover slow clients, partial requests,
-  disconnects and final cancellation. Instrumentation is absent from timed load.
+  disconnects and final cancellation. Timed load has no allocation instrumentation.
 
-These establish an fwp baseline, not a C/Rust/Swift comparison. The two AMD64
-sessions use different CPUs; do not pool them or rank architectures. The server
-uses about one CPU core; attribute its CPU work before selecting an optimization.
-The [report](measurements/application-compiler-load-2026-11-10/README.md) retains
+These are fwp capacity observations, not a before/after or C/Rust/Swift comparison.
+The AMD64 sessions use different CPUs; do not pool them or rank architectures.
+The [report](measurements/nested-resource-http-load-2026-11-10/README.md) retains
 all concurrency levels, raw summaries, process traces and measurement limits.
+The [earlier baseline](measurements/application-compiler-load-2026-11-10/README.md)
+remains tied to its original source, hosts and settings.
 
 ## November 7 complete-solve derivative comparison
 
@@ -156,7 +168,12 @@ direct comparison. Sorting implementations also differ. These differences belong
 to the results; they must not be presented as isolated ARC or dispatch costs.
 
 Three separate GNU-time runs of the same executables measure peak **resident
-memory**, the RAM occupied by the process, including runtime and mapped libraries:
+memory**, the kernel's process high-water estimate, including runtime and mapped
+libraries. Linux's fast RSS/high-water counters can be inaccurate, especially
+relative to small process footprints; [page walks provide more detail](https://man7.org/linux/man-pages/man5/proc_pid_status.5.html).
+Keep raw readings and failed limits. The [service RSS diagnosis](measurements/nested-resource-rss.md)
+compares counters with stopped-process page walks; sampled pages are not an exact
+transient peak. The table retains the original GNU-time observations:
 
 | Program | C peak KiB | Rust peak KiB | fwp peak KiB |
 |---|---:|---:|---:|

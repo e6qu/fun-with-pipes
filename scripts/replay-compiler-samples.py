@@ -9,8 +9,8 @@ import shutil
 import subprocess
 import traceback
 
-from compiler_sample_stacks import decode
-from compiler_sampling import histogram
+from compiler_sample_stacks import attribute
+from cpu_samples import decode, histogram
 from compiler_scaling import APPLICATIONS, ROOT, digest
 
 
@@ -55,8 +55,10 @@ def main():
             recording = source/name
             assert (recording/'ordinary.c').read_bytes() == (recording/'sampled.c').read_bytes()
             flat = histogram((recording/'all-symbols.tsv').read_text(), False)
-            row['checking-callers'] = decode(recording/'perf.data', directory, args.perf,
-                args.demangler, environment, args.deadline, flat, row['commands'])
+            row['checking-callers'] = decode(recording/'perf.data', directory, perf=args.perf,
+                symbol_command=[args.demangler, '--no-strip-underscore', '--format=rust'],
+                environment=environment, deadline=args.deadline, flat=flat, commands=row['commands'],
+                attribution=attribute, cwd=ROOT)
             row['correct'] = True
         except Exception:
             row['failure'] = traceback.format_exc()

@@ -1,0 +1,130 @@
+name: Verify nested resource-owner borrowing
+on:
+  workflow_call:
+    inputs:
+      scope:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CXX: g++
+      FWP_LTO: '0'
+      REFERENCE_SOURCE: '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_ARC_ARTIFACTS: ${{ github.workspace }}/nested-owner-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install native dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc g++ libssl-dev pkg-config
+      - name: Explicit focused scope
+        env:
+          CHECK_SCOPE: ${{ inputs.scope }}
+        run: test "$CHECK_SCOPE" = all || test "$CHECK_SCOPE" = lifetime
+      - name: Check formatting and all changed Rust callers
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --lib --test channel_queue_ownership --test resource_frames -- -D warnings
+      - name: Prove nested lifetime selection and rejection boundaries
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
+        run: |
+          cargo test --locked --lib cgen::resource_borrows::tests -- --nocapture
+          cargo test --locked --lib resource::tests -- --nocapture
+      - name: Verify actual service cleanup, weak expiration and caller lifetimes
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
+        run: >-
+          python3 scripts/run-native-tests.py --idle-timeout 1200
+          --logs nested-owner-tests --targets
+          channel_queue_ownership queued_functions compiler_call_liveness
+          resource_frames resource_frame_fields resource_frame_variants
+          resource_match_context tail_recursion
+      - name: Verify the actual omitted protecting owner and file lifetime controls
+        if: ${{ !cancelled() && inputs.scope == 'lifetime' }}
+        run: >-
+          python3 scripts/run-native-tests.py --idle-timeout 1200
+          --logs nested-owner-tests --targets resource_frames
+      - name: Check operation observer boundaries
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
+        run: python3 scripts/test-nested-resource-counts.py
+      - name: Build the exact frozen reference compiler
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$REFERENCE_SOURCE"
+          git worktree add --detach ../nested-owner-reference-checkout "$REFERENCE_SOURCE"
+          mkdir nested-owner-reference
+          git -C ../nested-owner-reference-checkout rev-parse HEAD > nested-owner-reference/source.txt
+          test "$(cat nested-owner-reference/source.txt)" = "$REFERENCE_SOURCE"
+          cargo build --locked --bin fwp --manifest-path ../nested-owner-reference-checkout/Cargo.toml \
+            --target-dir ../nested-owner-reference-target 2>&1 | tee nested-owner-reference/build.log
+          cp ../nested-owner-reference-target/debug/fwp nested-owner-reference/fwp
+          git -C ../nested-owner-reference-checkout diff --exit-code HEAD
+          sha256sum target/debug/fwp nested-owner-reference/fwp > nested-owner-reference/compilers.sha256
+      - name: Count actual calls and storage and verify observer fault controls
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          arch="$(uname -m)"
+          case "$arch" in
+            x86_64) c_arch=x86-64 ;;
+            aarch64) c_arch=armv8-a ;;
+            *) exit 1 ;;
+          esac
+          python3 scripts/measure-nested-resource-counts.py \
+            --compiler target/debug/fwp --reference nested-owner-reference/fwp \
+            --reference-source "$REFERENCE_SOURCE" \
+            --source "$GITHUB_SHA" --arch "$arch" --cc gcc --c-arch "$c_arch" \
+            --output nested-owner-counts
+          python3 scripts/audit-nested-resource-counts.py --input nested-owner-counts \
+            --source "$GITHUB_SHA" --arch "$arch"
+          python3 scripts/check-nested-resource-audits.py --kind counts --input nested-owner-counts \
+            --source "$GITHUB_SHA" --arch "$arch" --output nested-owner-audit-controls
+      - name: Retain source and exact toolchains
+        if: always()
+        run: |
+          mkdir -p nested-owner-identity
+          git rev-parse HEAD > nested-owner-identity/source.txt
+          rustc -Vv > nested-owner-identity/rust.txt
+          gcc --version > nested-owner-identity/gcc.txt
+          uname -a > nested-owner-identity/host.txt
+      - name: Retain all results, including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nested-resource-owners-${{ inputs.scope }}-${{ matrix.runner }}
+          path: |
+            nested-owner-identity/
+            nested-owner-tests/
+            nested-owner-evidence/
+            nested-owner-reference/*.txt
+            nested-owner-reference/*.log
+            nested-owner-reference/*.sha256
+            nested-owner-counts/
+            nested-owner-audit-controls/
+          if-no-files-found: error

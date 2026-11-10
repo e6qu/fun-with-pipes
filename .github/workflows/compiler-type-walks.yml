@@ -81,7 +81,7 @@ jobs:
           REFERENCE_SOURCE: ${{ inputs.reference_source }}
         run: |
           set -o pipefail
-          python3 scripts/compiler_build_comparison.py --reference compiler-binaries/reference --candidate compiler-binaries/candidate --reference-source "$REFERENCE_SOURCE" --phase "$PHASE" --session "$SESSION" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --deadline 120 --output compiler-comparison 2>&1 | tee compiler-comparison.log
+          python3 scripts/compiler_build_comparison.py --contract compiler-types --reference compiler-binaries/reference --candidate compiler-binaries/candidate --reference-source "$REFERENCE_SOURCE" --phase "$PHASE" --session "$SESSION" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --deadline 120 --output compiler-comparison 2>&1 | tee compiler-comparison.log
       - name: Build the separate copy-count observer
         if: inputs.phase == 'check'
         run: |

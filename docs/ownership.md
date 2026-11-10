@@ -97,6 +97,34 @@ transfer removes the cleanup registration without freeing the transferred value.
 [list copying](measurements/list-copy-cleanup.md) and
 [record cleanup](measurements/record-cleanup.md) explain the failure controls.
 
+### Keeping a resource alive through nested calls
+
+A **resource frame** preserves a source call's lifetime after inlining. For example,
+an outer call may need to keep a file open until it returns, even after the file's
+last ordinary use. The compiler registers a separate owner for that lifetime.
+
+An inner call using the same file need not acquire another lifetime owner when
+the outer frame protects it throughout the inner call:
+
+```text
+outer frame owns file ─────────────────────────── release
+    inner call uses that protection ─── return
+```
+
+The native compiler can prove this relationship through an exact local alias or
+an immutable field. It waits until a binding is initialized and keeps branch
+proofs separate. A factory result, an ended scope or a reassigned local does not
+establish protection. Loop/tail-call rebinding is outside this proof.
+
+Only the duplicate frame hold is removed. Ordinary arguments, returned owners,
+failure cleanup and the point at which a file closes or weak target expires retain
+their existing rules. The interpreter keeps its original scope metadata.
+[Native Linux counts/cleanup](measurements/nested-resource-counts-2026-11-10/README.md)
+and the [omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md)
+pass. [Ordinary timing](measurements/nested-resource-time-2026-11-10/README.md)
+shows 16–21% gains in qualified cases. Noisy comparisons, four process-RSS misses
+and final delivery remain open. This differs from borrowing an ordinary argument below.
+
 ### Borrowing across direct calls
 
 A **direct call** has a target known to the compiler. It can borrow an argument

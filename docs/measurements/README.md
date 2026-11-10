@@ -9,6 +9,23 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
+now passes both native replays and independent raw-record audits. Identified
+ownership operations account for 40–43% of fwp sampled CPU work on ARM64 and
+48–51% on AMD64; cleanup bookkeeping is also prominent. [Nested resource-owner
+borrowing](nested-resource-owners.md) removes [29.7–36.9% of cleanup registrations](nested-resource-counts-2026-11-10/README.md)
+in the large service cases, with unchanged heap use. Both native architectures
+pass count/cleanup checks and the [actual omitted-owner fault control](nested-resource-lifetime-2026-11-10/README.md).
+[HTTP response and cleanup checks](nested-resource-http-checks-2026-11-10/README.md) also pass.
+[All 34 sustained HTTP trials](nested-resource-http-load-2026-11-10/README.md) pass
+with flat sampled RSS. [Ordinary timing](nested-resource-time-2026-11-10/README.md) shows 16–21% less
+elapsed time in qualified cases. One runtime and one compiler comparison are noisy;
+four ARM64 RSS misses remain unexplained. The [memory diagnostic](nested-resource-memory-2026-11-10/README.md)
+finds lower observed resident-page peaks and no fast-counter disagreement. It does
+not replace original high-water limits. [Pre-publication gates pass](nested-resource-prepublication-gates-2026-11-10/README.md);
+final combined-head delivery remains open. Unknown profile leaves and erased
+phase boundaries stay explicit.
+
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
 Bodies dominate. [Exact type-copy counts](compiler-type-copies-2026-11-10/README.md)
@@ -18,6 +35,7 @@ select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
 [Ordinary timing](compiler-type-time-2026-11-10/README.md) verifies 11–14% less
 word-count compilation time and 8–10% less callback compilation time, with peak
 memory essentially unchanged. Four noisy growth comparisons remain inconclusive.
+[PR #275 passes all final delivery gates](compiler-borrowed-final-gates-2026-11-10/README.md).
 [Windows backpressure](http-backpressure.md) records a test assumption exposed
 by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
 
@@ -57,8 +75,8 @@ show substantial C/Rust lookup gaps and mixed Swift results. The
 16-byte result allocation per successful lookup in this caller.
 [Queued-service results and cleanup](weak-callback-service-2026-11-09/README.md)
 and [native service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
-pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) now passes
-both sessions on both hosts: large full delivery takes 18.65–20.23× C's time and
+pass. [The earlier complete-service timing](weak-callback-time-2026-11-09/README.md) passes
+both sessions on both hosts at its recorded source: large full delivery takes 18.65–20.23× C's time and
 5.12–6.70× Swift's, with less process RSS than Swift but more than C/Rust.
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
@@ -70,6 +88,11 @@ peak occurs during tokenization; evaluation allocates nothing. [Arena retry
 and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
 
 ## Latest deliveries
+
+- #275: [borrowed compiler types](compiler-borrowed-final-gates-2026-11-10/README.md);
+  application compilation is faster, with four noisy growth comparisons still open.
+- #274: [application/tool workflows, compiler growth and HTTP load](application-final-gates-2026-11-10/README.md).
+- #273: [ownership/peer comparisons and parser cleanup](ownership-peer-final-gates-2026-11-09/README.md).
 
 Merged #272 delivers known array callback specialization and structured-gradient
 comparisons. [All final gates pass](structured-callback-delivery-2026-11-09/README.md);
@@ -103,8 +126,8 @@ separate useful work from input construction and release.
 - [Native proof cases](computed-numeric-inputs-2026-11-07/README.md): values,
   shared inputs, evaluation/trap order and the actual four-number call.
 
-These results lead to the [structured autodiff comparison](structured-autodiff.md)
-in [PLAN.md](../../PLAN.md).
+These earlier results motivated the [structured autodiff comparison](structured-autodiff.md).
+[PLAN.md](../../PLAN.md) records current work.
 Older reports below retain their own sources and decisions; “current” in a dated
 experiment names its measured variant, not the latest compiler.
 
