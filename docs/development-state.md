@@ -12,8 +12,14 @@ PR #275 is open at `a232e1e35062a37aa013975ac77bbd8cb4620663`. Production run
 `42767361217` is active; docs run `42767360650`, job `129666864000`, passes.
 Keep its exact head stable. This separate worktree `.worktrees/service-cpu-costs`,
 branch `service-cpu-costs`, prepares [service CPU attribution](measurements/service-cpu-costs.md).
-No second PR or runtime change is introduced. The protocol is not yet implemented
-or dispatched. Rebase preparation onto the verified squash after #275 merges.
+No second PR or runtime change is introduced. Protocol commit `8fcea595d` is
+published as `roadmap/service-cpu-protocol-2026-11-10`. Local preparation extracts
+shared CPU readers and adds service/source accounting. Five compiler-reader and
+five service-reader controls pass. Extraction caught a missed call signature/import;
+both are fixed. Service controls caught valid C names (`f1`, `add`) being treated as
+hex addresses; the reader now compares bare addresses with the recorded IP.
+Native replay and service recording remain unverified; no workflow is dispatched.
+Rebase preparation onto the verified squash after #275 merges.
 PR #274 is merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree equals
 passing source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
 [All production/docs/audit gates pass](measurements/application-final-gates-2026-11-10/README.md).
@@ -96,3 +102,13 @@ Preserve unrelated root-worktree changes, old worktrees and handoff stash
 <1 GiB, 180-second deadline. Last disk check: about 114 GiB free. Never raise or
 bypass limits. A guard serialization refusal earlier was resolved by waiting for
 the previous download to finish; no limits changed.
+
+The service collector and workflow are now prepared locally: 32 exact-output
+controls, 16 large-case profiles, per-peer one-second calibration and independent
+raw-record reconstruction. Shared CPU decoding preserves unresolved work. Guarded
+controls pass (5 compiler-reader, 5 service-reader, 3 collection/audit), and changed
+workflow lint passes. Mock platform/path/archive stubs were repaired before these
+passes; no native collection has run yet. The emitted function table was checked
+against retained generated C, and Swift demangling preserves the stack format.
+Publish the observation source/tag and run its two native jobs plus compiler-profile
+replay while #275 finishes; keep one active PR and do not restart #275's CI.
