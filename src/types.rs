@@ -339,6 +339,18 @@ impl TypeTable {
         }
     }
 
+    /// Follow only variable bindings, borrowing the first unbound variable or
+    /// non-variable node. Constructor applications are normalized by the walk.
+    fn follow_bindings<'a>(&'a self, mut t: &'a Type) -> &'a Type {
+        while let Type::Var(v) = t {
+            match &self.vars[*v as usize].bound {
+                Some(bound) => t = bound,
+                None => break,
+            }
+        }
+        t
+    }
+
     /// Flatten a row by following bound tail variables.
     pub fn flatten_row(&self, r: &Row) -> Row {
         let mut fields = r.fields.clone();
@@ -360,21 +372,32 @@ impl TypeTable {
 
     /// Fully substitute bound variables.
     pub fn zonk(&self, t: &Type) -> Type {
-        match self.resolve(t) {
-            Type::Var(v) => Type::Var(v),
-            Type::Con(n, args) => Type::Con(n, args.iter().map(|a| self.zonk(a)).collect()),
-            Type::App(h, args) => Type::App(
-                Box::new(self.zonk(&h)),
-                args.iter().map(|a| self.zonk(a)).collect(),
-            ),
+        match self.follow_bindings(t) {
+            Type::Var(v) => Type::Var(*v),
+            Type::Con(n, args) => Type::Con(n.clone(), args.iter().map(|a| self.zonk(a)).collect()),
+            Type::App(h, args) => {
+                let head = self.zonk(h);
+                let arguments = args.iter().map(|a| self.zonk(a));
+                match head {
+                    Type::Con(name, mut preceding) => {
+                        preceding.extend(arguments);
+                        Type::Con(name, preceding)
+                    }
+                    Type::App(head, mut preceding) => {
+                        preceding.extend(arguments);
+                        Type::App(head, preceding)
+                    }
+                    other => Type::App(Box::new(other), arguments.collect()),
+                }
+            }
             Type::Fun(a, b, e) => Type::Fun(
-                Box::new(self.zonk(&a)),
-                Box::new(self.zonk(&b)),
-                self.zonk_row(&e),
+                Box::new(self.zonk(a)),
+                Box::new(self.zonk(b)),
+                self.zonk_row(e),
             ),
-            Type::Record(r) => Type::Record(self.zonk_row(&r)),
-            Type::Nat(n) => Type::Nat(n),
-            Type::NatOp(op, a, b) => Type::nat_op(op, self.zonk(&a), self.zonk(&b)),
+            Type::Record(r) => Type::Record(self.zonk_row(r)),
+            Type::Nat(n) => Type::Nat(*n),
+            Type::NatOp(op, a, b) => Type::nat_op(*op, self.zonk(a), self.zonk(b)),
         }
     }
 
@@ -392,27 +415,27 @@ impl TypeTable {
 
     /// Collect unbound variables in order of first appearance.
     pub fn free_vars(&self, t: &Type, out: &mut Vec<TV>) {
-        match self.resolve(t) {
+        match self.follow_bindings(t) {
             Type::Var(v) => {
-                if !out.contains(&v) {
-                    out.push(v)
+                if !out.contains(v) {
+                    out.push(*v)
                 }
             }
             Type::Con(_, args) => args.iter().for_each(|a| self.free_vars(a, out)),
             Type::App(h, args) => {
-                self.free_vars(&h, out);
+                self.free_vars(h, out);
                 args.iter().for_each(|a| self.free_vars(a, out));
             }
             Type::Fun(a, b, e) => {
-                self.free_vars(&a, out);
-                self.free_vars(&b, out);
-                self.free_vars_row(&e, out);
+                self.free_vars(a, out);
+                self.free_vars(b, out);
+                self.free_vars_row(e, out);
             }
-            Type::Record(r) => self.free_vars_row(&r, out),
+            Type::Record(r) => self.free_vars_row(r, out),
             Type::Nat(_) => {}
             Type::NatOp(_, a, b) => {
-                self.free_vars(&a, out);
-                self.free_vars(&b, out);
+                self.free_vars(a, out);
+                self.free_vars(b, out);
             }
         }
     }
@@ -1077,6 +1100,129 @@ pub type VarSet = HashSet<TV>;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn type_walks_follow_long_alias_chains_without_recursive_binding_steps() {
+        let mut table = TypeTable::default();
+        let aliases: Vec<_> = (0..10_000).map(|_| table.fresh(Kind::Star, 1)).collect();
+        for pair in aliases.windows(2) {
+            table.bind(pair[0], Type::Var(pair[1]));
+        }
+        let first = Type::Var(aliases[0]);
+        let last = *aliases.last().unwrap();
+        let mut variables = Vec::new();
+        table.free_vars(&first, &mut variables);
+        assert_eq!(variables, vec![last]);
+        assert_eq!(table.zonk(&first), Type::Var(last));
+        table.bind(last, Type::con("I64"));
+        variables.clear();
+        table.free_vars(&first, &mut variables);
+        assert!(variables.is_empty());
+        assert_eq!(table.zonk(&first), Type::con("I64"));
+    }
+
+    #[test]
+    fn type_walks_preserve_nested_application_order_and_normalization() {
+        let mut table = TypeTable::default();
+        let a = table.fresh(Kind::Star, 1);
+        let b = table.fresh(Kind::Star, 1);
+        let head = table.fresh(Kind::Star, 1);
+        table.bind(head, Type::Con("Triple".into(), vec![Type::Var(a)]));
+        let input = Type::App(
+            Box::new(Type::App(Box::new(Type::Var(head)), vec![Type::Var(b)])),
+            vec![Type::Var(a)],
+        );
+        let mut variables = Vec::new();
+        table.free_vars(&input, &mut variables);
+        assert_eq!(variables, vec![a, b]);
+        assert_eq!(
+            table.zonk(&input),
+            Type::Con(
+                "Triple".into(),
+                vec![Type::Var(a), Type::Var(b), Type::Var(a)]
+            )
+        );
+        table.bind(a, Type::con("I64"));
+        table.bind(b, Type::con("Bool"));
+        assert_eq!(
+            table.zonk(&input),
+            Type::Con(
+                "Triple".into(),
+                vec![Type::con("I64"), Type::con("Bool"), Type::con("I64")]
+            )
+        );
+        let open_head = Type::App(
+            Box::new(Type::Var(table.fresh(Kind::Star, 1))),
+            vec![Type::Nat(3)],
+        );
+        assert_eq!(table.zonk(&open_head), open_head);
+    }
+
+    #[test]
+    fn type_walks_keep_numeric_row_order_open_tails_and_effects() {
+        let mut table = TypeTable::default();
+        let a = table.fresh(Kind::Star, 1);
+        let b = table.fresh(Kind::Star, 1);
+        let c = table.fresh(Kind::Star, 1);
+        let tail = table.fresh(Kind::Row, 1);
+        let open = table.fresh(Kind::Row, 1);
+        table.bind(
+            tail,
+            Type::Record(Row {
+                fields: vec![("3".into(), Type::Var(c))],
+                tail: Some(open),
+            }),
+        );
+        let row = Row {
+            fields: vec![("10".into(), Type::Var(a)), ("2".into(), Type::Var(b))],
+            tail: Some(tail),
+        };
+        let input = Type::Record(row.clone());
+        let mut variables = Vec::new();
+        table.free_vars(&input, &mut variables);
+        assert_eq!(variables, vec![b, c, a, open]);
+        table.bind(b, Type::con("I64"));
+        let expected = Row {
+            fields: vec![
+                ("2".into(), Type::con("I64")),
+                ("3".into(), Type::Var(c)),
+                ("10".into(), Type::Var(a)),
+            ],
+            tail: Some(open),
+        };
+        assert_eq!(table.zonk(&input), Type::Record(expected.clone()));
+        let function = Type::Fun(Box::new(Type::Var(c)), Box::new(Type::Var(a)), row);
+        variables = vec![a];
+        table.free_vars(&function, &mut variables);
+        assert_eq!(variables, vec![a, c, open]);
+        assert_eq!(
+            table.zonk(&function),
+            Type::Fun(Box::new(Type::Var(c)), Box::new(Type::Var(a)), expected)
+        );
+    }
+
+    #[test]
+    fn type_walks_normalize_naturals_and_reject_recursive_types() {
+        let mut table = TypeTable::default();
+        let n = table.fresh(Kind::Star, 1);
+        table.bind(n, Type::Nat(4));
+        let sum = Type::NatOp(NatOp::Add, Box::new(Type::Var(n)), Box::new(Type::Nat(3)));
+        assert_eq!(table.zonk(&sum), Type::Nat(7));
+        let mut variables = Vec::new();
+        table.free_vars(&sum, &mut variables);
+        assert!(variables.is_empty());
+        let variable = Type::Var(table.fresh(Kind::Star, 1));
+        let recursive = Type::Fun(
+            Box::new(variable.clone()),
+            Box::new(Type::con("I64")),
+            Row::default(),
+        );
+        assert!(matches!(
+            table.unify(&variable, &recursive),
+            Err(UnifyError::Occurs(_, _))
+        ));
+        assert_eq!(table.zonk(&variable), variable);
+    }
 
     #[test]
     fn nominal_constraints_preserve_structural_variable_aliases() {

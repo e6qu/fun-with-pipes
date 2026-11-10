@@ -1,0 +1,138 @@
+[
+  {
+    "path": "arm/archive-file-list.json.gz",
+    "bytes": 317,
+    "sha256": "9499be4765b8cceff1222ae911fe209b271cb33e4c720567b292c4348743abc9",
+    "originalBytes": 2156,
+    "originalSha256": "ec74c026afc876ea5156dade69cf46d0505f3d88b824b4a088e189f78bd3475f"
+  },
+  {
+    "path": "arm/compiler-build.txt.gz",
+    "bytes": 419,
+    "sha256": "d674533b724f8ef584e2fd31bb71d265afa684044ef9072102284ef76e3fc07e",
+    "originalBytes": 632,
+    "originalSha256": "88e8e7847a164f0e3815f70b4e9f07317d8d32fe6761b3c7d233079e58fc3aaa"
+  },
+  {
+    "path": "arm/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "1ad1a17dafb0d60f1f725a29bfffc950d9b649f8af6efd9ec3d95f4dae0f045f",
+    "originalBytes": 41,
+    "originalSha256": "df9e2df6ae3141c82d484f8d570255fa7334f75de02910f205dc97f41c46087a"
+  },
+  {
+    "path": "arm/type-walk-checking/identity.json.gz",
+    "bytes": 1496,
+    "sha256": "f194d9c58bd94a7a746f90149753908bdbe35d26bf49c35fe1c22cdeca3bf254",
+    "originalBytes": 3640,
+    "originalSha256": "941b541bce5fb84422c1071f01e332b017a81f4d7d09d6f5124203f5d3a38d45"
+  },
+  {
+    "path": "arm/type-walk-checking/summary.json.gz",
+    "bytes": 5298,
+    "sha256": "f46314fb9713dbdccbb7b942f61735e5fb6ca5fb7ad5475637f7d5c3065d4474",
+    "originalBytes": 36683,
+    "originalSha256": "24ca53acb3c6f6ae845e8ce6a80fb4ba2c35a5baf1cc1e53e0edfc01997887a8"
+  },
+  {
+    "path": "arm/type-walk-checking.log.gz",
+    "bytes": 121,
+    "sha256": "b444bf4d88ad37f3bb30d7888f561babd5bd37bdaa98713a6a34cd76a085b477",
+    "originalBytes": 204,
+    "originalSha256": "9767814e71a9c81e2c6de83013ca2d6110768f4500299691091a314fda64e4c9"
+  },
+  {
+    "path": "arm/type-walk-probe/manifest.json.gz",
+    "bytes": 408,
+    "sha256": "53ba0ba1d06a28c848856cda3da9a7a94638390b53d802e2835d857724aab3b8",
+    "originalBytes": 646,
+    "originalSha256": "2e4b05e273dd8d6d152023bc77636d91801b5d1c4f73e1c3f616ca75fb73ac9a"
+  },
+  {
+    "path": "arm/type-walk-probe/observer.patch.gz",
+    "bytes": 1501,
+    "sha256": "9f1e211ee35ab392acfafe28deb94c091435807efa93edb2322fce1a757b896a",
+    "originalBytes": 4454,
+    "originalSha256": "b465f50d69b65021668aa7e3082d1e4998239d47033a102738565d6b95747107"
+  },
+  {
+    "path": "job-129636889101.log.gz",
+    "bytes": 13232,
+    "sha256": "12d5fb7f4630d7aa14f32609f4e689f72398b631a968376ad39b83c1ecdcfa64",
+    "originalBytes": 56834,
+    "originalSha256": "8d5f2c3a01a14214d02a88dc3e1a444d42f13879369b2a333c97b913577ec6b0"
+  },
+  {
+    "path": "amd/archive-file-list.json.gz",
+    "bytes": 317,
+    "sha256": "60ac307c7f6d6c8a2bfb834eb3bcc43eddfc273d161357a77d047dda4be29cee",
+    "originalBytes": 2156,
+    "originalSha256": "099011d31d4176288d029c0a1e0e6a4f994ad29a5467eb35cc39096e0c085fd2"
+  },
+  {
+    "path": "amd/compiler-build.txt.gz",
+    "bytes": 421,
+    "sha256": "f9750841c8b334d68f42b58f77e2f6df3308a93cf0d086bd65c86c769b69ad2c",
+    "originalBytes": 631,
+    "originalSha256": "591cd3006d8d49a9468c0bb46d146d728dc500ce1a94a21fae4e510658889795"
+  },
+  {
+    "path": "amd/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "1ad1a17dafb0d60f1f725a29bfffc950d9b649f8af6efd9ec3d95f4dae0f045f",
+    "originalBytes": 41,
+    "originalSha256": "df9e2df6ae3141c82d484f8d570255fa7334f75de02910f205dc97f41c46087a"
+  },
+  {
+    "path": "amd/type-walk-checking/identity.json.gz",
+    "bytes": 1931,
+    "sha256": "50faf7c7dbab689a2079c1183f5af58d0b4e9bb926844e0d7cbc0a0ab732a2f1",
+    "originalBytes": 4469,
+    "originalSha256": "12a36355c7d6d6fbb0714b03331c1248449587f22383e67c946fc18507012895"
+  },
+  {
+    "path": "amd/type-walk-checking/summary.json.gz",
+    "bytes": 5794,
+    "sha256": "d1da56c4b59446f8f29746ce81fd7a6068713a3daf69638781cc821546a5caf9",
+    "originalBytes": 37511,
+    "originalSha256": "c7599791b50260123f6f77c513eeb0fe01074292ada6b21540fbd1941201f148"
+  },
+  {
+    "path": "amd/type-walk-checking.log.gz",
+    "bytes": 121,
+    "sha256": "b444bf4d88ad37f3bb30d7888f561babd5bd37bdaa98713a6a34cd76a085b477",
+    "originalBytes": 204,
+    "originalSha256": "9767814e71a9c81e2c6de83013ca2d6110768f4500299691091a314fda64e4c9"
+  },
+  {
+    "path": "amd/type-walk-probe/manifest.json.gz",
+    "bytes": 408,
+    "sha256": "53ba0ba1d06a28c848856cda3da9a7a94638390b53d802e2835d857724aab3b8",
+    "originalBytes": 646,
+    "originalSha256": "2e4b05e273dd8d6d152023bc77636d91801b5d1c4f73e1c3f616ca75fb73ac9a"
+  },
+  {
+    "path": "amd/type-walk-probe/observer.patch.gz",
+    "bytes": 1501,
+    "sha256": "9f1e211ee35ab392acfafe28deb94c091435807efa93edb2322fce1a757b896a",
+    "originalBytes": 4454,
+    "originalSha256": "b465f50d69b65021668aa7e3082d1e4998239d47033a102738565d6b95747107"
+  },
+  {
+    "path": "job-129636888892.log.gz",
+    "bytes": 13328,
+    "sha256": "dcf96e92cdc8c78d90b6f4ec6e8a4bdbf979d4095010a5864a8adbfabd1dccec",
+    "originalBytes": 57260,
+    "originalSha256": "d0406a821e8e9147cbe3ac157e608dd21dcbf7e641c1ccdc0af3f4a479ff89bc"
+  },
+  {
+    "path": "counts.json",
+    "bytes": 662,
+    "sha256": "dbb2e521283be3d3ab9f157c345bacfe558afb10bc71084084bbe54e665cd8e1"
+  },
+  {
+    "path": "artifacts.json",
+    "bytes": 1468,
+    "sha256": "61cb6aa5b3e90cf97793f605b41c26431424a785951c56674b606d469a74f9c8"
+  }
+]

@@ -87,7 +87,7 @@ The reporter runs on the compilation worker and uses no clock reads when it is
 disabled. It does not measure per-phase CPU time, peak memory or runtime program
 performance. Whole-process RSS and observer overhead require the separate
 [compiler-cost protocol](measurements/application-tooling.md#compiler-phases-and-growth).
-The prepared [checking-cost investigation](measurements/compiler-checking.md)
+The [checking-cost investigation](measurements/compiler-checking.md)
 adds children beneath `type-check`: superclass validation, dependency ordering
 and each library/user/mixed binding group. A group contains mutually dependent
 definitions; its classification describes source modules, not independence from
@@ -97,9 +97,10 @@ excludes those children. [Focused native checks](measurements/compiler-checking-
 pass on Linux ARM64/AMD64. The group report further separates expression bodies,
 deferred operations, constraints, validation and generalization, with remaining
 group setup/cleanup explicit. [Their focused checks also pass](measurements/compiler-checking-parts-2026-11-10/README.md).
-Full platform verification belongs to this combined
-delivery batch. The earlier coarse report's overhead measurement does not cover
-these additional spans.
+All platform delivery gates pass in [PR #274's receipt](measurements/application-final-gates-2026-11-10/README.md).
+The earlier coarse report's overhead measurement does not cover these additional
+spans. [Type-variable traversal](terminology.md#type-variables-and-substitution)
+explains the temporary copies selected for the next compiler improvement.
 The native compiler supports one ordinary build, including `--emit-c`; profiling
 rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
 Cross-target output from a native compiler remains a build of that selected

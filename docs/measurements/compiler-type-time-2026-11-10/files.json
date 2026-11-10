@@ -1,0 +1,185 @@
+[
+  {
+    "path": "amd-1/archive-file-list.json.gz",
+    "bytes": 5064,
+    "sha256": "d0c916d3115c2ce9c3e1a4595c21cae0c0ed356a55195b3a3003b81ac23d62a5",
+    "originalBytes": 115825,
+    "originalSha256": "f0c25a566460d4bd7298162736953c34f04f97ed78bdf9c6cc219daeebae982b"
+  },
+  {
+    "path": "amd-1/compiler-build.txt.gz",
+    "bytes": 521,
+    "sha256": "5bb72efeacdd6de28dd56a3b28ad506a01e5053514ea110ec199bea8e3eca013",
+    "originalBytes": 886,
+    "originalSha256": "aad61a1fc77b4e279151abfafc7a18b129b601496e6049c26dbf562b12d5c188"
+  },
+  {
+    "path": "amd-1/compiler-comparison/identity.json.gz",
+    "bytes": 2136,
+    "sha256": "d8082998ebfc34d43f1b7dae2e49acc3f41f20f20e5f78b1f50a01416de41d7e",
+    "originalBytes": 5378,
+    "originalSha256": "5345ac467ff7e5e65d4eb6b69b60f04905ec00941f1a8358b4d5df9d71bad399"
+  },
+  {
+    "path": "amd-1/compiler-comparison/summary.json.gz",
+    "bytes": 22004,
+    "sha256": "8214d7a0a58da3fba5dbed5ed1f82d30b2e1a5ff6412ef1feee44628fcd9928c",
+    "originalBytes": 611889,
+    "originalSha256": "21d92cada3c42eb7259c3b912fba670d8afd43d7c55a4cc2140e3a5f81f6093f"
+  },
+  {
+    "path": "amd-1/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "amd-1/job.log.gz",
+    "bytes": 15339,
+    "sha256": "6ce8b5bebdbdb79ea629f5b82a29e03b03790f79ed399876c5d7c1cbc62ec398",
+    "originalBytes": 69165,
+    "originalSha256": "4097bf2028985a2eb8fe0bbc650bb9ab5464a3092a357f614b2643e6d8e12bea"
+  },
+  {
+    "path": "amd-2/archive-file-list.json.gz",
+    "bytes": 5186,
+    "sha256": "197d5dd6e0a7a5728cd9f44f6960fd544b33fd629e88a4f849a7a38e2950db0c",
+    "originalBytes": 115825,
+    "originalSha256": "95c94baca09526bffab17388119f8a4fba1a5bbdd36477d51e5ef40b63a9bee3"
+  },
+  {
+    "path": "amd-2/compiler-build.txt.gz",
+    "bytes": 521,
+    "sha256": "5bb72efeacdd6de28dd56a3b28ad506a01e5053514ea110ec199bea8e3eca013",
+    "originalBytes": 886,
+    "originalSha256": "aad61a1fc77b4e279151abfafc7a18b129b601496e6049c26dbf562b12d5c188"
+  },
+  {
+    "path": "amd-2/compiler-comparison/identity.json.gz",
+    "bytes": 2066,
+    "sha256": "cac484632522a022a7105bdd7483d867cf25ccd8104a8f244cb105c9cd8ea40d",
+    "originalBytes": 5171,
+    "originalSha256": "49aee8dc879f3a4ab33cfff3a3a6f323ef2c26cada93226ecc4bc000a5cb2473"
+  },
+  {
+    "path": "amd-2/compiler-comparison/summary.json.gz",
+    "bytes": 22210,
+    "sha256": "8a5bcfb9913a96926be514ed295946b3b0e8a55854705bdad3c1c83e6be776a6",
+    "originalBytes": 611638,
+    "originalSha256": "86a75efcb91679ec48894f0b5bb49507a03e4bf0ffa927c76a457c7882b6e867"
+  },
+  {
+    "path": "amd-2/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "amd-2/job.log.gz",
+    "bytes": 15234,
+    "sha256": "9a2a5c6a8d6bd273b7025511b622b68d3f466abcdcfcd1e2c62dcc56df738735",
+    "originalBytes": 69088,
+    "originalSha256": "5f24b4abb39af2d6ea8581a3f26388deefd8b38ad1643c20fdea4d88badcda30"
+  },
+  {
+    "path": "arm-1/archive-file-list.json.gz",
+    "bytes": 5035,
+    "sha256": "87c7dbd840193e311ce62554d1257b862bf526873707dc58392f2dc1a91f3f96",
+    "originalBytes": 115825,
+    "originalSha256": "e619a174d6a7965e61ccdcc5189e9f858e1e67178aa1fdebb524db92fbb4d5dc"
+  },
+  {
+    "path": "arm-1/compiler-build.txt.gz",
+    "bytes": 520,
+    "sha256": "97a7f2e0aa523d692f9b64b430ff26112e99aa76f9a7fa57947c9f11e0dd2c2d",
+    "originalBytes": 887,
+    "originalSha256": "785e3e69537f738648a8c2a666a8c4304a7fb359b40c3d1bae0016a16ba135fc"
+  },
+  {
+    "path": "arm-1/compiler-comparison/identity.json.gz",
+    "bytes": 1633,
+    "sha256": "41d42550d5c5276e808652fe988c383115145d63bb9f214bc07389477083d618",
+    "originalBytes": 4341,
+    "originalSha256": "55c8274c1fd0ecf7dec6210d45417fc327769e3fd538722270988a81d88806b5"
+  },
+  {
+    "path": "arm-1/compiler-comparison/summary.json.gz",
+    "bytes": 20086,
+    "sha256": "0bcf743a2d5e28dd1ec18e6e06091b0a7c348e0531c920d013bb7169ce906d74",
+    "originalBytes": 610723,
+    "originalSha256": "e607165df08f944350d1474027eb534a9698b60f9ae3555ea0a1ae3d812f5b75"
+  },
+  {
+    "path": "arm-1/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "arm-1/job.log.gz",
+    "bytes": 15121,
+    "sha256": "9ed88397be0c836ec090d77725d828579b341c4b951bb2469d478b4315172685",
+    "originalBytes": 68609,
+    "originalSha256": "3014d707f4aa01113bbc5d789b86c461deee88f910adb24b4c8209b7d933b5a1"
+  },
+  {
+    "path": "arm-2/archive-file-list.json.gz",
+    "bytes": 5027,
+    "sha256": "aa761e8cfd60895da879ec310fd248cac3bc1d970e64c98089290f1a134bb365",
+    "originalBytes": 115825,
+    "originalSha256": "ec8e12e36f481e7954dd9b31acce178643f966a3f24ac432ecb5deb44cfa6200"
+  },
+  {
+    "path": "arm-2/compiler-build.txt.gz",
+    "bytes": 520,
+    "sha256": "97a7f2e0aa523d692f9b64b430ff26112e99aa76f9a7fa57947c9f11e0dd2c2d",
+    "originalBytes": 887,
+    "originalSha256": "785e3e69537f738648a8c2a666a8c4304a7fb359b40c3d1bae0016a16ba135fc"
+  },
+  {
+    "path": "arm-2/compiler-comparison/identity.json.gz",
+    "bytes": 1633,
+    "sha256": "4ceb2197c729c1f8fbf3c8b7f6083ff99f24cdf53779dc3f634fc8817dc326fc",
+    "originalBytes": 4341,
+    "originalSha256": "da8c5eefc73eaa23f3c8e9a4c0b20d7512d27ac83fb358d86b6479caad17c4d1"
+  },
+  {
+    "path": "arm-2/compiler-comparison/summary.json.gz",
+    "bytes": 19878,
+    "sha256": "d750875950c0d05624a840b7c2afa3095d1b1ddf35c71acf925a7b8e5e03e758",
+    "originalBytes": 610670,
+    "originalSha256": "88af841f6ac0aa50c2c059840c8e4a69a3c904cbe321fade6eac579794b51f06"
+  },
+  {
+    "path": "arm-2/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "arm-2/job.log.gz",
+    "bytes": 15136,
+    "sha256": "f5ee1f0d98452b001f19e9fb5ee6215197d4a6f5b17d401830a54c436bac9156",
+    "originalBytes": 68618,
+    "originalSha256": "6ab28e2204a85b4846dd6e86f2b7eb81fa0d93af90b298f49a049552538bdfba"
+  },
+  {
+    "path": "artifacts.json",
+    "bytes": 2913,
+    "sha256": "b1522575eb30c9e95d32a08f09f2196104e47a50a470a8e83f2c6e58b094fac5"
+  },
+  {
+    "path": "results.json",
+    "bytes": 35703,
+    "sha256": "353d4e7521d3adb263fc40fdafd046f0697d786e863a8376495527a9e0089feb"
+  },
+  {
+    "path": "run.json",
+    "bytes": 17089,
+    "sha256": "680e68cc8e1dfacce94d3c52074fcc37a61582f4fafa14b6a01b604e01330b15"
+  }
+]

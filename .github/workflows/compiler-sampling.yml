@@ -1,0 +1,186 @@
+name: Compiler CPU samples on maintained applications
+on:
+  workflow_call:
+    inputs:
+      replay:
+        type: boolean
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  samples:
+    name: samples (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            ubuntu_version: '24.04'
+            profiler_package: linux-tools-generic
+            user_registers: ax,bx,cx,dx,si,di,bp,sp,ip,r8,r9,r10,r11,r12,r13,r14,r15
+          - runner: ubuntu-24.04-arm
+            ubuntu_version: '24.04'
+            profiler_package: linux-tools-generic
+            user_registers: x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20,x21,x22,x23,x24,x25,x26,x27,x28,x29,lr,sp,pc
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_PROFILE_RELEASE_DEBUG: '2'
+      CC: gcc
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        if: ${{ !inputs.replay }}
+      - uses: actions/cache@v6
+        if: ${{ !inputs.replay }}
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install and identify the profiler
+        env:
+          PROFILER_PACKAGE: ${{ matrix.profiler_package }}
+          EXPECTED_UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import platform
+          release = platform.freedesktop_os_release()
+          assert release['ID'] == 'ubuntu' and release['VERSION_ID'] == os.environ['EXPECTED_UBUNTU_VERSION'], release
+          PY
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev time "$PROFILER_PACKAGE" libcap2-bin binutils
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+
+          package = os.environ['PROFILER_PACKAGE']
+          if package == 'linux-tools-generic':
+              dependencies = subprocess.check_output(['dpkg-query', '-W', '-f', '${Depends}', package], text=True)
+              packages = re.findall(r'\b(linux-tools-\d[\w.+~-]*-generic)\b', dependencies)
+              assert len(packages) == 1, dependencies
+              package = packages[0]
+          else:
+              assert package == 'linux-perf', package
+          subprocess.run(['dpkg-query', '-W', package], check=True)
+          files = subprocess.check_output(['dpkg-query', '-L', package], text=True).splitlines()
+          candidates = [Path(name).resolve() for name in files if name.endswith('/perf')]
+          assert len(candidates) == 1 and candidates[0].is_file(), candidates
+          profiler = str(candidates[0])
+          subprocess.run(['sudo', 'setcap', 'cap_perfmon=ep', profiler], check=True)
+          subprocess.run(['getcap', profiler], check=True)
+          subprocess.run([profiler, '--version'], check=True)
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'COMPILER_PERF={profiler}\n')
+              output.write(f'COMPILER_CPU={min(os.sched_getaffinity(0))}\n')
+          PY
+      - name: Diagnose profiler event and stack support before building
+        if: ${{ !inputs.replay }}
+        env:
+          COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          from process_wait import run_capture
+
+          root = Path('profiler-capabilities')
+          root.mkdir()
+          os.sched_setaffinity(0, {int(os.environ['COMPILER_CPU'])})
+          perf = os.environ['COMPILER_PERF']
+          versions = subprocess.check_output([perf, 'version', '--build-options'], text=True)
+          (root/'build-options.txt').write_text(versions)
+          workload = ['python3', '-c', 'sum(i * i for i in range(2000000))']
+          variants = (
+              ('clock-user-flat', 'cpu-clock:u', []),
+              ('clock-user-dwarf', 'cpu-clock:u', ['--call-graph', 'dwarf,32768']),
+              ('clock-user-core', 'cpu-clock:u', ['--call-graph', 'dwarf,32768', '--user-regs='+os.environ['COMPILER_USER_REGISTERS']]),
+              ('clock-all-dwarf', 'cpu-clock', ['--call-graph', 'dwarf,32768']),
+              ('task-user-dwarf', 'task-clock:u', ['--call-graph', 'dwarf,32768']),
+              ('cycles-user-dwarf', 'cycles:u', ['--call-graph', 'dwarf,32768']),
+          )
+          records = []
+          for name, event, options in variants:
+              command = [perf, 'record', '-vv', '--event', event, '--freq', '997', '--strict-freq',
+                         '--inherit', '--mmap-pages', '262144B', '--no-buildid-cache',
+                         '--output', str(root/(name+'.data')), *options, '--', *workload]
+              result = run_capture(command, env=dict(os.environ, DEBUGINFOD_URLS='', LC_ALL='C'),
+                  cwd=Path.cwd(), input_data=None, input_stream=subprocess.DEVNULL,
+                  text=False, encoding='utf-8', timeout=20, check=False)
+              (root/(name+'.stdout')).write_bytes(result.stdout)
+              (root/(name+'.stderr')).write_bytes(result.stderr)
+              records.append(dict(name=name, command=command, status=result.returncode))
+              print(name, result.returncode, flush=True)
+          (root/'results.json').write_text(json.dumps(records, indent=2)+'\n')
+          assert records[2]['status'] == 0, 'configured recording unsupported; inspect retained event attributes'
+          PY
+      - name: Verify report readers and build the release compiler
+        if: ${{ !inputs.replay }}
+        run: |
+          python3 scripts/test-compiler-sampling.py
+          python3 scripts/test-compiler-scaling.py
+          cargo fetch --locked
+          cargo build --release --locked --offline --bin fwp
+      - name: Sample each original application compile
+        if: ${{ !inputs.replay }}
+        env:
+          COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
+        run: |
+          set -o pipefail
+          python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --demangler /usr/bin/c++filt --addr2line-timeout-ms 10000 --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
+      - name: Download retained recordings
+        if: inputs.replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_NAME: compiler-sampling-${{ matrix.runner }}
+        run: gh run download "$RECORDING_RUN" --repo "$GITHUB_REPOSITORY" --name "$RECORDING_NAME" --dir recordings
+      - name: Decode existing user stacks without rebuilding
+        if: inputs.replay
+        env:
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          set -o pipefail
+          python3 scripts/test-compiler-sampling.py
+          python3 scripts/replay-compiler-samples.py --recordings recordings --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --perf "$COMPILER_PERF" --demangler /usr/bin/c++filt --addr2line-timeout-ms 10000 --deadline 120 --output compiler-stacks 2>&1 | tee compiler-stacks.log
+      - name: Retain the mixed-thread unwind control
+        if: always() && inputs.replay
+        run: |
+          "$COMPILER_PERF" script -vv --input recordings/compiler-sampling/words/perf.data --inline --max-stack 512 --fields period,event,ip,sym,dso > compiler-unwind.stdout 2> compiler-unwind.stderr
+          gzip -6 compiler-unwind.stdout compiler-unwind.stderr
+      - name: Retain exact source and build settings
+        if: always()
+        run: |
+          git rev-parse HEAD > compiler-source.txt
+          rustc -Vv > compiler-build.txt
+          cat Cargo.toml >> compiler-build.txt
+          printenv | sort | sed -n '/^CARGO_PROFILE_/p' >> compiler-build.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-sampling-${{ matrix.runner }}
+          path: |
+            compiler-source.txt
+            compiler-build.txt
+            compiler-sampling.log
+            compiler-sampling/
+            compiler-stacks/
+            compiler-stacks.log
+            compiler-unwind.*
+            profiler-capabilities/
+          if-no-files-found: error

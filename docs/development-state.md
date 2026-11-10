@@ -1,17 +1,73 @@
 # Current work
 
-**Next:** monitor and audit the final native gates for the combined repair and
-compiler-checking work in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274).
-Audit all failures before the push. Merge only after nine production jobs,
-documentation and the complete-log audit pass for that exact final commit.
+**Next:** publish the combined compiler change as a normal PR, verify its nine
+production jobs plus documentation and complete-log audit, then squash-merge.
+Use one subject of at most 80 characters and an empty body; verify the resulting
+message and tree. Keep four noisy growth comparisons open after delivery.
 
-Worktree `.worktrees/application-milestone`, branch `application-tooling-costs`.
-The branch combines the repair and `compiler-checking-costs` preparation. Its
-delivery candidate is retained by `roadmap/application-delivery-format-2026-11-10`.
-It supersedes the failed matrix at `a0261f9ccaa4a87651fbcae11966afee68208d4d`;
-the seven earlier passing jobs are not passing gates for this new combined source.
-Preserve unrelated root-worktree changes and the preparation worktree's local
-handoff. There is one active PR; no separate preparation PR.
+## Current branch and verified baseline
+
+Worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`.
+PR #274 is merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree equals
+passing source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
+[All production/docs/audit gates pass](measurements/application-final-gates-2026-11-10/README.md).
+The redundant post-merge run `42760668107` was cancelled to free six runner slots;
+its complete logs are audited and retained. Interrupted uploads add no coverage.
+
+## Compiler change and results
+
+Candidate `c65ecb37691538ef5a24619376f68b1d243cbdea`, retained by
+`roadmap/compiler-borrowed-types-2026-11-10`, borrows input type trees in
+`free_vars` and `zonk`. Variable chains stay iterative; normalization, variable
+order, rows, effects and diagnostics are preserved. Row flattening is unchanged.
+Reference `35a12dfee0266134237d03d1262649be69df7c41` has ordinary compiler sources
+identical to merged #274. Later branch commits retain evidence and clarify docs.
+
+[Focused run `42763406320`](measurements/compiler-borrowed-types-2026-11-10/README.md)
+passes ARM64 `129654174367` and AMD64 `129654174360`: seven type tests, eight
+report/option tests, signature/error snapshots, sixteen exact-C comparisons and
+all growth error locations. Both hosts remove the same 1.09–1.10 million copies
+per application (29–32%), with unchanged visit counts and C. Separate observer
+patch/source hashes and every complete log are verified.
+
+[Timing run `42764964658`](measurements/compiler-type-time-2026-11-10/README.md)
+passes its four execution jobs at that same candidate. Recomputed raw samples
+verify all sixteen complete-application targets: word counting uses 11–14% less
+emit-C time, callbacks 8–10%, numerical 5–7%, HTTP 3–4%. Peak RSS growth is at most
+0.18% across all 64 comparisons. ARM64 uses Neoverse-N2; AMD64 session 1 uses
+Xeon 8573C and session 2 EPYC 7763. Do not pool different CPUs.
+
+Four AMD64 growth comparisons fail the frozen 2% copy-noise control: generic-8
+in both sessions, generic-128 and nesting-8 in session 2. Retain those as
+inconclusive, following the user's preference to keep verified gains while leaving
+timing goals open. Do not weaken the [contract](measurements/compiler-type-walks.md)
+or rerun unchanged noise to qualify it. All raw samples and failures are retained;
+copy reductions do not imply lower allocation bytes or application runtime cost.
+
+## Profiler and documentation repairs
+
+[Replay `42763409910`](measurements/compiler-cpu-samples-2026-11-10/README.md)
+passes AMD64 `129654190514` and ARM64 `129654190596`, reusing source `5cab084d5`
+recordings from `42761474854`. Direct DWARF stack reading replaces the unavailable
+parent column; explicit Ubuntu 24.04/perf 6.8 avoids the original libdw load-base
+problem. A ten-second addr2line read deadline preserves the 120-second total limit.
+All eight reports retain exact sample/period totals with no empty stacks. Unnamed
+leaf frames account for 25–42% of periods; attribution is incomplete. Original
+failed replays and the ineffective per-thread experiment remain retained.
+
+The docs explain type variables/substitution with examples, remove stale #274
+instructions, and distinguish measured gains from open acceptance. Recurring docs
+CI now runs all three compiler measurement-reader control suites.
+
+## Verification and local limits
+
+Guarded local checks pass: sampling reader (5 controls), ordinary comparison
+reader (4), growth reader (3), changed workflow lint, Rust formatting and roadmap
+links. A renamed heading exposed one stale link; it was repaired. Small artifact
+members passed CRC; source/observer hashes, schedules, counts and timing results
+were rechecked. Full compiler builds, tests and measurements run only on GitHub.
+The final staged documentation check passes: 452 document link sets, 106
+immutable preparation anchors and all six milestone rows.
 
 ## Roadmap status
 
@@ -19,105 +75,18 @@ handoff. There is one active PR; no separate preparation PR.
 |---|---|---|---|
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
-| 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | Verified | #273 ownership/peer comparisons and parser cleanup repair | Recorded measurement limits still apply |
-| 5 | In progress | Applications, compiler reports/growth, HTTP load and verified Windows pressure repair | Exact-head final delivery |
+| 3 | In progress | #272 structured gradients and known callbacks; all gates | Original AMD timing acceptance |
+| 4 | Verified | #273 ownership/peer comparisons and parser cleanup; all gates | Recorded comparison limits apply |
+| 5 | Verified | #274 applications, compiler reports/growth, HTTP load and pressure repair; all gates | Recorded observation limits apply |
+| 6 | In progress | Borrowed types: native correctness, fewer copies and all application speed/memory targets | Four noisy growth comparisons; final delivery gates |
 
-#273 merged as `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`; its
-[receipt](measurements/ownership-peer-final-gates-2026-11-09/README.md) retains
-passing source, all gates and audit. Original milestone 1–3 timing limits remain
-open. Do not repeat unchanged noisy measurements to obtain qualification.
+After delivery, attribute the queued service and HTTP cost to payloads, queues,
+protocol work and cleanup before selecting another implementation. Keep the public
+gradient API unchanged without representative evidence. Earlier noisy goals stay open.
 
-## Current failure and focused repair
-
-Combined head `88a3036592aba12030b9e74d4b506de502a4115c` exposed one formatting
-omission in the newly fixed timeout panic. Full-tree `cargo fmt --all -- --check`
-reproduced exactly that difference; formatting it and repeating the full check
-passes under the local guard. The repair has no behavior change.
-Production `42747990312` reports only formatting failures in both Linux and both
-regular macOS jobs so far. Benchmark `129604605646` and documentation
-`42747989925`/`129604600440` pass; both full logs audited, with only intentional
-runner controls in docs. Native work continues. After replacement jobs exist,
-cancel the superseded run and audit all available logs; never count cancellations
-as passes. Record any additional failure and fix it before final acceptance.
-
-Production `42730888995` at published head `a0261f9cc` is complete:
-seven jobs pass; both Windows jobs fail only
-`http_application::api_slow_clients_release_backpressured_output_o2`.
-All nine complete logs have been inspected: no other failed target or compiler
-warning. Docs `42730888467`, job `129548275958`, passes; deliberate runner-failure
-controls are expected. The passing matrix-wide log audit has not been run.
-
-[The repair contract](measurements/http-backpressure.md) records the exact
-failure and acceptance. Both Windows server logs show eight connections waiting
-for reads, no blocked writes and no first cleanup checkpoint. Do not infer a
-runtime deadlock or accept absence of backpressure as a successful test.
-
-- Original Windows jobs: ARM64 `129548282561`, AMD64 `129548282333`.
-- Failure-group artifacts: ARM64 `13729108766`, AMD64 `13730116338`.
-- Server artifacts: ARM64 `13729304404`, AMD64 `13730133131`; only small stderr,
-  RSS and exit-status members were downloaded from these large archives.
-- Original-send diagnostic: source `9054528ba`, immutable tag
-  `roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`, ARM64 job
-  `129586576306`. It confirms one successful send of all 8,388,717 bytes;
-  the small requested send buffer did not force a partial/blocked send.
-  It also reproduces the diagnostic mutex-poisoning bug repaired below.
-- Candidate: source `924eb8795`, tag `roadmap/http-pressure-bounds-2026-11-10`.
-  Diagnostic sends are capped at 16 KiB; the unread Windows client requests and
-  verifies a 256 KiB receive buffer. Same deadlines, exact bytes, real would-block
-  branch, other-client progress and cleanup. Ordinary runtime writes are unchanged.
-  Focused ARM64 `42744070652` and AMD64 `42744095817` both pass: 11 HTTP tests,
-  linting, real blocked writes in all six large-response cohorts, 72/72 sockets
-  closed, zero final managed bytes. Complete logs are clean; the
-  [receipt](measurements/http-pressure-repair-2026-11-10/README.md) retains originals
-  and repair evidence. RSS rises at most 96 KiB on ARM64 and 172 KiB on AMD64.
-- Subsequent local `e58842d01` fixes diagnostic error reporting: clone the log
-  before panicking, so the mutex is released and cleanup can retain evidence.
-  This does not change the candidate's success path. Final gates must test it.
-- Failure logs now publish before the next Windows test group.
-
-## Completed measurements and prepared compiler work
-
-[Application/compiler/load results](measurements/application-compiler-load-2026-11-10/README.md)
-retain the original full source `7a65a8bb2ac23df0554610dfb90609c5fed30ee8`, ten
-focused logs, all 48 compiler comparisons and 34 HTTP trials. All timed runs pass
-at that source. Raw HTTP streams remain in identified artifacts until February 8,
-2027. Keep CPU models separate and distinguish tracked summaries from archives.
-No unchanged timing reruns are needed for the diagnostic-only transport repair.
-
-[Initial checking attribution](measurements/compiler-checking-preparation-2026-11-10/README.md)
-at `f43dfcd1c52292dfe84253cba5801bf3749597e6` passes application/report contracts
-and all growth/error observations on both Linux architectures: runs `42736751196`
-and `42737726682`. Library checking accounts for about 206–227 ms; ordering 3–5 ms.
-
-[Complete applications](measurements/compiler-applications-2026-11-10/README.md)
-at `ea531da149d085dbb146a64cd6ff1f92b61b170b`, run `42741790147`, also pass.
-All eight ordinary/observed builds preserve exact C. Library checking costs
-208–234 ms; the full HTTP compile costs 1.2–1.4 seconds. These single observations
-are attribution, not speedup or observer-overhead measurements.
-
-Finer parts (bodies, deferred operations, constraints, validation, generalization)
-are prepared at `7761a41544c0c9538880f75cb5b1a177de3d2f6c`, tag
-`roadmap/compiler-checking-parts-2026-11-10`, run `42743138148`. ARM64 job
-`129588849571` and AMD64 `129588850096` both pass. They verify eight report
-contracts at production Rust O1, then use release fwp on all four applications.
-No solver algorithm or trait lookup changed. Select an optimization only from
-attributed costs under the [investigation contract](measurements/compiler-checking.md).
-The original coarse report's measured overhead does not cover these added spans.
-The [receipt](measurements/compiler-checking-parts-2026-11-10/README.md) retains
-both clean logs and all group partitions. ARM64 body checking is 156–158 ms;
-AMD64 (different EPYC 9V45 host) is 105–110 ms. Bodies dominate, validation is
-next. These are observed boundaries, not ordinary timings or function-level CPU
-attribution. Keep the new observer's overhead explicitly unmeasured.
-
-## Delivery and local limits
-
-After final production/docs pass, dispatch `suite=production-log-audit` with the
-exact source, production run/attempt, documentation job and `audit_host=all`.
-Squash-merge with one subject of at most 80 characters and an empty body, without
-trailers or attribution. Verify the merged tree/message and continue PLAN.md.
-
-Guarded formatting, actionlint and roadmap checks pass for the repair/preparation.
-No local fwp build or full suite ran. Keep local checks serial through
-`python3 scripts/local-guard.py`; retain 64 GiB free, target data below 2 GiB,
-sampled RSS below 1 GiB and the 180-second deadline. Do not raise limits.
+Preserve unrelated root-worktree changes, old worktrees and handoff stash
+`451bbf713d451f2d62d80fd7676839404875846a`. Local checks remain serial through
+`python3 scripts/local-guard.py`: 64 GiB free, target data <2 GiB, sampled RSS
+<1 GiB, 180-second deadline. Last disk check: about 114 GiB free. Never raise or
+bypass limits. A guard serialization refusal earlier was resolved by waiting for
+the previous download to finish; no limits changed.
