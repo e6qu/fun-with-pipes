@@ -559,6 +559,8 @@ pressure =
          "    if (!c) { http_app_checkpoint(); return FWP_NONE; }\n    int pressure_buffer = 16384;\n    if (setsockopt(SOCK(c)->fd, SOL_SOCKET, SO_SNDBUF, (const char *)&pressure_buffer, (socklen_t)sizeof pressure_buffer)) abort();"),
         ("        if (k < 0 && (fwp_socket_again(errno))) {\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);",
          "        if (k < 0 && (fwp_socket_again(errno))) {\n            int pressure_errno = errno;\n            fprintf(stderr, \"http-wait-pressure-write\\n\"); fflush(stderr); errno = pressure_errno;\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);"),
+        ("            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);\n        if (k > 0)",
+         "            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);\n        if (len >= 1048576) { int saved = errno; fprintf(stderr, \"http-wait-pressure-send %zu/%zu %lld error=%d\\n\", off, len, (long long)k, k < 0 ? saved : 0); fflush(stderr); errno = saved; }\n        if (k > 0)"),
     ] {
         assert_eq!(code.matches(before).count(), 1, "{before}");
         code = code.replacen(before, after, 1);
@@ -610,7 +612,12 @@ pressure =
                 let line = server
                     .lines
                     .recv_timeout(deadline.saturating_duration_since(Instant::now()))
-                    .unwrap();
+                    .unwrap_or_else(|error| {
+                        panic!(
+                            "pressure round {round}: waiting for blocked write: {error}; {}",
+                            server.log.lock().unwrap()
+                        )
+                    });
                 if line == "http-wait-pressure-write" {
                     break;
                 }
