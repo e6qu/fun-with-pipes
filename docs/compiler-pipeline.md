@@ -87,6 +87,13 @@ The reporter runs on the compilation worker and uses no clock reads when it is
 disabled. It does not measure per-phase CPU time, peak memory or runtime program
 performance. Whole-process RSS and observer overhead require the separate
 [compiler-cost protocol](measurements/application-tooling.md#compiler-phases-and-growth).
+The prepared [checking-cost investigation](measurements/compiler-checking.md)
+adds children beneath `type-check`: superclass validation, dependency ordering
+and each library/user/mixed binding group. A group contains mutually dependent
+definitions; its classification describes source modules, not independence from
+the rest of the type environment. Group counts sum to the parent's binding count.
+Use the parent's inclusive time for all type checking; its exclusive time now
+excludes those children. Native verification of these added boundaries is pending.
 The native compiler supports one ordinary build, including `--emit-c`; profiling
 rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
 Cross-target output from a native compiler remains a build of that selected

@@ -96,8 +96,9 @@ now pass. PR #274 delivers these related tasks together:
 
 After delivery, use the new measurements to select the next substantial change:
 
-- **Compiler:** separate bundled-library checking from user declarations using
-  the existing phase report and representative application inputs. Establish
+- **Compiler:** follow the [checking-cost investigation](docs/measurements/compiler-checking.md)
+  to separate bundled-library checking from user declarations using the existing
+  phase report and representative application inputs. Establish
   which repeated work can be eliminated without changing inference, effects,
   diagnostics or macro execution. Freeze its cost/correctness contract first.
 - **Service:** attribute CPU time in the actual queued service and HTTP endpoint
