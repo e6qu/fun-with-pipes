@@ -20,8 +20,13 @@ Initial source `f26b3723a0ac5049bfaa40180593be1618e8695c`, tag
 All completed logs and all four ARM64 recording errors are audited. AMD64 needs
 Ubuntu 26.04's separate profiler package; ARM64 rejects the implicit extended
 register recording. The revised workflow asserts OS versions and explicitly
-selects packages and ordinary registers. Verify this repair before interpretation
-of samples; no compiler or runtime behavior changed.
+selects packages and ordinary registers. The second attempt at
+`f8cf810f53fb5b0fd40ea74cb7000e8a851ed468`, run `42751630458`, verified package
+setup but exposed perf's optional-argument syntax: the register list requires
+`--user-regs=LIST`. Both complete logs and all eight app failures are inspected.
+The next source corrects that syntax, keeps the exact known register-list warning
+visible, and runs six bounded capability probes before rebuilding fwp. Verify
+this repair before interpreting samples; no compiler or runtime behavior changed.
 Preserve unrelated root changes and the saved preparation handoff stash
 `451bbf713d451f2d62d80fd7676839404875846a`.
 

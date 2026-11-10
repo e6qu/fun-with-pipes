@@ -5,6 +5,7 @@ permissions:
   contents: read
 jobs:
   samples:
+    name: samples (${{ matrix.runner }})
     strategy:
       fail-fast: false
       matrix:
@@ -70,6 +71,49 @@ jobs:
               output.write(f'COMPILER_PERF={profiler}\n')
               output.write(f'COMPILER_CPU={min(os.sched_getaffinity(0))}\n')
           PY
+      - name: Diagnose profiler event and stack support before building
+        env:
+          COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          from process_wait import run_capture
+
+          root = Path('profiler-capabilities')
+          root.mkdir()
+          os.sched_setaffinity(0, {int(os.environ['COMPILER_CPU'])})
+          perf = os.environ['COMPILER_PERF']
+          versions = subprocess.check_output([perf, 'version', '--build-options'], text=True)
+          (root/'build-options.txt').write_text(versions)
+          workload = ['python3', '-c', 'sum(i * i for i in range(2000000))']
+          variants = (
+              ('clock-user-flat', 'cpu-clock:u', []),
+              ('clock-user-dwarf', 'cpu-clock:u', ['--call-graph', 'dwarf,32768']),
+              ('clock-user-core', 'cpu-clock:u', ['--call-graph', 'dwarf,32768', '--user-regs='+os.environ['COMPILER_USER_REGISTERS']]),
+              ('clock-all-dwarf', 'cpu-clock', ['--call-graph', 'dwarf,32768']),
+              ('task-user-dwarf', 'task-clock:u', ['--call-graph', 'dwarf,32768']),
+              ('cycles-user-dwarf', 'cycles:u', ['--call-graph', 'dwarf,32768']),
+          )
+          records = []
+          for name, event, options in variants:
+              command = [perf, 'record', '-vv', '--event', event, '--freq', '997', '--strict-freq',
+                         '--inherit', '--mmap-pages', '262144B', '--no-buildid-cache',
+                         '--output', str(root/(name+'.data')), *options, '--', *workload]
+              result = run_capture(command, env=dict(os.environ, DEBUGINFOD_URLS='', LC_ALL='C'),
+                  cwd=Path.cwd(), input_data=None, input_stream=subprocess.DEVNULL,
+                  text=False, encoding='utf-8', timeout=20, check=False)
+              (root/(name+'.stdout')).write_bytes(result.stdout)
+              (root/(name+'.stderr')).write_bytes(result.stderr)
+              records.append(dict(name=name, command=command, status=result.returncode))
+              print(name, result.returncode, flush=True)
+          (root/'results.json').write_text(json.dumps(records, indent=2)+'\n')
+          assert records[2]['status'] == 0, 'configured recording unsupported; inspect retained event attributes'
+          PY
       - name: Verify report readers and build the release compiler
         run: |
           python3 scripts/test-compiler-sampling.py
@@ -98,4 +142,5 @@ jobs:
             compiler-build.txt
             compiler-sampling.log
             compiler-sampling/
+            profiler-capabilities/
           if-no-files-found: error

@@ -13,6 +13,23 @@ import traceback
 from compiler_scaling import APPLICATIONS, ROOT, digest, resources
 from process_wait import run_capture
 
+CORE_REGISTERS = {
+    'aarch64': [f'x{i}' for i in range(30)] + ['lr', 'sp', 'pc'],
+    'x86_64': ['ax', 'bx', 'cx', 'dx', 'si', 'di', 'bp', 'sp', 'ip'] + [f'r{i}' for i in range(8, 16)],
+}
+REGISTER_WARNING = ('WARNING: The use of --call-graph=dwarf may require all the user registers, '
+    'specifying a subset with --user-regs may render DWARF unwinding unreliable, '
+    'so the minimal registers set (IP, SP) is explicitly forced.')
+
+
+def recording_messages(text):
+    # perf emits this warning for every explicit register list, even a complete
+    # general-register set. Keep it visible; validate that set before recording.
+    for line in text.splitlines():
+        assert line == REGISTER_WARNING or re.fullmatch(
+            r'\[ perf record: (Woken up \d+ times to write data|Captured and wrote .+) \]', line), line
+        assert not re.search(r'lost|throttl|error', line, re.I), line
+
 
 def histogram(text, parent):
     """Read explicitly selected perf TSV fields, keeping unresolved samples."""
@@ -52,6 +69,7 @@ def main():
     assert 0 < args.deadline <= 120 and 0 < args.frequency <= 1000
     assert 0 < args.stack_bytes <= 65528 and args.stack_bytes % 8 == 0
     assert args.ring_bytes > 0 and args.cpu in os.sched_getaffinity(0)
+    assert args.user_registers.split(',') == CORE_REGISTERS[platform.machine()]
     os.sched_setaffinity(0, {args.cpu})
     output = args.output.resolve()
     output.mkdir(exist_ok=False, parents=True)
@@ -93,7 +111,7 @@ def main():
                 if sampled:
                     command = [str(perf), 'record', '--event', 'cpu-clock:u', '--freq', str(args.frequency),
                         '--strict-freq', '--inherit', '--call-graph', f'dwarf,{args.stack_bytes}',
-                        '--user-regs', args.user_registers,
+                        '--user-regs='+args.user_registers,
                         '--mmap-pages', str(args.ring_bytes)+'B', '--no-buildid-cache',
                         '--output', str(directory/'perf.data'), '--', *command]
                 entry = dict(role=role, command=command)
@@ -105,9 +123,7 @@ def main():
                 (directory/(role+'.stderr')).write_bytes(result.stderr)
                 assert result.returncode == 0 and not result.stdout, (entry, result.stderr.decode())
                 if sampled:
-                    assert all(re.fullmatch(r'\[ perf record: (Woken up \d+ times to write data|Captured and wrote .+) \]', line)
-                               for line in result.stderr.decode().splitlines()), result.stderr
-                    assert not re.search(r'lost|throttl|warning|error', result.stderr.decode(), re.I), result.stderr
+                    recording_messages(result.stderr.decode())
                 else:
                     assert not result.stderr, result.stderr
                 entry.update(resources(usage.read_text()), cSha256=digest(cfile))

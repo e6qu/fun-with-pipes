@@ -95,6 +95,21 @@ the [kernel](https://raw.githubusercontent.com/torvalds/linux/v7.0/kernel/events
 rejects extended registers for software-clock events. This is the candidate
 cause to verify on the repaired probe, not a compiler failure or a timing result.
 
+The second attempt, `f8cf810f53fb5b0fd40ea74cb7000e8a851ed468`
+(`roadmap/compiler-cpu-registers-2026-11-10`, run `42751630458`), verified package
+selection but found a command-line error: perf's optional register argument
+requires `--user-regs=LIST`; a separated list became the command to execute.
+The correction first records six tiny capability probes before building fwp.
+It preserves verbose event attributes for flat, DWARF and register-selected
+software clocks and a hardware-cycle control. No probe substitutes automatically
+for the configured event. The configured recording must work before compilation.
+
+Perf warns about explicit register lists even when all general-purpose registers
+are present. Retain that exact warning, require the complete architecture-specific
+list, and require resolved body-checking caller stacks. Any other warning/error
+still fails. SVE-specific frames are outside this diagnostic's unwind coverage;
+do not treat its stacks as complete coverage of arbitrary native binaries.
+
 ## Questions and boundaries
 
 | Question | Evidence to collect |
