@@ -11,7 +11,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 [Queued-service CPU attribution](service-cpu-costs.md) has [first native recordings](service-cpu-first-2026-11-10/README.md).
 All service outputs are correct, but six fwp decoder failures leave attribution
-incomplete. Repair and replay those recordings before selecting an optimization.
+incomplete. [The decoder diagnosis](service-decoder-replay-2026-11-10/README.md)
+identifies a marker-reader bug. Repair and replay before selecting an optimization.
 
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
@@ -22,6 +23,7 @@ select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
 [Ordinary timing](compiler-type-time-2026-11-10/README.md) verifies 11–14% less
 word-count compilation time and 8–10% less callback compilation time, with peak
 memory essentially unchanged. Four noisy growth comparisons remain inconclusive.
+[PR #275 passes all final delivery gates](compiler-borrowed-final-gates-2026-11-10/README.md).
 [Windows backpressure](http-backpressure.md) records a test assumption exposed
 by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
 

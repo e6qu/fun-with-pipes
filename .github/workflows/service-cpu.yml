@@ -53,16 +53,18 @@ jobs:
       SAMPLE_REGISTERS: ${{ matrix.registers }}
     steps:
       - name: Install native compilers and profiler
-        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic llvm-18
+        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@master
+        if: ${{ !inputs.replay }}
         env:
           RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
         with:
           toolchain: 1.99.1
       - uses: actions/cache@v6
+        if: ${{ !inputs.replay }}
         with:
           path: ~/.cargo/registry
           key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
@@ -91,9 +93,40 @@ jobs:
               output.write(f'SERVICE_PERF={profilers[0]}\n')
               output.write(f'SERVICE_CPU={min(os.sched_getaffinity(0))}\n')
           PY
-          mkdir "$RUNNER_TEMP/service-tools"
-          ln -s /usr/bin/llvm-addr2line-18 "$RUNNER_TEMP/service-tools/addr2line"
-          echo "$RUNNER_TEMP/service-tools" >> "$GITHUB_PATH"
+      - name: Check out the pinned profiler source
+        uses: actions/checkout@v7
+        with:
+          repository: torvalds/linux
+          ref: e8f897f4afef0031fe618a8e94127a0934896aba
+          path: perf-source
+          sparse-checkout: |
+            tools
+            include
+            scripts
+            arch
+            lib
+      - name: Build the repaired GNU inline-name reader
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/perf-source"
+          python3 scripts/prepare-perf-symbol-reader.py --checkout perf-source --output service-perf-build
+          make -C perf-source/tools/perf -j2 CC=gcc CXX=g++ \
+            NO_LIBBFD=1 NO_LIBUNWIND=1 NO_LIBPYTHON=1 NO_LIBPERL=1 \
+            NO_LIBBABELTRACE=1 NO_LIBTRACEEVENT=1 NO_LIBPFM4=1 NO_LIBNUMA=1 \
+            NO_GTK2=1 NO_JVMTI=1 NO_SLANG=1 NO_LIBAUDIT=1 NO_LIBCRYPTO=1 NO_LIBBPF=1 \
+            2>&1 | tee service-perf-build/build.log
+          perf-source/tools/perf/perf version --build-options > service-perf-build/features.txt
+          sha256sum perf-source/tools/perf/perf > service-perf-build/binary.sha256
+          cp perf-source/tools/perf/.config-detected service-perf-build/config.txt
+          python3 - <<'PYCONFIG'
+          from pathlib import Path
+          config = Path('service-perf-build/config.txt').read_text().splitlines()
+          for setting in ('CONFIG_DWARF_UNWIND=y', 'CONFIG_LIBDW_DWARF_UNWIND=y'):
+              assert setting in config, (setting, config)
+          PYCONFIG
+          echo "SERVICE_REFERENCE_PERF=$SERVICE_PERF" >> "$GITHUB_ENV"
+          echo "SERVICE_PERF=$GITHUB_WORKSPACE/perf-source/tools/perf/perf" >> "$GITHUB_ENV"
       - name: Check recording and decoding before compiler builds
         if: ${{ !inputs.replay }}
         run: >-
@@ -103,7 +136,7 @@ jobs:
           --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
           --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
           --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
-          --addr2line /usr/bin/llvm-addr2line-18 --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line /usr/bin/addr2line --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-probe
       - name: Check readers and build fwp
         if: ${{ !inputs.replay }}
@@ -125,7 +158,7 @@ jobs:
           --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
           --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
           --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
-          --addr2line /usr/bin/llvm-addr2line-18 --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line /usr/bin/addr2line --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-evidence
       - name: Reconstruct sample accounting and exact service results
         if: ${{ !inputs.replay }}
@@ -148,8 +181,8 @@ jobs:
         run: >-
           python3 scripts/service_cpu_replay.py --recordings service-recordings
           --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --arch "$SAMPLE_ARCH"
-          --perf "$SERVICE_PERF" --addr2line /usr/bin/llvm-addr2line-18
-          --gnu-addr2line /usr/bin/addr2line
+          --perf "$SERVICE_PERF" --addr2line /usr/bin/addr2line
+          --reference-perf "$SERVICE_REFERENCE_PERF"
           --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-replayed
       - name: Retain complete and failed observations
@@ -160,5 +193,6 @@ jobs:
           path: |
             service-cpu-probe/
             service-cpu-setup/
+            service-perf-build/
             ${{ !inputs.replay && 'service-cpu-evidence/' || 'service-cpu-replayed/' }}
           if-no-files-found: error

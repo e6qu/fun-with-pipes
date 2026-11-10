@@ -11,6 +11,16 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Borrowed compiler types (PR #275)
+
+[PR #275](https://github.com/e6qu/fun-with-pipes/pull/275) removes repeated type-tree
+copies while finding unresolved variables and applying substitutions. Inference,
+diagnostics and generated C stay identical. Complete word-count compilation takes
+11–14% less time and callback compilation 8–10% less, with essentially unchanged
+peak process memory. [All final gates pass](measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
+[Four noisy AMD64 growth comparisons](measurements/compiler-type-time-2026-11-10/README.md)
+leave full milestone 6 timing acceptance open.
+
 ## Application workflows and compiler costs (PR #274)
 
 [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) adds opt-in compiler

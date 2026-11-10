@@ -1,8 +1,8 @@
 # Locate queued-service CPU costs before changing its implementation
 
 **Recordings collected; decoder repair pending.** [The first native run](service-cpu-first-2026-11-10/README.md)
-verifies all outputs but rejects six fwp stack reports. PR #275's delivery gates
-remain the immediate priority.
+verifies all outputs but rejects six fwp stack reports. [The failed LLVM replay](service-decoder-replay-2026-11-10/README.md) confirms
+a GNU marker-reader bug. Repair that reader and replay the saved samples.
 The [complete service comparison](weak-callback-time-2026-11-09/README.md) found
 that delivering 4,096 messages takes about 19–20 times C's service time and 5–7
 times Swift's. Different queues, representations and synchronization prevent
@@ -109,9 +109,10 @@ both the leaf symbol and the actual ancestor used for each classification.
 `service-cpu` in the [evidence workflow](../../.github/workflows/numerics.yml)
 requires an immutable `service_cpu_tag`. It runs both native Linux architectures
 in the existing Swift image with `CAP_PERFMON`, for process-local CPU sampling.
-LLVM addr2line is selected explicitly for source names. Perf's script command
-locates it through a dedicated tool-directory symlink; the collector verifies
-that the resolved executable matches its required setting. The capability probe
+GNU addr2line is selected explicitly. The workflow builds pinned perf 6.8 with
+a one-condition fix: only an actual `0x` address can begin its end marker.
+It retains the source patch, build log, enabled unwind features and binary hash.
+The collector verifies the selected symbol reader's executable identity. The capability probe
 must pass before compiler builds. Sampling records, binaries,
 source mappings, commands and all failures are retained. No production source
 changes or new service profiling boundaries are part of this observation.

@@ -47,7 +47,7 @@ def verify_recordings(source, revision, arch):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('recordings', 'output', 'perf', 'addr2line', 'gnu-addr2line', 'demangler', 'swift-demangler'):
+    for name in ('recordings', 'output', 'perf', 'addr2line', 'reference-perf', 'demangler', 'swift-demangler'):
         parser.add_argument('--'+name, type=Path, required=True)
     for name in ('source', 'run', 'arch'):
         parser.add_argument('--'+name, required=True)
@@ -113,11 +113,9 @@ def main():
             print(key, 'pass' if row['correct'] else row['failure'], flush=True)
     # Keep the first failing GNU exchange as a source-level diagnosis. This never
     # supplies accepted attribution and does not execute a recorded program.
-    gnu_env = dict(env, PATH=str(args.gnu_addr2line.parent)+os.pathsep+env['PATH'])
-    assert Path(shutil.which('addr2line', path=gnu_env['PATH'])).resolve() == args.gnu_addr2line.resolve()
-    command = [str(args.perf), 'script', '-v', '--input', str(restored/'fwp-4096-0/perf.data'),
+    command = [str(args.reference_perf), 'script', '-v', '--input', str(restored/'fwp-4096-0/perf.data'),
                '--inline', '--max-stack', '512', '--fields', 'period,event,ip,sym,dso']
-    diagnostic = run_capture(command, env=gnu_env, cwd=ROOT, input_data=None,
+    diagnostic = run_capture(command, env=env, cwd=ROOT, input_data=None,
         input_stream=subprocess.DEVNULL, text=False, encoding='utf-8', timeout=args.deadline, check=False)
     for name, data in (('stdout', diagnostic.stdout), ('stderr', diagnostic.stderr)):
         (output/('gnu-diagnostic.'+name+'.gz')).write_bytes(gzip.compress(data, mtime=0))

@@ -51,12 +51,13 @@ implementation; do not invent a universal language-overhead target.
 | 4 | Complete ownership and peer comparisons | Complete the [buffer, returned-function, weak-registration and parser comparisons](docs/measurements/ownership-peers.md). Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
 | 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#sustained-service-load). Add syntax only for a demonstrated need. |
 | 6 | Reduce repeated compiler type-copy work | Borrow inputs while finding unresolved variables and substituting resolved types, under the [frozen contract](docs/measurements/compiler-type-walks.md). Preserve inference, diagnostics, effects and exact C; verify copy reductions on four applications and compiler growth. Require qualified ordinary-build timing and memory results, then all final delivery gates. |
+| 7 | Reduce measured queued-service costs | Complete the [CPU attribution](docs/measurements/service-cpu-costs.md), select a demonstrated cost, and freeze a candidate contract before implementation. Preserve delivery/cancellation/expiration/error results, verify whole-service time and working memory on both architectures, check the same mechanism in HTTP, and pass all final delivery gates. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: remove measured compiler copies
+## Current work: locate and reduce queued-service costs
 
 #270–272 delivered fresh-array stores, captured-map ownership and known array
 callbacks with structured-gradient comparisons. Their original noisy or unmet
@@ -73,35 +74,21 @@ retain all 48 qualifying compiler comparisons and 34 successful HTTP trials.
 The later checking subdivisions have unmeasured reporter overhead; they establish
 no ordinary-build speedup.
 
-**Milestone 6:** measure and deliver the [borrowed type traversals](docs/measurements/compiler-type-walks.md).
-The [exact counters](docs/measurements/compiler-type-copies-2026-11-10/README.md)
-match on both architectures: each complete application makes roughly 804,000–810,000
-type-node copies while searching for unresolved variables, and 469,000–471,000
-while substituting resolved types. Borrow the existing input trees and build only
-required outputs. Keep row flattening unchanged initially; report remaining copies.
-[Focused checks pass](docs/measurements/compiler-borrowed-types-2026-11-10/README.md)
-on both architectures: 29–32% fewer total type copies, unchanged visit counts,
-exact C and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
+#275 delivers milestone 6's compiler change: 29–32% fewer type copies, exact C
+and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
 verify 11–14% less word-count compilation time and 8–10% less callback compilation
-time. All complete-application targets and memory limits pass; four noisy AMD64
-growth comparisons leave full timing acceptance open. Retain the verified gains
-without repeating those unchanged cases to obtain qualification.
+time. All complete-application targets and memory limits pass. [All delivery gates
+pass](docs/measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
+Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
+those results; do not repeat unchanged cases to obtain qualification.
 
-The frozen target is at least 5% less ordinary emit-C time for word counting and
-queued callbacks, with numerical/HTTP/growth regressions limited to 2% and peak
-RSS growth to 5%. Two sessions per architecture and the existing 2% copy-control
-limit distinguish a measured gain from noise. Preserve language behavior and
-exact C; no count reduction alone completes timing acceptance. Bundle the compiler
-change, profiler/observation repairs, docs and final delivery evidence in one PR.
+**Next:** complete the [service CPU protocol](docs/measurements/service-cpu-costs.md).
+All original service outputs pass; repair the profiler's symbol reader and replay
+the saved recordings before selecting a runtime change. Keep failed observations
+and unknown frames visible. Then freeze the selected change's correctness,
+whole-service time, memory and compiler-cost targets before implementation.
 
-[Caller decoding now passes](docs/measurements/compiler-cpu-samples-2026-11-10/README.md)
-on both architectures with every sample accounted for. Unnamed frames remain
-visible; independent counters quantify copies. Neither proves a compiler speedup.
-
-The [service CPU protocol](docs/measurements/service-cpu-costs.md) prepares the
-next investigation while the compiler delivery gates run.
-
-After this compiler milestone, attribute CPU time in the queued service and HTTP
+Attribute CPU time in the queued service and HTTP
 endpoint to payload construction, queues/channels, protocol work and cleanup.
 The 4,096-message service still takes 18.65–20.23 times C's time and 5.12–6.70 times
 Swift's, with differing representations and synchronization. Do not call that gap
