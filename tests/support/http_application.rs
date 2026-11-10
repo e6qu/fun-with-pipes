@@ -676,9 +676,9 @@ pressure =
                     .lines
                     .recv_timeout(deadline.saturating_duration_since(Instant::now()))
                     .unwrap_or_else(|error| {
+                        let log = server.log.lock().unwrap().clone();
                         panic!(
-                            "pressure round {round}: waiting for blocked write: {error}; {}",
-                            server.log.lock().unwrap()
+                            "pressure round {round}: waiting for blocked write: {error}; {log}"
                         )
                     });
                 if line == "http-wait-pressure-write" {
