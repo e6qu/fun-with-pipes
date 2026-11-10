@@ -1,18 +1,33 @@
-name: Count compiler type copies on maintained applications
+name: Verify and measure borrowed compiler type walks
 on:
   workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
+      reference_source:
+        type: string
+        required: true
 permissions:
   contents: read
 jobs:
-  counts:
+  comparison:
     strategy:
       fail-fast: false
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
+        session: ${{ fromJSON(inputs.phase == 'check' && '[0]' || '[1,2]') }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       CARGO_BUILD_JOBS: '2'
+      CARGO_PROFILE_RELEASE_DEBUG: 'false'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
       CC: gcc
       FWP_LTO: '0'
     steps:
@@ -22,31 +37,75 @@ jobs:
         with:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Validate explicit inputs and timing failure controls
+        env:
+          PHASE: ${{ inputs.phase }}
+          REFERENCE_SOURCE: ${{ inputs.reference_source }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          assert os.environ['PHASE'] in ('check', 'measure')
+          assert re.fullmatch(r'[0-9a-f]{40}', os.environ['REFERENCE_SOURCE'])
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'COMPILER_CPU={min(os.sched_getaffinity(0))}\n')
+          PY
+          python3 scripts/test-compiler-build-comparison.py
       - name: Install observation dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev time
-      - name: Build ordinary and counted compilers from the same source
+      - name: Build ordinary reference and candidate compilers
+        env:
+          REFERENCE_SOURCE: ${{ inputs.reference_source }}
         run: |
           cargo fetch --locked
           cargo build --release --locked --offline --bin fwp
+          git fetch --no-tags origin "$REFERENCE_SOURCE"
+          git worktree add --detach "$RUNNER_TEMP/type-reference" "$REFERENCE_SOURCE"
+          cargo build --release --locked --offline --bin fwp --manifest-path "$RUNNER_TEMP/type-reference/Cargo.toml" --target-dir "$RUNNER_TEMP/type-reference-target"
+          git -C "$RUNNER_TEMP/type-reference" diff --exit-code HEAD
+          mkdir compiler-binaries
+          cp target/release/fwp compiler-binaries/candidate
+          cp "$RUNNER_TEMP/type-reference-target/release/fwp" compiler-binaries/reference
+          git -C "$RUNNER_TEMP/type-reference" rev-parse HEAD > compiler-binaries/reference-source.txt
+      - name: Check type inference, diagnostics and report contracts
+        if: inputs.phase == 'check'
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --offline --lib --test golden_check --test compiler_options -- -D warnings
+          cargo test --locked --offline --lib types::tests -- --nocapture
+          cargo test --locked --offline --test golden_check --test compiler_options -- --nocapture
+      - name: Compare exact C, diagnostics or ordinary compilation costs
+        env:
+          PHASE: ${{ inputs.phase }}
+          SESSION: ${{ matrix.session }}
+          REFERENCE_SOURCE: ${{ inputs.reference_source }}
+        run: |
+          set -o pipefail
+          python3 scripts/compiler_build_comparison.py --reference compiler-binaries/reference --candidate compiler-binaries/candidate --reference-source "$REFERENCE_SOURCE" --phase "$PHASE" --session "$SESSION" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --deadline 120 --output compiler-comparison 2>&1 | tee compiler-comparison.log
+      - name: Build the separate copy-count observer
+        if: inputs.phase == 'check'
+        run: |
           git worktree add --detach "$RUNNER_TEMP/type-walk-checkout" "$GITHUB_SHA"
           python3 scripts/type_walk_probe.py --checkout "$RUNNER_TEMP/type-walk-checkout" --output type-walk-probe
           cargo build --release --locked --offline --bin fwp --manifest-path "$RUNNER_TEMP/type-walk-checkout/Cargo.toml" --target-dir "$RUNNER_TEMP/type-walk-target"
           python3 scripts/type_walk_probe.py --verify "$RUNNER_TEMP/type-walk-checkout" --output type-walk-probe
-          cp target/release/fwp type-walk-probe/ordinary-fwp
           cp "$RUNNER_TEMP/type-walk-target/release/fwp" type-walk-probe/observed-fwp
-      - name: Count copies and require identical C on all four applications
+      - name: Count remaining copies and preserve C on all applications
+        if: inputs.phase == 'check'
         run: |
           set -o pipefail
-          python3 scripts/inspect-compiler-checking.py --ordinary-compiler target/release/fwp --compiler "$RUNNER_TEMP/type-walk-target/release/fwp" --cc gcc --time /usr/bin/time --deadline 120 --output type-walk-checking 2>&1 | tee type-walk-checking.log
+          python3 scripts/inspect-compiler-checking.py --ordinary-compiler compiler-binaries/candidate --compiler "$RUNNER_TEMP/type-walk-target/release/fwp" --cc gcc --time /usr/bin/time --deadline 120 --output type-walk-checking 2>&1 | tee type-walk-checking.log
           python3 - <<'PY'
           import json
           from pathlib import Path
           report = json.loads(Path('type-walk-checking/summary.json').read_text())
-          assert not report['failures'] and len(report['applications']) == 4
+          baseline = json.loads(Path('docs/measurements/compiler-type-copies-2026-11-10/counts.json').read_text())
+          assert not report['failures'] and set(report['applications']) == set(baseline)
           for name, application in report['applications'].items():
               assert application['correct'], name
               counts = application['commands']['observed']['typeWalkCounts']
-              assert counts['type_clones'] > 0 and counts['free_vars_visits'] > 0 and counts['zonk_visits'] > 0
+              for field in ('type_clones', 'free_vars_clones', 'zonk_clones'):
+                  assert counts[field] < baseline[name][field], (name, field, counts, baseline[name])
               print(name, counts)
           PY
       - name: Retain exact source and build settings
@@ -55,13 +114,17 @@ jobs:
           git rev-parse HEAD > compiler-source.txt
           rustc -Vv > compiler-build.txt
           cat Cargo.toml >> compiler-build.txt
+          printenv | sort | sed -n '/^CARGO_PROFILE_/p' >> compiler-build.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: compiler-type-walks-${{ matrix.runner }}
+          name: compiler-type-walks-${{ matrix.runner }}-${{ matrix.session }}
           path: |
             compiler-source.txt
             compiler-build.txt
+            compiler-binaries/
+            compiler-comparison/
+            compiler-comparison.log
             type-walk-probe/
             type-walk-checking/
             type-walk-checking.log

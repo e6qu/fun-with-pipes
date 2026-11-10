@@ -53,7 +53,7 @@ class CompilerSamplingTests(unittest.TestCase):
                     '--time', '/usr/bin/time', '--cc', 'gcc', '--cpu', '0', '--frequency', '997',
                     '--stack-bytes', '32768', '--ring-bytes', '262144', '--user-registers',
                     ','.join(compiler_sampling.CORE_REGISTERS['aarch64']), '--demangler', '/c++filt',
-                    '--deadline', '120', '--output', str(output)]
+                    '--addr2line-timeout-ms', '10000', '--deadline', '120', '--output', str(output)]
                 with ExitStack() as stack:
                     stack.enter_context(patch.dict(os.environ, GITHUB_ACTIONS='true', CARGO_PROFILE_RELEASE_DEBUG='2'))
                     stack.enter_context(patch.object(sys, 'argv', arguments))

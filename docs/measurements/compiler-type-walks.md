@@ -77,3 +77,28 @@ The candidate is frozen against the counted source above:
 5. Run affected correctness checks during development; run all nine production
    jobs, documentation and the complete-log audit once the coherent change is
    ready. Original roadmap timing misses remain open.
+
+## Candidate checks and ordinary timing
+
+The candidate borrows through variable chains iteratively, traverses constructor
+inputs directly, and normalizes applications while building the substituted
+result. The four new unit controls cover long aliases, nested applications,
+variable order, numeric row labels, open tails/effects, naturals and occurs checks.
+Row flattening remains the reference implementation.
+
+Dispatch `suite=compiler-type-walks` with explicit
+`source_revision=35a12dfee0266134237d03d1262649be69df7c41` for focused checks.
+It builds ordinary reference/candidate compilers, runs type/diagnostic/report
+controls at production Rust O1, compares exact C for all sixteen inputs and early/
+late diagnostics for every growing input, then counts candidate copies separately.
+
+After correctness passes, `suite=compiler-type-time` with the same reference
+runs two sessions per architecture. Each input gets one warmup and eight balanced
+rounds of reference, identical reference copy, candidate and identical candidate
+copy. Only ordinary fresh-process emit-C is timed, including GNU time startup;
+no phase reporter, copy counter, GCC or program execution is included. Both
+compilers use the same explicit allowed logical CPU, not an exclusive core.
+Keep CPU models separate. Report elapsed medians, process CPU, maximum timed RSS,
+C size and all four compiler hashes. Noise and missed targets remain visible in
+`timingQualified` and `acceptance`; a successful correctness job is not timing
+acceptance. The reader rejects missing/duplicate rounds and counts every input.

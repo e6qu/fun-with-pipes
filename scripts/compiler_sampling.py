@@ -75,12 +75,14 @@ def main():
     parser.add_argument('--ring-bytes', type=int, required=True)
     parser.add_argument('--user-registers', required=True)
     parser.add_argument('--demangler', type=Path, required=True)
+    parser.add_argument('--addr2line-timeout-ms', type=int, required=True)
     parser.add_argument('--deadline', type=float, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'sample on GitHub runners'
     assert platform.system() == 'Linux' and platform.machine() in ('aarch64', 'x86_64')
     assert 0 < args.deadline <= 120 and 0 < args.frequency <= 1000
+    assert 0 < args.addr2line_timeout_ms <= args.deadline * 1000
     assert 0 < args.stack_bytes <= 65528 and args.stack_bytes % 8 == 0
     assert args.ring_bytes > 0 and args.cpu in os.sched_getaffinity(0)
     assert args.user_registers.split(',') == CORE_REGISTERS[platform.machine()]
@@ -90,7 +92,9 @@ def main():
     compiler, perf = args.compiler.resolve(), args.perf.resolve()
     environment = {k: v for k, v in os.environ.items()
                    if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(CC=args.cc, FWP_LTO='0', LC_ALL='C', DEBUGINFOD_URLS='')
+    config = output/'perf.config'
+    config.write_text(f'[core]\naddr2line-timeout = {args.addr2line_timeout_ms}\n')
+    environment.update(CC=args.cc, FWP_LTO='0', LC_ALL='C', DEBUGINFOD_URLS='', PERF_CONFIG=str(config))
     identity = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         compilerSha256=digest(compiler), rust=subprocess.check_output(['rustc', '-Vv'], text=True),
         perf=str(perf), perfVersion=subprocess.check_output([str(perf), '--version'], text=True),
@@ -99,7 +103,8 @@ def main():
         kernel=platform.platform(), topology=subprocess.check_output(['lscpu'], text=True),
         affinity=sorted(os.sched_getaffinity(0)), event='cpu-clock:u', frequency=args.frequency,
         stackBytes=args.stack_bytes, ringBytes=args.ring_bytes, deadlineSeconds=args.deadline,
-        userRegisters=args.user_registers,
+        userRegisters=args.user_registers, addr2lineTimeoutMs=args.addr2line_timeout_ms,
+        perfConfig=str(config), perfConfigSha256=digest(config),
         releaseDebug=os.environ.get('CARGO_PROFILE_RELEASE_DEBUG'),
         scope='One ordinary and one sampled fresh-process emit-C build for each original application. '
               'No phase reporter, GCC compilation or application execution. User CPU stacks include '

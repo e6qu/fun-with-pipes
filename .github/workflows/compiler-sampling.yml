@@ -141,7 +141,7 @@ jobs:
           COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
         run: |
           set -o pipefail
-          python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --demangler /usr/bin/c++filt --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
+          python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --demangler /usr/bin/c++filt --addr2line-timeout-ms 10000 --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
       - name: Download retained recordings
         if: inputs.replay
         env:
@@ -157,7 +157,7 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/test-compiler-sampling.py
-          python3 scripts/replay-compiler-samples.py --recordings recordings --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --perf "$COMPILER_PERF" --demangler /usr/bin/c++filt --deadline 120 --output compiler-stacks 2>&1 | tee compiler-stacks.log
+          python3 scripts/replay-compiler-samples.py --recordings recordings --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --perf "$COMPILER_PERF" --demangler /usr/bin/c++filt --addr2line-timeout-ms 10000 --deadline 120 --output compiler-stacks 2>&1 | tee compiler-stacks.log
       - name: Retain the mixed-thread unwind control
         if: always() && inputs.replay
         run: |

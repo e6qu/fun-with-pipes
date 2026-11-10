@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** implement and verify the selected borrowed type traversals, bundle the
+**Next:** publish and run focused native verification of the borrowed type traversals; bundle the
 compiler change, observation repairs and delivery/docs updates in one normal PR.
 [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) is fully verified and merged.
 
@@ -14,7 +14,8 @@ has no body or trailers. [Delivery receipt](measurements/application-final-gates
 
 Worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`, is
 rebased onto that squash commit. Historical recording tags retain their original
-sources. No next PR has opened yet; the compiler candidate is not implemented.
+sources. No next PR has opened yet. The first compiler candidate is implemented locally;
+focused native verification and ordinary timing remain required.
 
 ## Selected change and measurements
 
@@ -33,8 +34,8 @@ copies, then ordinary whole emit-C time on four apps and twelve growth inputs.
 Require two sessions per architecture, existing 2% copy controls, ≥5% improvement
 for words/callbacks, ≤2% other time regression and ≤5% peak-RSS growth. No speedup
 has been measured. Run focused checks first and one complete final delivery matrix.
-The observation script's group-loop variable also needs renaming to restore
-correct console application labels; original JSON/counts are correct.
+The observation script's group-loop variable now preserves console application
+labels; original JSON/counts were correct.
 
 ## Profiler repair
 
@@ -46,14 +47,18 @@ ARM64 passes all apps; AMD64 misses words/numerical callers. Per-thread replay
 `42759680401` does not repair this; do not accept those profiles.
 
 AMD64 perf 7.0.14's libdw load-base calculation conflicts with the recorded ELF
-segment layout (4 KiB virtual/file offset difference). The next recording selects
-Ubuntu 24.04's perf 6.8 environment explicitly on both architectures, retaining
-ordinary compiler optimization/link settings and requiring resolved callers plus
-complete sample/period accounting. The ineffective per-thread workaround is
+segment layout (4 KiB virtual/file offset difference). Recording `42761474854` at `5cab084d5` uses Ubuntu 24.04/perf 6.8 on both
+architectures. ARM64 passes; AMD64 now resolves checking callers in words/HTTP,
+but numerical/callback reports fail addr2line's one-second internal read deadline.
+Both complete logs are audited. The next replay sets that decoder deadline
+explicitly to 10 seconds while preserving the existing 120-second total command
+deadline, warnings and all sample accounting. It reuses these recordings. The ineffective per-thread workaround is
 removed. This is diagnostic work; production platform coverage remains unchanged.
 
-Local guarded reader controls, workflow lint and roadmap checks have passed for
-the prepared scripts; recheck after current docs/workflow edits. No local compiler
+Local guarded checks pass: `test-compiler-sampling.py` (5 controls),
+`test-compiler-build-comparison.py` (4 controls), `actionlint` on all three changed
+workflows, `cargo fmt --all -- --check`, and `check-roadmap.py` (450 document
+link sets, 106 preparation anchors, 6 milestones). No local compiler
 build, full suite or benchmark ran. One artifact read was stopped by the guard's
 serialization lock; it ran successfully after the prior read finished, with no
 limit changes. All report downloads remain small and serial.
@@ -67,7 +72,7 @@ limit changes. All report downloads remain small and serial.
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup repair; all gates | Recorded comparison limits apply |
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load and Windows pressure repair; all gates | Recorded observation limits apply |
-| 6 | In progress | Verified baseline copy counts and frozen borrowing contract | Compiler implementation, correctness, count/timing/memory comparison and final delivery |
+| 6 | In progress | Verified baseline copy counts and frozen borrowing contract | Native correctness, count/timing/memory comparison and final delivery |
 
 Original milestone 1–3 timing limits remain open; do not repeat unchanged noisy
 measurements for acceptance. Keep CPU models separate, new reporter overhead

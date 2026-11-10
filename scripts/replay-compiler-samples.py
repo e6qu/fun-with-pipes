@@ -21,11 +21,13 @@ def main():
     parser.add_argument('--run', required=True)
     parser.add_argument('--perf', type=Path, required=True)
     parser.add_argument('--demangler', type=Path, required=True)
+    parser.add_argument('--addr2line-timeout-ms', type=int, required=True)
     parser.add_argument('--deadline', type=float, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert 0 < args.deadline <= 120
+    assert 0 < args.addr2line_timeout_ms <= args.deadline * 1000
     source = args.recordings.resolve()/'compiler-sampling'
     identity = json.loads((source/'identity.json').read_text())
     assert identity['source'] == args.source and digest(source/'fwp') == identity['compilerSha256']
@@ -36,8 +38,11 @@ def main():
     shutil.copyfile(source/'fwp', compiler)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, LC_ALL='C', DEBUGINFOD_URLS='')
+    config = output/'perf.config'
+    config.write_text(f'[core]\naddr2line-timeout = {args.addr2line_timeout_ms}\n')
+    environment = dict(os.environ, LC_ALL='C', DEBUGINFOD_URLS='', PERF_CONFIG=str(config))
     summary = dict(recordingRun=args.run, recordingIdentity=identity,
+        addr2lineTimeoutMs=args.addr2line_timeout_ms, perfConfigSha256=digest(config),
         decoderSource=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         perfVersion=subprocess.check_output([str(args.perf), '--version'], text=True),
         applications={}, failures=[])
