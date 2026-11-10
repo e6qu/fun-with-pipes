@@ -5,6 +5,12 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+APPLICATIONS = {
+    'words': 'examples/wordfreq.fwp',
+    'numerical': 'docs/tutorials/20-autodiff-and-devices/main.fwp',
+    'callbacks': 'tests/fixtures/weak_callback_service.fwp',
+    'http': 'examples/server/api.fwp',
+}
 FAMILIES = {'definitions': (16, 64, 256, 1024), 'generic': (8, 32, 128, 512),
             'nesting': (8, 32, 128, 512)}
 
