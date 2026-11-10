@@ -1,0 +1,72 @@
+name: Verify nested resource-owner borrowing
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CXX: g++
+      FWP_LTO: '0'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_ARC_ARTIFACTS: ${{ github.workspace }}/nested-owner-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install native dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc g++ libssl-dev pkg-config
+      - name: Check formatting and all changed Rust callers
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --lib --test channel_queue_ownership -- -D warnings
+      - name: Prove nested lifetime selection and rejection boundaries
+        if: ${{ !cancelled() }}
+        run: |
+          cargo test --locked --lib cgen::resource_borrows::tests -- --nocapture
+          cargo test --locked --lib resource::tests -- --nocapture
+      - name: Verify actual service cleanup, weak expiration and caller lifetimes
+        if: ${{ !cancelled() }}
+        run: >-
+          python3 scripts/run-native-tests.py --idle-timeout 1200
+          --logs nested-owner-tests --targets
+          channel_queue_ownership queued_functions compiler_call_liveness
+          resource_frames resource_frame_fields resource_frame_variants
+          resource_match_context tail_recursion
+      - name: Retain source and exact toolchains
+        if: always()
+        run: |
+          mkdir -p nested-owner-identity
+          git rev-parse HEAD > nested-owner-identity/source.txt
+          rustc -Vv > nested-owner-identity/rust.txt
+          gcc --version > nested-owner-identity/gcc.txt
+          uname -a > nested-owner-identity/host.txt
+      - name: Retain all results, including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nested-resource-owners-${{ matrix.runner }}
+          path: |
+            nested-owner-identity/
+            nested-owner-tests/
+            nested-owner-evidence/
+          if-no-files-found: error

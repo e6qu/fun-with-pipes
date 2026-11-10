@@ -1,7 +1,7 @@
 # Reuse an enclosing resource owner inside nested calls
 
 **Selected from [verified service CPU samples](service-cpu-attribution-2026-11-10/README.md);
-not implemented yet.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
+first native-lowering implementation awaits verification.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
 retained by `roadmap/service-cpu-software-clock-2026-11-10`. Its ordinary code is
 unchanged from the recorded service source. Freeze this contract before changing
 production code. Keep earlier missed timing goals separate.
@@ -106,3 +106,19 @@ is inconclusive; a qualified regression is a failed target. Keep both explicit.
 After focused correctness, mechanism and measurement checks, run the nine final
 production jobs, documentation and complete-log audit on one final PR head. Bundle
 the selected compiler change, profiler repairs, reports and focused documentation.
+
+## First implementation under verification
+
+`src/cgen/resource_borrows.rs` scans each exact emission tree twice: it rejects
+reassigned local IDs, then tracks enclosing ownership with scoped rollback.
+Initialized frame bindings, exact aliases and immutable record/variant projections
+can cover an inner parameter. Calls and newly constructed/updated values do not.
+Loop-step and self-tail-rebinding bodies are excluded. Ordinary argument owners,
+resource bindings, cancellation ticks and interpreter metadata remain unchanged.
+
+Seven proof controls cover aliases/projections, uninitialized slots, completed
+scopes, factory results, pattern branches, sibling scopes, reassignment and count
+operations. The actual service ledger test requires the optimized program to
+exercise this selection before checking native outputs and physical release.
+Native O1/O2 validation and ordinary performance acceptance are pending; the
+implementation alone does not complete this contract.

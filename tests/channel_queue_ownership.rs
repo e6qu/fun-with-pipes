@@ -105,6 +105,12 @@ fn callback_service_releases_payloads_and_weak_registrations() {
                 "{emitted:?}"
             );
             let original = std::fs::read_to_string(&cfile).unwrap();
+            if !raw {
+                assert!(
+                    original.contains("protected by enclosing frame"),
+                    "the optimized service must exercise nested resource borrowing"
+                );
+            }
             // The address ledger is test storage outside the managed heap.
             let observed = ownership_ledger::instrument_native(&original, 1 << 17);
             let finish = "    owner_ledger_finish();\n";

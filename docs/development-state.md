@@ -1,10 +1,17 @@
 # Current work
 
-**Next:** implement [nested resource-owner borrowing](measurements/nested-resource-owners.md)
-under its frozen contract. Start with inner parameter anchors proved covered by an
-enclosing live owner. Preserve interpreter scope metadata, weak expiration,
-ordinary ownership and all failure/cancellation paths. Deliver this change with
-the profiler repairs, measurements and docs in one substantial normal PR.
+**Next:** publish and run the focused native `nested-resource-owners` checks.
+Audit every completed target, repair any failure as a batch, then measure the
+candidate under [the frozen contract](measurements/nested-resource-owners.md).
+Deliver the compiler proof, profiler repairs, measurements and docs in one normal PR.
+
+The first native-lowering proof is implemented in `src/cgen/resource_borrows.rs`.
+It tracks initialized enclosing owners through exact aliases and immutable
+projections, with scope rollback. It rejects reassigned IDs and excludes loop/self-
+tail-rebinding emission. All three native result representations use the proof;
+interpreter/debugger metadata stays unchanged. Seven unit controls cover positive
+and negative lifetime boundaries. The service ledger requires actual selection.
+No native compilation, correctness or speed claim has passed for this candidate yet.
 
 ## Verified delivery
 
@@ -31,7 +38,8 @@ the verified squash. No delivery PR yet. Immutable observation source
 `roadmap/service-cpu-observation-2026-11-10`.
 Reference ordinary compiler/runtime `65719f7fc2277a5b97c5a790df941fea6c5eb4d7` is
 retained by `roadmap/service-cpu-software-clock-2026-11-10`; its ordinary sources
-match the recording source. Publish the candidate contract before production edits.
+match the recording source. Contract published before production edits as `be57644e4`, retained by
+`roadmap/nested-resource-owner-contract-2026-11-10`.
 
 ## Verified service diagnosis
 
@@ -85,8 +93,10 @@ classification and skipped calibration. Five compiler-reader and five service-re
 controls previously pass. Shared compiler replay `42772707168` exactly matches the
 previous reader's rows/counts/periods on both hosts. New summaries independently
 reconstruct all 32 profiles. Actionlint passes the explicit verified-download step.
-The latest docs audit passed 457 link sets / 106 anchors / seven milestones; audit
-the new attribution report and candidate contract before publication. No local builds.
+The attribution/contract docs audit passed 459 link sets / 106 anchors / seven
+milestones. Actionlint passes the focused proof workflow. Local formatting initially
+used the wrong edition; incidental changes were removed, keeping only the intended
+C-generator edit and new module. Native formatting/type checking runs in CI. No local builds.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data <2 GiB,
 sampled RSS <1 GiB, 180 seconds. Last free space: about 112 GiB. Preserve unrelated
