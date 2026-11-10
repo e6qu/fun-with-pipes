@@ -8,7 +8,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        include:
+          - runner: ubuntu-latest
+            ubuntu_version: '26.04'
+            profiler_package: linux-perf
+            user_registers: ax,bx,cx,dx,si,di,bp,sp,ip,r8,r9,r10,r11,r12,r13,r14,r15
+          - runner: ubuntu-24.04-arm
+            ubuntu_version: '24.04'
+            profiler_package: linux-tools-generic
+            user_registers: x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20,x21,x22,x23,x24,x25,x26,x27,x28,x29,lr,sp,pc
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 40
     env:
@@ -24,19 +32,34 @@ jobs:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Install and identify the profiler
+        env:
+          PROFILER_PACKAGE: ${{ matrix.profiler_package }}
+          EXPECTED_UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
         run: |
+          python3 - <<'PY'
+          import os
+          import platform
+          release = platform.freedesktop_os_release()
+          assert release['ID'] == 'ubuntu' and release['VERSION_ID'] == os.environ['EXPECTED_UBUNTU_VERSION'], release
+          PY
           sudo apt-get update
-          sudo apt-get install -y libssl-dev time linux-tools-generic libcap2-bin
+          sudo apt-get install -y libssl-dev time "$PROFILER_PACKAGE" libcap2-bin
           python3 - <<'PY'
           import os
           from pathlib import Path
           import re
           import subprocess
 
-          dependencies = subprocess.check_output(['dpkg-query', '-W', '-f', '${Depends}', 'linux-tools-generic'], text=True)
-          packages = re.findall(r'\b(linux-tools-\d[\w.+~-]*-generic)\b', dependencies)
-          assert len(packages) == 1, dependencies
-          files = subprocess.check_output(['dpkg-query', '-L', packages[0]], text=True).splitlines()
+          package = os.environ['PROFILER_PACKAGE']
+          if package == 'linux-tools-generic':
+              dependencies = subprocess.check_output(['dpkg-query', '-W', '-f', '${Depends}', package], text=True)
+              packages = re.findall(r'\b(linux-tools-\d[\w.+~-]*-generic)\b', dependencies)
+              assert len(packages) == 1, dependencies
+              package = packages[0]
+          else:
+              assert package == 'linux-perf', package
+          subprocess.run(['dpkg-query', '-W', package], check=True)
+          files = subprocess.check_output(['dpkg-query', '-L', package], text=True).splitlines()
           candidates = [Path(name).resolve() for name in files if name.endswith('/perf')]
           assert len(candidates) == 1 and candidates[0].is_file(), candidates
           profiler = str(candidates[0])
@@ -54,9 +77,11 @@ jobs:
           cargo fetch --locked
           cargo build --release --locked --offline --bin fwp
       - name: Sample each original application compile
+        env:
+          COMPILER_USER_REGISTERS: ${{ matrix.user_registers }}
         run: |
           set -o pipefail
-          python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
+          python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
       - name: Retain exact source and build settings
         if: always()
         run: |

@@ -55,6 +55,9 @@ gets one ordinary build and one sampled build; their generated C must be identic
 - `perf record` samples user-space CPU activity at 997 Hz, including compiler
   threads and child processes. It observes only the command's process tree.
   A 32 KiB stack snapshot and 256 KiB event buffer are explicit settings.
+  Each architecture explicitly requests its general-purpose registers for
+  unwinding. The ARM64 software-clock event does not request the SVE vector-length
+  register that perf 6.8 may select using a hardware-counter capability probe.
 - Both builds use one allowed logical CPU, a 120-second deadline and GNU time
   for process CPU/RSS. The CPU is not reserved exclusively. No C compilation or
   application execution is included; the compiler phase reporter is disabled.
@@ -79,6 +82,18 @@ and [reporting](https://raw.githubusercontent.com/torvalds/linux/master/tools/pe
 references define the sampling and call-stack fields. These runs are diagnostic
 preparation; their results and profiler limitations must be reviewed before
 selecting an optimization.
+
+The first probe, source `f26b3723a0ac5049bfaa40180593be1618e8695c`
+(`roadmap/compiler-cpu-samples-2026-11-10`, run `42750772791`), failed before
+producing samples. AMD64's Ubuntu 26.04 packages moved perf into `linux-perf`;
+the workflow now selects the OS/package explicitly. ARM64 completed all four
+ordinary builds, but each software-clock recording reported unsupported sampling.
+The revised probe explicitly selects general-purpose registers: perf's ARM64
+[register selection](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/arch/arm64/util/perf_regs.c)
+can add SVE's vector-length register after testing a hardware event, whereas
+the [kernel](https://raw.githubusercontent.com/torvalds/linux/v7.0/kernel/events/core.c)
+rejects extended registers for software-clock events. This is the candidate
+cause to verify on the repaired probe, not a compiler failure or a timing result.
 
 ## Questions and boundaries
 
