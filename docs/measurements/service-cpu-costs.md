@@ -1,6 +1,7 @@
 # Locate queued-service CPU costs before changing its implementation
 
-**Preparation only.** PR #275's delivery gates remain the immediate priority.
+**Observation tooling prepared; native results pending.** PR #275's delivery
+gates remain the immediate priority.
 The [complete service comparison](weak-callback-time-2026-11-09/README.md) found
 that delivering 4,096 messages takes about 19–20 times C's service time and 5–7
 times Swift's. Different queues, representations and synchronization prevent
@@ -84,6 +85,32 @@ information alone cannot reconstruct that boundary. Keep such samples in the
 remaining-service category until actual source evidence separates them. Missing
 frames also limit attribution; overlapping source ranges cannot be counted twice. Do not label all
 `malloc` work as ARC or all unmatched samples as compiler overhead.
+
+## Reader and source evidence
+
+The [collector](../../scripts/service_cpu_collect.py) reuses the existing separate
+service/caller builder. The [reader](../../scripts/service_cpu_samples.py) keeps
+both the leaf symbol and the actual ancestor used for each classification.
+
+- fwp phase names come from its emitted function-ID table; anonymous functions
+  remain anonymous. C, Rust and Swift callbacks need their actual service parent.
+- Allocation, release and count operations use the functions defined in
+  `runtime/fwp_rt_heap.c`; channel/weak operations use `runtime/fwp_rt_task.c`.
+  libc allocation/free, pthread synchronization and known Swift runtime symbols
+  are separate operations. Unrecognized Rust/Swift internals remain unclassified.
+- A release within dispatch is still dispatch. Payload arithmetic with no surviving
+  function boundary stays in remaining work; the reader does not infer a phase
+  from an instruction name or assume unmatched CPU time is ARC overhead.
+- Every row contributes once. Unnamed frames and entirely missing stacks keep
+  their sample counts and periods. The independent [audit](../../scripts/service_cpu_audit.py)
+  reconstructs results, pilots and attribution from retained raw records.
+
+`service-cpu` in the [evidence workflow](../../.github/workflows/numerics.yml)
+requires an immutable `service_cpu_tag`. It runs both native Linux architectures
+in the existing Swift image with `CAP_PERFMON`, for process-local CPU sampling.
+The capability probe must pass before compiler builds. Sampling records, binaries,
+source mappings, commands and all failures are retained. No production source
+changes or new service profiling boundaries are part of this observation.
 
 ## Select the next change from evidence
 
