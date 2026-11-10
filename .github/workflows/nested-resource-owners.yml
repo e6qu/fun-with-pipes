@@ -29,6 +29,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.99.1
+          components: rustfmt, clippy
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -52,6 +53,40 @@ jobs:
           channel_queue_ownership queued_functions compiler_call_liveness
           resource_frames resource_frame_fields resource_frame_variants
           resource_match_context tail_recursion
+      - name: Check operation observer boundaries
+        if: ${{ !cancelled() }}
+        run: python3 scripts/test-nested-resource-counts.py
+      - name: Build same-source reference with only nested borrowing disabled
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach ../nested-owner-reference-checkout "$GITHUB_SHA"
+          python3 scripts/prepare-nested-resource-reference.py \
+            --checkout ../nested-owner-reference-checkout --output nested-owner-reference
+          cargo build --locked --bin fwp --manifest-path ../nested-owner-reference-checkout/Cargo.toml \
+            --target-dir ../nested-owner-reference-target 2>&1 | tee nested-owner-reference/build.log
+          cp ../nested-owner-reference-target/debug/fwp nested-owner-reference/fwp
+          git -C ../nested-owner-reference-checkout diff HEAD > nested-owner-reference/after-build.patch
+          cmp nested-owner-reference/reference.patch nested-owner-reference/after-build.patch
+          sha256sum target/debug/fwp nested-owner-reference/fwp > nested-owner-reference/compilers.sha256
+      - name: Count actual calls and storage and verify observer fault controls
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          arch="$(uname -m)"
+          case "$arch" in
+            x86_64) c_arch=x86-64 ;;
+            aarch64) c_arch=armv8-a ;;
+            *) exit 1 ;;
+          esac
+          python3 scripts/measure-nested-resource-counts.py \
+            --compiler target/debug/fwp --reference nested-owner-reference/fwp \
+            --source "$GITHUB_SHA" --arch "$arch" --cc gcc --c-arch "$c_arch" \
+            --output nested-owner-counts
+          python3 scripts/audit-nested-resource-counts.py --input nested-owner-counts \
+            --source "$GITHUB_SHA" --arch "$arch"
       - name: Retain source and exact toolchains
         if: always()
         run: |
@@ -69,4 +104,9 @@ jobs:
             nested-owner-identity/
             nested-owner-tests/
             nested-owner-evidence/
+            nested-owner-reference/*.json
+            nested-owner-reference/*.patch
+            nested-owner-reference/*.log
+            nested-owner-reference/*.sha256
+            nested-owner-counts/
           if-no-files-found: error

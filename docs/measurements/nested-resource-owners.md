@@ -1,7 +1,7 @@
 # Reuse an enclosing resource owner inside nested calls
 
 **Selected from [verified service CPU samples](service-cpu-attribution-2026-11-10/README.md);
-first native-lowering implementation awaits verification.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
+first native-lowering implementation passes focused correctness checks.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
 retained by `roadmap/service-cpu-software-clock-2026-11-10`. Its ordinary code is
 unchanged from the recorded service source. Freeze this contract before changing
 production code. Keep earlier missed timing goals separate.
@@ -120,5 +120,17 @@ Seven proof controls cover aliases/projections, uninitialized slots, completed
 scopes, factory results, pattern branches, sibling scopes, reassignment and count
 operations. The actual service ledger test requires the optimized program to
 exercise this selection before checking native outputs and physical release.
-Native O1/O2 validation and ordinary performance acceptance are pending; the
-implementation alone does not complete this contract.
+[Native O1/O2 checks](nested-resource-first-checks-2026-11-10/README.md) pass on
+both Linux architectures. The first workflow failed its setup for formatting and
+Clippy; the repair installs both components. Ordinary performance acceptance and
+final delivery remain pending.
+
+The count comparison builds the same source twice, disabling only
+`NESTED_RESOURCE_BORROWS` in the reference checkout. It retains that exact patch,
+compiler hashes, generated C and native binaries. Separate diagnostic builds count
+actual cleanup push/pop/unwind calls, retain/release calls, successful count
+increments/decrements and allocation requests. Peak charged storage includes slot
+padding; it is not process RSS. Each service call must restore its original live
+bytes and cleanup stack. Native controls add one real push/pop pair or omit the
+real result release. These measurements do not time instrumented code or infer
+elapsed-time gains from count reductions.

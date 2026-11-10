@@ -13,8 +13,9 @@ identities. Do not edit observations to make an old experiment describe new code
 now passes both native replays and independent raw-record audits. Identified
 ownership operations account for 40–43% of fwp sampled CPU work on ARM64 and
 48–51% on AMD64; cleanup bookkeeping is also prominent. [Nested resource-owner
-borrowing](nested-resource-owners.md) is selected under a frozen contract, not yet
-implemented. Unknown leaves, erased phase boundaries and all failed decoder
+borrowing](nested-resource-owners.md) now passes [focused native correctness checks](nested-resource-first-checks-2026-11-10/README.md).
+Operation counts, timing and final delivery remain unverified. Unknown leaves,
+erased phase boundaries and all failed decoder
 attempts remain explicit.
 
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)

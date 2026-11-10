@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish and run the focused native `nested-resource-owners` checks.
-Audit every completed target, repair any failure as a batch, then measure the
-candidate under [the frozen contract](measurements/nested-resource-owners.md).
+**Next:** repair the focused workflow's missing rustfmt/Clippy components and
+publish the service operation-count comparison in the same batch. Then measure
+ordinary timing under [the frozen contract](measurements/nested-resource-owners.md).
 Deliver the compiler proof, profiler repairs, measurements and docs in one normal PR.
 
 The first native-lowering proof is implemented in `src/cgen/resource_borrows.rs`.
@@ -11,7 +11,13 @@ projections, with scope rollback. It rejects reassigned IDs and excludes loop/se
 tail-rebinding emission. All three native result representations use the proof;
 interpreter/debugger metadata stays unchanged. Seven unit controls cover positive
 and negative lifetime boundaries. The service ledger requires actual selection.
-No native compilation, correctness or speed claim has passed for this candidate yet.
+At `0c73a4e7102876fef8d576abdce5b1290f0b28c0`, run `42784994278` passes all
+14 unit checks and eight native targets on both Linux architectures (34 integration
+tests per host). Jobs `129723892136` / `129723892565` fail only because rustfmt was
+not installed; Clippy consequently did not run. Complete logs were inspected.
+No compiler diagnostic or native test failure appeared. [Complete logs and scope](measurements/nested-resource-first-checks-2026-11-10/README.md)
+are retained. Documentation run `42784998783` passes. This is focused correctness
+evidence, not final delivery or performance acceptance.
 
 ## Verified delivery
 
@@ -84,7 +90,7 @@ loop rebinding. Inspect actual HTTP selection before claiming shared benefit.
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup; all gates | Recorded comparison limits apply |
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
-| 7 | In progress | Verified service CPU profiles; selected lifetime proof | Implementation, focused controls, measured acceptance and final delivery |
+| 7 | In progress | Verified service CPU profiles; lifetime proof passes focused native checks | Lint setup repair, measured acceptance and final delivery |
 
 ## Local checks and preservation
 
