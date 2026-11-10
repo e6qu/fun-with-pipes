@@ -93,6 +93,12 @@ does not populate parents reconstructed from DWARF user stacks. The replay reads
 `perf script` frames from the saved recordings, retains unknown/unmatched callers
 and checks totals against the original flat report. No new compilation is needed.
 
+The replay first lists every sample's thread and period without unwinding. It
+then decodes each sampled thread in a separate process and requires exact period
+sequences per thread, plus the original whole-recording totals. This avoids
+sharing the profiler's unwind cache across threads. The mixed-thread control is
+retained separately; native verification of this repair is pending.
+
 GNU `c++filt --format=rust` decodes names explicitly; raw names remain retained.
 Perf's explicit-register warning is retained even with the complete requested
 register set. Other warnings, losses, unresolved checking callers or inconsistent

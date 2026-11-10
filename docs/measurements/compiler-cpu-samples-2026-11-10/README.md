@@ -37,7 +37,14 @@ All four ARM64 applications pass; AMD64 callbacks pass. AMD64 has 23 empty
 stacks out of 294 samples for words, 337/585 for numerical and 686/1,311 for HTTP.
 Retaining these periods prevents biased totals, but does not recover callers:
 words and numerical still have no decoded body-checking caller. They remain
-failed attribution probes. The next replay retains verbose unwind diagnostics.
+failed attribution probes. The candidate replay retains verbose mixed-thread diagnostics alongside a
+separate decoding process for each sampled thread. It verifies every thread's
+period sequence and the original combined totals. Perf 7.0.14's
+[source](https://raw.githubusercontent.com/gregkh/linux/v7.0.14/tools/perf/util/unwind-libdw.c)
+contains the cached-thread lookup defect described in the
+[upstream repair](https://lists.openwall.net/linux-kernel/2026/07/24/1598).
+That is a candidate explanation for these recordings; native verification must
+show both the original failure and recovered callers before accepting it.
 The artifact download action also emitted a deprecated Node Buffer warning;
 use the installed GitHub CLI to download the exact named artifact instead.
 
