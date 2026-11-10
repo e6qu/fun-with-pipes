@@ -15,7 +15,8 @@ class CompilerSamplingTests(unittest.TestCase):
                 recording_messages(text)
 
     def test_unresolved_and_unmatched_samples_are_retained(self):
-        text = ('# Overhead\tSamples\tPeriod\tParent\tShared Object\tSymbol\n'
+        prefix = '# Total Lost Samples: 0\n# Event count (approx.): 10000\n'
+        text = (prefix+'# Overhead\tSamples\tPeriod\tParent symbol\tShared Object\tSymbol\n'
                 '60.00%\t6\t6000\tfwp::infer::Infer::check_binding\tfwp\t[.] infer_expr\n'
                 '40.00%\t4\t4000\t[other]\t[unknown]\t[.] 0x1234\n')
         rows = histogram(text, True)
@@ -23,8 +24,14 @@ class CompilerSamplingTests(unittest.TestCase):
         self.assertEqual(sum(row['period'] for row in rows), 10000)
         self.assertEqual(rows[1]['parent'], '[other]')
         self.assertEqual(rows[1]['symbol'], '[.] 0x1234')
-        plain = '100.00%\t10\t10000\tfwp\t[.] infer_expr\n'
+        plain = prefix+'# Overhead\tSamples\tPeriod\tShared Object\tSymbol\n100.00%\t10\t10000\tfwp\t[.] infer_expr\n'
         self.assertEqual(histogram(plain, False)[0]['samples'], 10)
+        with_ipc = plain.replace('Object\tSymbol\n', 'Object\tSymbol\tIPC   [IPC Coverage]\n').replace('infer_expr\n', 'infer_expr\t-      -\n')
+        self.assertEqual(histogram(with_ipc, False), histogram(plain, False))
+        for invalid in (plain.replace('Samples: 0', 'Samples: 1'), plain.replace('approx.): 10000', 'approx.): 9999'),
+                        with_ipc.replace('-      -', '1.00 [100%]'), with_ipc.replace('IPC   [IPC Coverage]', 'Other')):
+            with self.assertRaises(AssertionError):
+                histogram(invalid, False)
 
     def test_invalid_reports_fail(self):
         for text in ('', '# header only\n', '100.00%\t1\t1\tfwp\n',

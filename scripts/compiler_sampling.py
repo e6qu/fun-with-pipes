@@ -33,12 +33,22 @@ def recording_messages(text):
 
 def histogram(text, parent):
     """Read explicitly selected perf TSV fields, keeping unresolved samples."""
+    lost = re.findall(r'^# Total Lost Samples:\s*(\d+)\s*$', text, re.M)
+    assert lost == ['0'], 'missing loss accounting or lost samples'
+    headers = [line for line in text.splitlines() if line.startswith('# Overhead\t')]
+    assert len(headers) == 1, 'missing or duplicate histogram header'
+    columns = [' '.join(part.split()) for part in headers[0][2:].split('\t')]
+    expected = ['Overhead', 'Samples', 'Period'] + (['Parent symbol'] if parent else []) + ['Shared Object', 'Symbol']
+    assert columns == expected or columns == expected + ['IPC [IPC Coverage]'], columns
+    has_ipc = len(columns) != len(expected)
     keys = ['overheadPercent', 'samples', 'period'] + (['parent'] if parent else []) + ['dso', 'symbol']
     rows = []
     for line in text.splitlines():
         if not line.strip() or line.lstrip().startswith('#'):
             continue
         values = [part.strip() for part in line.split('\t')]
+        if has_ipc:
+            assert values.pop().split() == ['-', '-'], 'software-clock reports must not claim instruction counts'
         assert len(values) == len(keys), f'unexpected perf row: {line}'
         row = dict(zip(keys, values))
         row['overheadPercent'] = float(row['overheadPercent'].removesuffix('%'))
@@ -47,6 +57,8 @@ def histogram(text, parent):
         assert 0 <= row['overheadPercent'] <= 100 and row['samples'] > 0 and row['period'] > 0
         rows.append(row)
     assert rows, 'perf returned no samples'
+    period = re.findall(r'^# Event count \(approx\.\):\s*(\d+)\s*$', text, re.M)
+    assert len(period) == 1 and sum(row['period'] for row in rows) == int(period[0]), 'event total differs from retained rows'
     return rows
 
 
@@ -61,6 +73,7 @@ def main():
     parser.add_argument('--stack-bytes', type=int, required=True)
     parser.add_argument('--ring-bytes', type=int, required=True)
     parser.add_argument('--user-registers', required=True)
+    parser.add_argument('--demangler', type=Path, required=True)
     parser.add_argument('--deadline', type=float, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -80,6 +93,7 @@ def main():
     identity = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         compilerSha256=digest(compiler), rust=subprocess.check_output(['rustc', '-Vv'], text=True),
         perf=str(perf), perfVersion=subprocess.check_output([str(perf), '--version'], text=True),
+        demangler=str(args.demangler), demanglerVersion=subprocess.check_output([str(args.demangler), '--version'], text=True),
         cc=args.cc, ccVersion=subprocess.check_output([args.cc, '--version'], text=True),
         kernel=platform.platform(), topology=subprocess.check_output(['lscpu'], text=True),
         affinity=sorted(os.sched_getaffinity(0)), event='cpu-clock:u', frequency=args.frequency,
@@ -136,7 +150,7 @@ def main():
                     '--percent-limit', '0', '--percentage', 'absolute', '--field-separator', '\t',
                     '--fields', fields, '--sort', ('parent,' if parent else '')+'dso,symbol']
                 if parent:
-                    command += ['--parent', 'fwp::infer::Infer::(check_binding|check_effects)']
+                    command += ['--parent', 'check_binding|check_effects']
                 entry = dict(role=role, command=command)
                 row['commands'].append(entry)
                 result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
@@ -145,11 +159,26 @@ def main():
                 (directory/(role+'.tsv')).write_text(result.stdout)
                 (directory/(role+'.stderr')).write_text(result.stderr)
                 assert result.returncode == 0 and not result.stderr, entry
-                rows = histogram(result.stdout, parent)
+                raw_rows = histogram(result.stdout, parent)
+                demangle_command = [str(args.demangler), '--no-strip-underscore', '--format=rust']
+                decoded = run_capture(demangle_command, env=environment, cwd=ROOT, input_data=result.stdout,
+                    input_stream=None, text=True, encoding='utf-8', timeout=args.deadline, check=False)
+                entry['demangleCommand'] = demangle_command
+                entry['demangleStatus'] = decoded.returncode
+                (directory/(role+'.demangled.tsv')).write_text(decoded.stdout)
+                (directory/(role+'.demangle.stderr')).write_text(decoded.stderr)
+                assert decoded.returncode == 0 and not decoded.stderr, entry
+                rows = histogram(decoded.stdout, parent)
+                assert len(rows) == len(raw_rows)
+                for raw, row in zip(raw_rows, rows):
+                    assert all(raw[key] == row[key] for key in ('overheadPercent', 'samples', 'period', 'dso'))
+                    row['rawSymbol'] = raw['symbol']
+                    if parent:
+                        row['rawParent'] = raw['parent']
                 row[role] = dict(samples=sum(r['samples'] for r in rows), period=sum(r['period'] for r in rows),
                     unresolvedSamples=sum(r['samples'] for r in rows if '[unknown]' in r['symbol'] or re.search(r'\b0x[0-9a-f]+$', r['symbol'])), rows=rows)
                 if parent:
-                    assert any('check_binding' in r['parent'] for r in rows), 'no body-checking caller stacks'
+                    assert any(re.search(r'::infer::Infer>?::check_binding', r['parent']) for r in rows), 'no decoded body-checking caller stacks'
             assert row['all-symbols']['samples'] == row['checking-parents']['samples']
             assert row['all-symbols']['period'] == row['checking-parents']['period']
             row['correct'] = True

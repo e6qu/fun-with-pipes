@@ -110,6 +110,19 @@ list, and require resolved body-checking caller stacks. Any other warning/error
 still fails. SVE-specific frames are outside this diagnostic's unwind coverage;
 do not treat its stacks as complete coverage of arbitrary native binaries.
 
+The capability run `42752530541`, source
+`1ae957feceeeed0564d769951c3a96b0af91d248`
+(`roadmap/compiler-cpu-preflight-2026-11-10`), records all eight application
+compiles and preserves identical C. ARM64's verbose attributes confirm the cause:
+register mask `0x4001ffffffff` fails, while `0x1ffffffff` records successfully.
+Both report readers then reject perf's additional, unmeasured IPC column. The
+reader now recognizes that exact placeholder column, rejects lost samples and
+requires row periods to equal the complete event total. Rust symbols are decoded
+explicitly with GNU `c++filt --format=rust`, retaining the original names too;
+perf 6.8 does not decode the compiler's current Rust symbol format itself.
+Caller matching accepts encoded names, then requires decoded checking functions.
+The repaired report interpretation still needs native verification.
+
 ## Questions and boundaries
 
 | Question | Evidence to collect |
