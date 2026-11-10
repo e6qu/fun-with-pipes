@@ -1,9 +1,16 @@
 # Current work
 
-**Next:** publish the corrected focused/count batch using the exact frozen
-reference; verify all native jobs before starting the prepared ordinary timing
-workflow under [the frozen contract](measurements/nested-resource-owners.md).
+**Next:** monitor corrected focused/count run `42790112990` at
+`c49af8a6e873380cd328d2679c1df2a6a795b489`; audit both jobs before starting
+the prepared ordinary timing workflow under [the frozen contract](measurements/nested-resource-owners.md).
 Deliver the compiler proof, profiler repairs, measurements and docs in one normal PR.
+
+Publish the additional file-owner fault control with the isolated proof observer
+and run `nested-resource-lifetime`. That scope checks only the changed file target
+plus formatting/Clippy; it does not repeat the ongoing eight-target/count batch.
+The source test removes actual protecting holds and requires earlier file closure
+to change the observable result. Generated ordinary/fault C, binaries and outputs
+are retained. This added negative native control has not run yet.
 
 The first native-lowering proof is implemented in `src/cgen/resource_borrows.rs`.
 It tracks initialized enclosing owners through exact aliases and immutable
@@ -34,6 +41,12 @@ It requires an exact `roadmap/weak-callback-time-*` tag via `weak_time_tag`.
 Do not dispatch timing before count/fault checks pass. Preserve all noisy or failed
 observations; do not rerun unchanged cases for qualification. HTTP functional/load
 checks and final nine-job/docs/log-audit delivery are still outstanding.
+
+The prepared diagnostic compiler observer counts both proof scans and alias walks
+on four applications plus twelve growth inputs. It requires identical emitted C
+to the ordinary compiler and remains separate from timing. Its two guarded controls
+pass after repairing repeated-instrumentation rejection. Native observer compilation
+and its actual visit bounds remain unverified until the timing workflow runs.
 
 ## Verified delivery
 

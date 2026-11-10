@@ -153,3 +153,18 @@ The native workflows retain successful and failed cases. Independent readers
 reconstruct every service output, counter difference, timing qualification and
 RSS ratio; altered-report controls must fail even with recomputed file hashes.
 Static HTTP selection is recorded separately from functional/load verification.
+
+The separate proof observer counts the freshness scan, ownership scan and short
+alias-expression walks. Accepted bodies must have equal visit counts for the two
+main scans, with alias visits no greater than body visits. Rejected freshness
+checks must perform no ownership scan or selection. It records selected anchors
+for every application and growth input and must emit byte-identical C to the
+ordinary candidate compiler. Counter-enabled compilation is never used for the
+ordinary compiler-time acceptance result.
+
+The focused `nested-resource-lifetime` job checks a file example where the
+original call must keep the first file open while attempting a second open under
+a deliberately small descriptor limit. A diagnostic build omits the actual
+protecting parameter holds. The second open must then succeed, exposing premature
+closure. This verifies that the test detects an invalid lifetime change; it is
+separate from leak controls and does not change production code.

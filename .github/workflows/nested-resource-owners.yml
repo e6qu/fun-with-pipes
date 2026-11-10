@@ -1,6 +1,10 @@
 name: Verify nested resource-owner borrowing
 on:
   workflow_call:
+    inputs:
+      scope:
+        type: string
+        required: true
 permissions:
   contents: read
 jobs:
@@ -37,28 +41,37 @@ jobs:
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Install native dependencies
         run: sudo apt-get update && sudo apt-get install -y gcc g++ libssl-dev pkg-config
+      - name: Explicit focused scope
+        env:
+          CHECK_SCOPE: ${{ inputs.scope }}
+        run: test "$CHECK_SCOPE" = all || test "$CHECK_SCOPE" = lifetime
       - name: Check formatting and all changed Rust callers
         run: |
           cargo fmt --all -- --check
-          cargo clippy --locked --lib --test channel_queue_ownership -- -D warnings
+          cargo clippy --locked --lib --test channel_queue_ownership --test resource_frames -- -D warnings
       - name: Prove nested lifetime selection and rejection boundaries
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         run: |
           cargo test --locked --lib cgen::resource_borrows::tests -- --nocapture
           cargo test --locked --lib resource::tests -- --nocapture
       - name: Verify actual service cleanup, weak expiration and caller lifetimes
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         run: >-
           python3 scripts/run-native-tests.py --idle-timeout 1200
           --logs nested-owner-tests --targets
           channel_queue_ownership queued_functions compiler_call_liveness
           resource_frames resource_frame_fields resource_frame_variants
           resource_match_context tail_recursion
+      - name: Verify the actual omitted protecting owner and file lifetime controls
+        if: ${{ !cancelled() && inputs.scope == 'lifetime' }}
+        run: >-
+          python3 scripts/run-native-tests.py --idle-timeout 1200
+          --logs nested-owner-tests --targets resource_frames
       - name: Check operation observer boundaries
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         run: python3 scripts/test-nested-resource-counts.py
       - name: Build the exact frozen reference compiler
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -73,7 +86,7 @@ jobs:
           git -C ../nested-owner-reference-checkout diff --exit-code HEAD
           sha256sum target/debug/fwp nested-owner-reference/fwp > nested-owner-reference/compilers.sha256
       - name: Count actual calls and storage and verify observer fault controls
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -104,7 +117,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nested-resource-owners-${{ matrix.runner }}
+          name: nested-resource-owners-${{ inputs.scope }}-${{ matrix.runner }}
           path: |
             nested-owner-identity/
             nested-owner-tests/

@@ -82,7 +82,9 @@ pass](docs/measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
 Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
 those results; do not repeat unchanged cases to obtain qualification.
 
-**Next:** implement [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
+**Current:** verify [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
+The first implementation passes [focused Linux lifetime/cleanup checks](docs/measurements/nested-resource-first-checks-2026-11-10/README.md).
+Actual operation counts, ordinary timing, compiler costs and final delivery remain open.
 [Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
 identify substantial count work and cleanup bookkeeping. Prove that an enclosing
 owner protects an inner parameter for its full lifetime; remove only that duplicate
