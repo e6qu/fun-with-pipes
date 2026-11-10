@@ -15,32 +15,22 @@ Use the new `compiler-sampling` suite on this branch; retain all four original
 applications, raw recordings and unknown samples. Review actual hot functions
 before selecting an optimization. Parser controls and workflow lint pass locally
 under the guard; no local fwp build or full suite ran.
-Initial source `f26b3723a0ac5049bfaa40180593be1618e8695c`, tag
-`roadmap/compiler-cpu-samples-2026-11-10`, run `42750772791`, failed on both hosts.
-All completed logs and all four ARM64 recording errors are audited. AMD64 needs
-Ubuntu 26.04's separate profiler package; ARM64 rejects the implicit extended
-register recording. The revised workflow asserts OS versions and explicitly
-selects packages and ordinary registers. The second attempt at
-`f8cf810f53fb5b0fd40ea74cb7000e8a851ed468`, run `42751630458`, verified package
-setup but exposed perf's optional-argument syntax: the register list requires
-`--user-regs=LIST`. Both complete logs and all eight app failures are inspected.
-The next source corrects that syntax, keeps the exact known register-list warning
-visible, and runs six bounded capability probes before rebuilding fwp. Verify
-this repair before interpreting samples; no compiler or runtime behavior changed.
-Third source `1ae957feceeeed0564d769951c3a96b0af91d248`, run `42752530541`,
-records all eight applications with identical C. The register-mask cause is
-confirmed by retained event attributes. Both jobs then reject perf's extra IPC
-placeholder column; all eight saved reports pass the repaired reader locally
-under the guard, including zero-loss accounting and exact event totals.
-The next source also explicitly decodes Rust symbols and matches caller names
-before decoding. Fourth source `7a2cfc919`, run `42753509308`, decodes the first ARM64 report but
-exposes a sample-loop variable overwriting the application result. That prevents
-later applications from running. The repair renames that variable and adds a
-complete local report-flow regression: all four applications complete, and one
-failed child still allows the others to run. Four tests pass under the guard;
-the test's mocked platform identity was corrected locally too. AMD64 is still
-queued for the obsolete source. Cancel it after publishing the repaired probe;
-never count it as a pass. Final native report verification remains pending.
+Current profiler repair: `f7f4336f7`, immutable tag
+`roadmap/compiler-cpu-flow-2026-11-10`, run `42754692740`.
+Both native jobs are queued. The obsolete `42753509308` was cancelled after
+publishing the bookkeeping fix; its ARM64 failure is audited and its queued
+AMD64 job is not a pass. [The checking contract](measurements/compiler-checking.md)
+records all earlier source IDs and repaired causes. The latest local regression
+exercises every application and continuation after a deliberate child failure.
+
+The next [type-copy investigation](measurements/compiler-type-walks.md) is also
+prepared. It builds ordinary and counted copies of the same source, injecting
+counters only in a separate diagnostic checkout. Generated observer Rust parses,
+double instrumentation is rejected, workflow lint and documentation links pass
+under the guard. No compiler optimization has been implemented or selected from
+these incomplete caller profiles. Once native profiling passes, dispatch
+`compiler-type-walks` on this preparation branch and inspect all four application
+counts on both architectures before changing a type traversal.
 Preserve unrelated root changes and the saved preparation handoff stash
 `451bbf713d451f2d62d80fd7676839404875846a`.
 
