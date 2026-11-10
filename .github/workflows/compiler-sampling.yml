@@ -142,13 +142,13 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/compiler_sampling.py --compiler target/release/fwp --perf "$COMPILER_PERF" --time /usr/bin/time --cc gcc --cpu "$COMPILER_CPU" --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$COMPILER_USER_REGISTERS" --demangler /usr/bin/c++filt --deadline 120 --output compiler-sampling 2>&1 | tee compiler-sampling.log
-      - uses: actions/download-artifact@v8
+      - name: Download retained recordings
         if: inputs.replay
-        with:
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.evidence_run }}
-          name: compiler-sampling-${{ matrix.runner }}
-          path: recordings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+          RECORDING_NAME: compiler-sampling-${{ matrix.runner }}
+        run: gh run download "$RECORDING_RUN" --repo "$GITHUB_REPOSITORY" --name "$RECORDING_NAME" --dir recordings
       - name: Decode existing user stacks without rebuilding
         if: inputs.replay
         env:
@@ -158,6 +158,11 @@ jobs:
           set -o pipefail
           python3 scripts/test-compiler-sampling.py
           python3 scripts/replay-compiler-samples.py --recordings recordings --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --perf "$COMPILER_PERF" --demangler /usr/bin/c++filt --deadline 120 --output compiler-stacks 2>&1 | tee compiler-stacks.log
+      - name: Retain unwind diagnostics for a failed replay
+        if: failure() && inputs.replay
+        run: |
+          "$COMPILER_PERF" script -vv --input recordings/compiler-sampling/words/perf.data --inline --max-stack 512 --fields period,event,ip,sym,dso > compiler-unwind.stdout 2> compiler-unwind.stderr
+          gzip -6 compiler-unwind.stdout compiler-unwind.stderr
       - name: Retain exact source and build settings
         if: always()
         run: |
@@ -176,5 +181,6 @@ jobs:
             compiler-sampling/
             compiler-stacks/
             compiler-stacks.log
+            compiler-unwind.*
             profiler-capabilities/
           if-no-files-found: error

@@ -90,7 +90,13 @@ class CompilerSamplingTests(unittest.TestCase):
         self.assertEqual(report['samplesWithUnknownFrames'], 1)
         self.assertEqual(report['period'], 3000)
         self.assertEqual(report['rows'][1]['parent'], '[other]')
-        for invalid in ('', '1000 cpu-clock:u:\n', text+'unexpected warning\n',
+        missing = attribute(stacks(text+'500 cpu-clock:u:\n'), [dict(samples=3, period=3500)])
+        self.assertEqual(missing['samplesWithoutFrames'], 1)
+        self.assertEqual(missing['rows'][-1]['parent'], '[unavailable]')
+        self.assertEqual(missing['period'], 3500)
+        with self.assertRaises(AssertionError):
+            attribute(stacks('1000 cpu-clock:u:\n'), [dict(samples=1, period=1000)])
+        for invalid in ('', text+'unexpected warning\n',
                         text.replace('2000 cpu-clock', '0 cpu-clock'),
                         text.replace('cpu-clock:u', 'cycles:u')):
             with self.subTest(text=invalid), self.assertRaises(AssertionError):

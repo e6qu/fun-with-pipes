@@ -86,57 +86,17 @@ references define the sampling and call-stack fields. These runs are diagnostic
 preparation; their results and profiler limitations must be reviewed before
 selecting an optimization.
 
-The first probe, source `f26b3723a0ac5049bfaa40180593be1618e8695c`
-(`roadmap/compiler-cpu-samples-2026-11-10`, run `42750772791`), failed before
-producing samples. AMD64's Ubuntu 26.04 packages moved perf into `linux-perf`;
-the workflow now selects the OS/package explicitly. ARM64 completed all four
-ordinary builds, but each software-clock recording reported unsupported sampling.
-The revised probe explicitly selects general-purpose registers: perf's ARM64
-[register selection](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/arch/arm64/util/perf_regs.c)
-can add SVE's vector-length register after testing a hardware event, whereas
-the [kernel](https://raw.githubusercontent.com/torvalds/linux/v7.0/kernel/events/core.c)
-rejects extended registers for software-clock events. This is the candidate
-cause to verify on the repaired probe, not a compiler failure or a timing result.
+The [CPU-sampling receipt](compiler-cpu-samples-2026-11-10/README.md) retains
+all failed attempts and repairs. Both architectures now record all four programs
+and preserve C. Caller attribution remains unverified: `perf report --parent`
+does not populate parents reconstructed from DWARF user stacks. The replay reads
+`perf script` frames from the saved recordings, retains unknown/unmatched callers
+and checks totals against the original flat report. No new compilation is needed.
 
-The second attempt, `f8cf810f53fb5b0fd40ea74cb7000e8a851ed468`
-(`roadmap/compiler-cpu-registers-2026-11-10`, run `42751630458`), verified package
-selection but found a command-line error: perf's optional register argument
-requires `--user-regs=LIST`; a separated list became the command to execute.
-The correction first records six tiny capability probes before building fwp.
-It preserves verbose event attributes for flat, DWARF and register-selected
-software clocks and a hardware-cycle control. No probe substitutes automatically
-for the configured event. The configured recording must work before compilation.
-
-Perf warns about explicit register lists even when all general-purpose registers
-are present. Retain that exact warning, require the complete architecture-specific
-list, and require resolved body-checking caller stacks. Any other warning/error
-still fails. SVE-specific frames are outside this diagnostic's unwind coverage;
-do not treat its stacks as complete coverage of arbitrary native binaries.
-
-The capability run `42752530541`, source
-`1ae957feceeeed0564d769951c3a96b0af91d248`
-(`roadmap/compiler-cpu-preflight-2026-11-10`), records all eight application
-compiles and preserves identical C. ARM64's verbose attributes confirm the cause:
-register mask `0x4001ffffffff` fails, while `0x1ffffffff` records successfully.
-Both report readers then reject perf's additional, unmeasured IPC column. The
-reader now recognizes that exact placeholder column, rejects lost samples and
-requires row periods to equal the complete event total. Rust symbols are decoded
-explicitly with GNU `c++filt --format=rust`, retaining the original names too;
-perf 6.8 does not decode the compiler's current Rust symbol format itself.
-Caller attribution requires decoded checking functions.
-The next attempt (`7a2cfc919`, run `42753509308`) decoded the first ARM64
-report but exposed a Python variable overwriting its application record. The
-repair now has a complete reporting-flow regression, including continuation
-after a child failure. The next attempt (`f7f4336f7`, run `42754692740`) retains all four
-application recordings on each host, but every reported parent is `[other]`.
-This is a profiler-interface limitation: the
-[DWARF unwind path](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/util/machine.c)
-builds the call cursor without assigning the `perf report --parent` field.
-The replacement reads `perf script` user stacks, keeps unknown/unmatched samples
-and requires both sample and period totals to match the flat report. The
-`compiler-sampling-replay` suite decodes the existing binary/recordings on runners;
-it does not rebuild the compiler or repeat measurements. Native verification is
-pending. A valid stack report is required before attributing costs to checking.
+GNU `c++filt --format=rust` decodes names explicitly; raw names remain retained.
+Perf's explicit-register warning is retained even with the complete requested
+register set. Other warnings, losses, unresolved checking callers or inconsistent
+totals fail the probe. SVE-specific frames are outside this diagnostic's coverage.
 
 ## Questions and boundaries
 
@@ -158,20 +118,15 @@ Superclass validation checks that an implementation supplies those prerequisites
 Dependency ordering checks required definitions before their callers; mutually
 dependent definitions form one group.
 
-## First observation change
+## Preserve the observation contract
 
-Extend the existing opt-in report with nested spans for superclass validation,
-dependency ordering and library/user/mixed groups. Count each group's bindings.
-Keep the complete `type-check` parent span and its total binding count. Nested
-exclusive times must add up without double-counting; group binding counts must
-sum to the parent count, including checks performed while expanding macros.
+The implemented reporter separates superclass checks, dependency ordering and
+library/user/mixed groups. Nested exclusive times add up without double-counting;
+group binding counts sum to the parent, including macro expansion. Success and
+failure controls verify these invariants. Disabled reporting reads no clocks,
+but its extra boundaries have unmeasured overhead; do not claim zero cost.
 
-Preserve generated C, output, diagnostics/source locations and compile-time
-execution. Check success and failure reports. Disabled reporting still performs
-no clock reads; do not claim zero overhead without measuring the ordinary build.
-Do not add a cache, skip library validation or depend on an older fwp build.
-
-## Measurements after the observation controls pass
+## Maintained inputs and future comparison
 
 The next diagnostic command is `scripts/inspect-compiler-checking.py`, dispatched
 with `suite=compiler-checking`. It compiles these complete maintained sources:
@@ -189,7 +144,7 @@ accounting. Original source paths preserve imports; retained copies record exact
 inputs. Emitted C must match byte-for-byte. Every invocation and failure is
 retained, and all programs are attempted before reporting failure.
 
-This first pass does not run GCC or execute programs. Existing application and
+These observations do not run GCC or execute programs. Existing application and
 HTTP checks cover runtime behavior; this diagnostic attributes compilation work.
 It has no warmup/copy-control schedule and establishes no speedup or observer
 overhead. Its source is frozen before dispatch. The paired experiment below is
