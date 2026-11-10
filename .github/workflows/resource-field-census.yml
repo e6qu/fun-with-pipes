@@ -1,0 +1,73 @@
+name: Count original resource holder fields
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  census:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      CC: gcc
+      CXX: g++
+      FWP_LTO: '0'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install native dependencies and check observer controls
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ libssl-dev pkg-config
+          python3 scripts/test-resource-field-census.py
+          python3 scripts/test-nested-resource-analysis.py
+      - name: Build ordinary compiler and counter-only compiler
+        run: |
+          mkdir resource-field-build
+          git rev-parse HEAD > resource-field-build/source.txt
+          rustc -Vv > resource-field-build/rust.txt
+          gcc --version > resource-field-build/gcc.txt
+          uname -a > resource-field-build/host.txt
+          cargo fetch --locked 2>&1 | tee resource-field-build/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee resource-field-build/ordinary.log
+          cp target/debug/fwp resource-field-build/ordinary-fwp
+          git worktree add --detach ../resource-field-observer "$GITHUB_SHA"
+          python3 scripts/inspect-nested-resource-analysis.py --kind plain-fields prepare \
+            --checkout ../resource-field-observer --output resource-field-setup
+          cargo build --locked --offline --bin fwp --manifest-path ../resource-field-observer/Cargo.toml \
+            --target-dir target 2>&1 | tee resource-field-build/observed.log
+          git -C ../resource-field-observer diff HEAD > resource-field-setup/after-build.patch
+          cmp resource-field-setup/observer.patch resource-field-setup/after-build.patch
+      - name: Require unchanged C and identify original holders on every input
+        run: >-
+          python3 scripts/inspect-nested-resource-analysis.py --kind plain-fields measure
+          --compiler target/debug/fwp --ordinary resource-field-build/ordinary-fwp
+          --output resource-field-observations
+      - name: Retain complete source, classifications and failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resource-field-census-${{ matrix.runner }}
+          path: |
+            resource-field-build/*.txt
+            resource-field-build/*.log
+            resource-field-setup/
+            resource-field-observations/
+          if-no-files-found: error

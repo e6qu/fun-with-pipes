@@ -83,14 +83,14 @@ jobs:
         run: |
           set -euo pipefail
           git worktree add --detach ../nested-analysis-checkout "$GITHUB_SHA"
-          python3 scripts/inspect-nested-resource-analysis.py prepare \
+          python3 scripts/inspect-nested-resource-analysis.py --kind nested-borrows prepare \
             --checkout ../nested-analysis-checkout --output nested-analysis-setup
           cargo build --release --locked --offline --bin fwp \
             --manifest-path ../nested-analysis-checkout/Cargo.toml \
             --target-dir ../nested-analysis-target 2>&1 | tee nested-analysis-setup/build.log
           git -C ../nested-analysis-checkout diff HEAD > nested-analysis-setup/after-build.patch
           cmp nested-analysis-setup/observer.patch nested-analysis-setup/after-build.patch
-          python3 scripts/inspect-nested-resource-analysis.py measure \
+          python3 scripts/inspect-nested-resource-analysis.py --kind nested-borrows measure \
             --compiler ../nested-analysis-target/release/fwp --ordinary target/release/fwp \
             --output nested-analysis-observations
       - name: Verify real timing callers and wrong-result, release and clock controls
