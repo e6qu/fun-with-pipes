@@ -11,6 +11,21 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Nested resource-owner borrowing (PR #276)
+
+[PR #276](https://github.com/e6qu/fun-with-pipes/pull/276) removes duplicate lifetime
+holds when an enclosing owner already protects an inner argument. Files still
+close and weak references still expire at their original point. Qualified service
+cases take 16–21% less time, with fewer cleanup registrations and actual count
+updates; managed heap use is unchanged. The PR also fixes profiler decoding and
+the memory diagnostic's environment/accounting scope.
+
+[All final gates pass](measurements/nested-resource-final-gates-2026-11-10/README.md).
+[Original measurements](measurements/nested-resource-time-2026-11-10/README.md)
+retain one noisy runtime comparison, one noisy compiler comparison and four ARM64
+RSS misses. Separate page snapshots do not explain those misses. All 34 sustained
+HTTP trials pass with no request failures; this is not an HTTP speedup comparison.
+
 ## Borrowed compiler types (PR #275)
 
 [PR #275](https://github.com/e6qu/fun-with-pipes/pull/275) removes repeated type-tree

@@ -1,0 +1,13 @@
+{
+  "headRefOid": "55060a061801a51a583dccc5777113e5ce49ccce",
+  "mergeCommit": {
+    "oid": "b2bbd0389d227ea097ea1239d8d02ec6346f4be7"
+  },
+  "mergedAt": "2026-11-10T13:55:41Z",
+  "state": "MERGED",
+  "message": "Speed up services by removing duplicate resource lifetime holds",
+  "subjectCharacters": 63,
+  "testedHead": "55060a061801a51a583dccc5777113e5ce49ccce",
+  "tree": "98ccbbecca3ac5d6e7492473ffac227b6a32a451",
+  "equalTrees": true
+}

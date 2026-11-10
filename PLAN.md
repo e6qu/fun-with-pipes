@@ -52,58 +52,44 @@ implementation; do not invent a universal language-overhead target.
 | 5 | Language/tooling usability and compiler cost | Follow the [application and measurement plan](docs/measurements/application-tooling.md). Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#sustained-service-load). Add syntax only for a demonstrated need. |
 | 6 | Reduce repeated compiler type-copy work | Borrow inputs while finding unresolved variables and substituting resolved types, under the [frozen contract](docs/measurements/compiler-type-walks.md). Preserve inference, diagnostics, effects and exact C; verify copy reductions on four applications and compiler growth. Require qualified ordinary-build timing and memory results, then all final delivery gates. |
 | 7 | Reduce measured queued-service costs | Deliver [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md), selected from verified CPU attribution, under its frozen correctness and measurement contract. Preserve delivery/cancellation/expiration/error results, verify whole-service time and working memory on both architectures, check the same mechanism in HTTP, and pass all final delivery gates. |
+| 8 | Remove remaining unnecessary resource-lifetime holds | Follow the [field-cost investigation](docs/measurements/resource-field-costs.md): identify exact original holders, count executed extra holds in the service and HTTP, freeze a worthwhile improvement, prove lifetime boundaries and measure ordinary time/memory/compiler cost. Deliver the coherent change with all final gates. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: verify queued-service gains
+## Current work: measure the remaining lifetime holds
 
-#270–272 delivered fresh-array stores, captured-map ownership and known array
-callbacks with structured-gradient comparisons. Their original noisy or unmet
-milestone 1–3 timing acceptance remains open. Do not repeat unchanged measurements
-to obtain qualification. #273 completes milestone 4 with its parser cleanup
-repair and ownership/peer comparisons; [all delivery gates pass](docs/measurements/ownership-peer-final-gates-2026-11-09/README.md).
+#270–272 deliver fresh-array stores, captured-map ownership and known callbacks;
+original noisy or unmet milestone 1–3 timing acceptance remains open. #273 and
+#274 complete the ownership comparisons and application/tool/compiler-load work.
+#275 removes 29–32% of compiler type copies: complete applications compile 8–14%
+faster, with essentially unchanged peak memory. Four noisy growth comparisons
+remain open. [Delivery history](docs/roadmap-history.md) links their final gates.
 
-#274 completes milestone 5: [all nine production jobs, docs and the complete-log
-audit pass](docs/measurements/application-final-gates-2026-11-10/README.md).
-It delivers complete application/tool workflows, compiler phase reports, bounded
-generic expansion, growing-input measurements and sustained HTTP load checks.
-[Measurements](docs/measurements/application-compiler-load-2026-11-10/README.md)
-retain all 48 qualifying compiler comparisons and 34 successful HTTP trials.
-The later checking subdivisions have unmeasured reporter overhead; they establish
-no ordinary-build speedup.
+#276 delivers nested resource-owner borrowing with [all final gates passing](docs/measurements/nested-resource-final-gates-2026-11-10/README.md).
+Qualified whole-service cases take 16–21% less time; large-case cleanup
+registrations fall 29.7–36.9% and actual count updates 4.85–5.34%, with unchanged
+managed heap use. [The original results](docs/measurements/nested-resource-time-2026-11-10/README.md)
+retain one noisy runtime comparison, one noisy compiler comparison and four ARM64
+RSS misses. The separate memory diagnostic does not explain or replace those misses.
+All 34 HTTP load trials pass; they are capacity evidence, not an HTTP speedup.
 
-#275 delivers milestone 6's compiler change: 29–32% fewer type copies, exact C
-and preserved diagnostics. [Ordinary timings](docs/measurements/compiler-type-time-2026-11-10/README.md)
-verify 11–14% less word-count compilation time and 8–10% less callback compilation
-time. All complete-application targets and memory limits pass. [All delivery gates
-pass](docs/measurements/compiler-borrowed-final-gates-2026-11-10/README.md).
-Four noisy AMD64 growth comparisons leave full timing acceptance open. Preserve
-those results; do not repeat unchanged cases to obtain qualification.
+**Next: count unnecessary plain-data holds in mixed resource-lifetime records.**
+The [investigation](docs/measurements/resource-field-costs.md) first matches exact
+compiler contexts to unchanged generated C, then counts executed holds in the
+queued service and HTTP endpoint. [Both native static censuses pass](docs/measurements/resource-field-census-2026-11-10/README.md),
+identifying five service slots and twenty HTTP slots. [Executed service counts](docs/measurements/resource-field-holds-2026-11-10/README.md)
+attribute only 1.35–1.70% of successful retains to those plain fields. Measure HTTP
+and callable-field/whole-frame work before selecting a field-only change; capture
+origins require their own bounded proof. Select a bounded field proof only after those
+counts show worthwhile work; freeze ordinary measurement targets before changing
+production code. Keep original disposal timing and ordinary argument ownership.
 
-**Current:** verify [nested resource-owner borrowing](docs/measurements/nested-resource-owners.md).
-Both Linux architectures pass [native counts and cleanup checks](docs/measurements/nested-resource-counts-2026-11-10/README.md):
-large-case cleanup registrations fall by 29.7–36.9%, actual count increments by
-4.85–5.34%, with unchanged heap use. The [omitted-owner control](docs/measurements/nested-resource-lifetime-2026-11-10/README.md)
-detects premature file closure. [Ordinary timing](docs/measurements/nested-resource-time-2026-11-10/README.md)
-shows 16–21% gains in qualified cases. One runtime and one compiler comparison
-are noisy, and four ARM64 RSS limits are missed. The [memory diagnostic](docs/measurements/nested-resource-memory-2026-11-10/README.md)
-finds lower observed resident-page peaks, but does not establish the cause of those
-misses. Keep their acceptance open; finish final delivery without repeating timings.
-[Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
-identify substantial count work and cleanup bookkeeping. Prove that an enclosing
-owner protects an inner parameter for its full lifetime; remove only that duplicate
-protection. Preserve original disposal/weak-expiration timing. Require fewer cleanup
-registrations, ordinary whole-service gains, complete cleanup and bounded compiler
-cost. The contract defines exact targets and negative lifetime controls.
-
-Check the same selected mechanism in the maintained HTTP endpoint. Keep profile
-limitations explicit: inlining erased fwp phase boundaries, and peer libraries have
-substantial unresolved leaf work.
-The new 4,096-message full-delivery comparison takes 14.93–16.78 times C's time
-and 4.32–5.34 times Swift's, with differing representations and synchronization. Do not call that entire gap
-an ARC cost or infer peer timing ratios from CPU samples. Keep the experimental
+The 4,096-message full-delivery service still takes 14.93–16.78 times C's time
+and 4.32–5.34 times Swift's. Different representations and synchronization matter;
+the entire gap is not an ARC cost. Preserve explicit profile limitations and do
+not repeat unchanged timings to obtain qualification. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.
 
 ## Earlier contracts

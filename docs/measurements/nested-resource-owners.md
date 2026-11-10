@@ -108,7 +108,7 @@ After focused correctness, mechanism and measurement checks, run the nine final
 production jobs, documentation and complete-log audit on one final PR head. Bundle
 the selected compiler change, profiler repairs, reports and focused documentation.
 
-## First implementation under verification
+## Delivered implementation and original limits
 
 `src/cgen/resource_borrows.rs` scans each exact emission tree twice: it rejects
 reassigned local IDs, then tracks enclosing ownership with scoped rollback.
@@ -129,7 +129,8 @@ premature closure. The earlier formatter/linter setup is repaired and both pass.
 [Ordinary timing](nested-resource-time-2026-11-10/README.md) verifies 16–21% gains
 in qualified cases. One runtime comparison and one compiler comparison are noisy;
 four ARM64 RSS limits are missed. The [separate diagnosis](nested-resource-rss.md)
-preserves those original limits. Full acceptance and final delivery remain pending.
+preserves those original limits. Full performance acceptance remains open;
+[all final delivery gates pass](nested-resource-final-gates-2026-11-10/README.md).
 
 The comparisons build the exact frozen reference `65719f7fc` and the candidate
 from Rust source with the same toolchain. They retain source identities,

@@ -123,7 +123,8 @@ their existing rules. The interpreter keeps its original scope metadata.
 and the [omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md)
 pass. [Ordinary timing](measurements/nested-resource-time-2026-11-10/README.md)
 shows 16–21% gains in qualified cases. Noisy comparisons, four process-RSS misses
-and final delivery remain open. This differs from borrowing an ordinary argument below.
+remain open. [All final delivery gates pass](measurements/nested-resource-final-gates-2026-11-10/README.md).
+This differs from borrowing an ordinary argument below.
 
 ### Borrowing across direct calls
 

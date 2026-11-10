@@ -1,0 +1,155 @@
+{
+  "words": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "9f4f8b16f58801cde95ff43123e422abff8d31199c2718178b8b050a2f29bc4c"
+  },
+  "numerical": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "44f2d98ba2dbfc0589b33a070d4e094d2fdf80b0c16f6bcb6a83ba366a07a820"
+  },
+  "callbacks": {
+    "totals": {
+      "frames": 21,
+      "fields": 31,
+      "plainFields": 5,
+      "variants": 0
+    },
+    "cSha256": "ef5707779ccb1e8cc86e067265ce71feb535ffeb3f1ac94e901d0bed87b1fd0c"
+  },
+  "http": {
+    "totals": {
+      "frames": 755,
+      "fields": 1111,
+      "plainFields": 20,
+      "variants": 0
+    },
+    "cSha256": "e141888c275bd83b2599854cb6f8afbdc73c505ac51ecd3e7e5fb8883bc928ce"
+  },
+  "exported-service": {
+    "totals": {
+      "frames": 21,
+      "fields": 31,
+      "plainFields": 5,
+      "variants": 0
+    },
+    "cSha256": "c56e0f077eaa6e2a51d53bb021e9e5691edfb6e586728048c2ea8c7d2b4e5a74"
+  },
+  "definitions-16": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "e1b8fc8c58ab3c00fa419d4314bbffeb341ed3f73af88b05fb0e936012b4ad49"
+  },
+  "definitions-64": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "1cbadefcee3f02730676f12f7b8d58d763443f6d98858705caca91355420b14a"
+  },
+  "definitions-256": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "6f3b7644e763e5e3eeb0bcb3b6b5be53dd7f162f9ef8966b1d75667112ae733c"
+  },
+  "definitions-1024": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "99a4d5b7b068015811aeeeaf3dbb87e477178e02c28c3e21ea43a121e89d9c9b"
+  },
+  "generic-8": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "252f5f63faaefbc7823baaf7ab3e8576d4b0f65be16db50e9d9b03ff4c0c8123"
+  },
+  "generic-32": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "0351f1585e6f2e9e06e47baccd14a8422d516464df9d72fb82172cd8d94e6477"
+  },
+  "generic-128": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "4598dcf0153318beb9d766fcb2153601528fe5f21372e570d44feb5346af9c43"
+  },
+  "generic-512": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "56748af19612338c57d99c0fd606b7a6950d0d83d1a2a70f94863582dc01b506"
+  },
+  "nesting-8": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "2359b2ebb415473006c481a3f45d317d89064ad0644ee6e396047c7931ca20a0"
+  },
+  "nesting-32": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "11e6087f0429950b918aaaf9baca81b0cb357c05b7d86cf57520008ae14558d6"
+  },
+  "nesting-128": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "ed1cc7ea669bfe472076298de8c865d6426263698feb864e6540ebf843d8b6b8"
+  },
+  "nesting-512": {
+    "totals": {
+      "frames": 0,
+      "fields": 0,
+      "plainFields": 0,
+      "variants": 0
+    },
+    "cSha256": "562021aef0a262dfbba1581426f7cc69b21b0f277c5899841bbf6d4f36d69fe4"
+  }
+}

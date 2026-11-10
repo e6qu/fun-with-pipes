@@ -1,0 +1,19 @@
+diff --git a/src/cgen.rs b/src/cgen.rs
+index 482881a..9eabba4 100644
+--- a/src/cgen.rs
++++ b/src/cgen.rs
+@@ -4693,6 +4693,14 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
+             .g
+             .protect_frame_values(&entries, &variants, &ctx, &node);
+         assert!(!protection.is_empty(), "empty original resource region");
++        let observed_fields: Vec<_> = entries.iter().enumerate().map(|(slot, (_, ty))| {
++            let mut name = String::new();
++            crate::json::escape(&format!("{ty:?}"), &mut name);
++            format!("{{\"slot\":{slot},\"observable\":{},\"type\":{name}}}", self.g.resource_type(ty))
++        }).collect();
++        eprintln!("FWP_RESOURCE_FIELDS {{\"function\":{},\"context\":{id},\"variable\":\"{ctx}\",\"node\":\"{node}\",\"variants\":{},\"fields\":[{}]}}",
++            self.me, variants.len(), observed_fields.join(","));
++
+         self.line(&protection);
+         // Incoming owners stay protected while retaining frame references.
+         for (slot, value) in initial {
