@@ -1,0 +1,68 @@
+name: Count compiler type copies on maintained applications
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  counts:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CC: gcc
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install observation dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev time
+      - name: Build ordinary and counted compilers from the same source
+        run: |
+          cargo fetch --locked
+          cargo build --release --locked --offline --bin fwp
+          git worktree add --detach "$RUNNER_TEMP/type-walk-checkout" "$GITHUB_SHA"
+          python3 scripts/type_walk_probe.py --checkout "$RUNNER_TEMP/type-walk-checkout" --output type-walk-probe
+          cargo build --release --locked --offline --bin fwp --manifest-path "$RUNNER_TEMP/type-walk-checkout/Cargo.toml" --target-dir "$RUNNER_TEMP/type-walk-target"
+          python3 scripts/type_walk_probe.py --verify "$RUNNER_TEMP/type-walk-checkout" --output type-walk-probe
+          cp target/release/fwp type-walk-probe/ordinary-fwp
+          cp "$RUNNER_TEMP/type-walk-target/release/fwp" type-walk-probe/observed-fwp
+      - name: Count copies and require identical C on all four applications
+        run: |
+          set -o pipefail
+          python3 scripts/inspect-compiler-checking.py --ordinary-compiler target/release/fwp --compiler "$RUNNER_TEMP/type-walk-target/release/fwp" --cc gcc --time /usr/bin/time --deadline 120 --output type-walk-checking 2>&1 | tee type-walk-checking.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('type-walk-checking/summary.json').read_text())
+          assert not report['failures'] and len(report['applications']) == 4
+          for name, application in report['applications'].items():
+              assert application['correct'], name
+              counts = application['commands']['observed']['typeWalkCounts']
+              assert counts['type_clones'] > 0 and counts['free_vars_visits'] > 0 and counts['zonk_visits'] > 0
+              print(name, counts)
+          PY
+      - name: Retain exact source and build settings
+        if: always()
+        run: |
+          git rev-parse HEAD > compiler-source.txt
+          rustc -Vv > compiler-build.txt
+          cat Cargo.toml >> compiler-build.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-type-walks-${{ matrix.runner }}
+          path: |
+            compiler-source.txt
+            compiler-build.txt
+            type-walk-probe/
+            type-walk-checking/
+            type-walk-checking.log
+          if-no-files-found: error

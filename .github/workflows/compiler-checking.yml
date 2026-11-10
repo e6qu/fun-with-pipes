@@ -42,7 +42,7 @@ jobs:
       - name: Observe all maintained application compiles
         run: |
           set -o pipefail
-          python3 scripts/inspect-compiler-checking.py --compiler target/release/fwp --cc gcc --time /usr/bin/time --deadline 120 --output compiler-checking 2>&1 | tee compiler-checking.log
+          python3 scripts/inspect-compiler-checking.py --compiler target/release/fwp --ordinary-compiler target/release/fwp --cc gcc --time /usr/bin/time --deadline 120 --output compiler-checking 2>&1 | tee compiler-checking.log
       - name: Retain exact source and build settings
         if: always()
         run: |

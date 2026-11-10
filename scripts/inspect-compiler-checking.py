@@ -16,6 +16,7 @@ from process_wait import run_capture
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--ordinary-compiler', type=Path, required=True)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--time', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -25,6 +26,7 @@ def main():
     assert platform.system() == 'Linux' and platform.machine() in ('aarch64', 'x86_64')
     assert 0 < args.deadline <= 120
     compiler = args.compiler.resolve()
+    ordinary_compiler = args.ordinary_compiler.resolve()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     environment = {k: v for k, v in os.environ.items()
@@ -33,6 +35,7 @@ def main():
     identity = {
         'source': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'compilerSha256': digest(compiler),
+        'ordinaryCompilerSha256': digest(ordinary_compiler),
         'machine': platform.machine(),
         'rustVersion': subprocess.check_output(['rustc', '-Vv'], text=True),
         'cc': args.cc,
@@ -63,7 +66,7 @@ def main():
                 cfile = directory / (role + '.c')
                 report = directory / (role + '.json')
                 usage = directory / (role + '.resources')
-                command = [str(compiler), 'build', '--target', 'native', '--emit-c', '-O2',
+                command = [str(compiler if observed else ordinary_compiler), 'build', '--target', 'native', '--emit-c', '-O2',
                            str(source), '-o', str(cfile)]
                 if observed:
                     command += ['--profile-compile', str(report)]
@@ -83,6 +86,13 @@ def main():
                     row.update(cSha256=digest(cfile), cBytes=cfile.stat().st_size)
                     if observed:
                         report_data = profile(report, 0)
+                        if 'type_walk_counts' in report_data:
+                            counts = report_data['type_walk_counts']
+                            assert set(counts) == {'type_clones', 'free_vars_clones', 'zonk_clones', 'free_vars_visits', 'zonk_visits'}
+                            assert all(type(value) is int and value >= 0 for value in counts.values())
+                            assert counts['free_vars_clones'] <= counts['type_clones']
+                            assert counts['zonk_clones'] <= counts['type_clones']
+                            row['typeWalkCounts'] = counts
                         row['phases'] = phase_totals(report_data)
                         assert 'type-check-library-group' in row['phases']
                         phases = row['phases']
