@@ -98,24 +98,66 @@ fn verify_profile(path: &Path, status: u8) -> Vec<Json> {
     };
     assert!(!events.is_empty());
     let mut exclusive_total = 0;
+    let mut child_time = vec![0_u128; events.len()];
+    let mut grouped_bindings = vec![0_u128; events.len()];
     for (index, event) in events.iter().enumerate() {
         assert_eq!(number(field(event, "id")), index as u128);
         let start = number(field(event, "start_ns"));
         let end = number(field(event, "end_ns"));
         assert!(start <= end && end <= number(field(&report, "wall_ns")));
         assert_eq!(number(field(event, "inclusive_ns")), end - start);
-        let children: u128 = events
-            .iter()
-            .filter(|child| field(child, "parent") == field(event, "id"))
-            .map(|child| number(field(child, "inclusive_ns")))
-            .sum();
-        assert_eq!(number(field(event, "exclusive_ns")) + children, end - start);
         exclusive_total += number(field(event, "exclusive_ns"));
         if field(event, "parent") != &Json::Null {
             let parent = number(field(event, "parent")) as usize;
             assert!(parent < index);
             assert!(number(field(&events[parent], "start_ns")) <= start);
             assert!(end <= number(field(&events[parent], "end_ns")));
+            child_time[parent] += end - start;
+            let Json::Str(name) = field(event, "phase") else {
+                panic!("phase needs a name")
+            };
+            if matches!(
+                name.as_str(),
+                "type-check-library-group" | "type-check-user-group" | "type-check-mixed-group"
+            ) {
+                assert_eq!(
+                    field(&events[parent], "phase"),
+                    &Json::Str("type-check".into())
+                );
+                let counts = field(event, "counts");
+                let bindings = number(field(counts, "bindings"));
+                let library = number(field(counts, "library_bindings"));
+                assert!(bindings > 0 && library <= bindings);
+                match name.as_str() {
+                    "type-check-library-group" => assert_eq!(library, bindings),
+                    "type-check-user-group" => assert_eq!(library, 0),
+                    _ => assert!(library > 0 && library < bindings),
+                }
+                grouped_bindings[parent] += bindings;
+            }
+            if name == "type-check-bodies" {
+                assert!(matches!(
+                    field(&events[parent], "phase"),
+                    Json::Str(group) if matches!(group.as_str(),
+                        "type-check-library-group" | "type-check-user-group" | "type-check-mixed-group")
+                ));
+                assert_eq!(
+                    field(field(event, "counts"), "bindings"),
+                    field(field(&events[parent], "counts"), "bindings")
+                );
+            }
+        }
+    }
+    for (index, event) in events.iter().enumerate() {
+        assert_eq!(
+            number(field(event, "exclusive_ns")) + child_time[index],
+            number(field(event, "inclusive_ns"))
+        );
+        if field(event, "phase") == &Json::Str("type-check".into()) {
+            assert_eq!(
+                grouped_bindings[index],
+                number(field(field(event, "counts"), "bindings"))
+            );
         }
     }
     assert_eq!(
@@ -168,6 +210,21 @@ fn compile_reports_preserve_code_results_errors_and_nested_macro_accounting() {
             assert!(events
                 .iter()
                 .any(|e| field(e, "phase") == &Json::Str("representation-and-ownership".into())));
+            for phase in [
+                "type-check-superclasses",
+                "type-check-dependencies",
+                "type-check-library-group",
+                "type-check-user-group",
+                "type-check-bodies",
+                "type-check-deferred",
+                "type-check-constraints",
+                "type-check-validation",
+                "type-check-generalization",
+            ] {
+                assert!(events
+                    .iter()
+                    .any(|e| field(e, "phase") == &Json::Str(phase.into())));
+            }
             assert!(!events
                 .iter()
                 .any(|e| field(e, "phase") == &Json::Str("native-build".into())));

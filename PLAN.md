@@ -80,8 +80,9 @@ now pass. PR #274 delivers these related tasks together:
    AMD64. [Walkthroughs](docs/application-workflows.md) explain each computation.
 2. **Compiler phase reports:** nested spans separate loading/parsing, macros,
    typing, specialization, optimization, ownership, C emission and child tools.
-   Ordinary and observed builds emit identical C and results. Measured observer
-   ratios range from 0.9799 to 1.0177; this does not establish zero overhead.
+   Ordinary and observed builds emit identical C and results. The original coarse
+   report's observer ratios range from 0.9799 to 1.0177; later library/checking
+   subdivisions have not had their overhead measured. Neither is zero-cost proof.
 3. **Compiler growth:** all twelve sizes pass on both architectures, including
    512 independent generic uses; expanding recursion remains bounded. All 48
    timed comparisons pass copy controls. Type checking dominates fwp time;
@@ -91,13 +92,16 @@ now pass. PR #274 delivers these related tasks together:
    soaks. All 34 trials complete with zero failed requests and flat sampled
    server RSS. Separate probes verify allocation traffic, slow-client progress,
    cancellation and exact cleanup. Different CPU models remain separate.
-5. **Final delivery remains:** audit all nine production jobs, documentation and
-   complete logs for the exact final PR head; fix any failures before merging.
+5. **Final delivery remains:** repair the [Windows backpressure diagnostic](docs/measurements/http-backpressure.md),
+   combine the compiler-checking attribution, then audit all nine production jobs,
+   documentation and complete logs for the exact final PR head before merging.
 
 After delivery, use the new measurements to select the next substantial change:
 
-- **Compiler:** separate bundled-library checking from user declarations using
-  the existing phase report and representative application inputs. Establish
+- **Compiler:** follow the [checking-cost investigation](docs/measurements/compiler-checking.md)
+  to attribute internal bundled-library checking work. Growing inputs and four
+  complete applications now separate the library's roughly 208–234 ms from user
+  declarations and later compilation stages. Establish
   which repeated work can be eliminated without changing inference, effects,
   diagnostics or macro execution. Freeze its cost/correctness contract first.
 - **Service:** attribute CPU time in the actual queued service and HTTP endpoint
