@@ -17,7 +17,10 @@ borrowing](nested-resource-owners.md) removes [29.7–36.9% of cleanup registrat
 in the large service cases, with unchanged heap use. Both native architectures
 pass count/cleanup checks and the [actual omitted-owner fault control](nested-resource-lifetime-2026-11-10/README.md).
 [HTTP response and cleanup checks](nested-resource-http-checks-2026-11-10/README.md) also pass.
-Ordinary timing, sustained load and final delivery remain unverified. Unknown leaves,
+[All 34 sustained HTTP trials](nested-resource-http-load-2026-11-10/README.md) pass
+with flat sampled RSS. [Ordinary timing](nested-resource-time-2026-11-10/README.md) shows 16–21% less
+elapsed time in qualified cases. One runtime and one compiler comparison are noisy;
+four ARM64 RSS misses need [diagnosis](nested-resource-rss.md). Final delivery remains open. Unknown leaves,
 erased phase boundaries and all failed decoder
 attempts remain explicit.
 

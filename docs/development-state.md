@@ -1,14 +1,37 @@
 # Current work
 
-**Next:** publish the verified count/lifetime/HTTP evidence, open the normal PR,
-and start ordinary runtime and compiler-cost measurements. Monitor sustained load
-run `42797169205`; all four jobs reached the load protocol. Keep every noisy or
-missed timing target explicit before final delivery.
+**Next:** run the focused [RSS diagnosis](measurements/nested-resource-rss.md)
+on the saved native executables, audit both remaining Linux production jobs,
+and bundle the diagnostic, results and any repairs into [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276).
+Keep original noisy/missed limits; do not rerun unchanged timings for qualification.
 
-Worktree `.worktrees/service-cpu-costs`, branch `service-cpu-costs`. The last native
-correctness source is `cd661ff84b88736ceec83c75e0e2ecf7e6de551d`; the next publication
-adds reports and starts the final matrix. Production compiler sources are unchanged
-since `c49af8a6e873380cd328d2679c1df2a6a795b489`.
+Worktree `.worktrees/service-cpu-costs`, local branch `service-cpu-costs`. Published
+PR head remains `d80357c8c81d206c9d9934b141b5a5fafe97c430`. The separate evidence
+branch `service-memory-diagnosis` will run only the new diagnostic, preserving
+this PR head while its current gates finish. Contract commit `5235b9983` and tag
+`roadmap/nested-resource-rss-contract-2026-11-10` precede diagnostic implementation.
+
+- Production run `42798426347`: seven of nine jobs pass (all macOS, Windows and
+  benchmarks); both Linux jobs are still running. Docs `42798426476` pass.
+- Ordinary timing/compiler run `42798403679`: both jobs pass raw-data audits.
+  [Results](measurements/nested-resource-time-2026-11-10/README.md): 31/32 service
+  comparisons qualify and meet timing targets; qualified gains are 16–21%.
+  One AMD64 cancellation comparison is noisy. Compiler limits pass 63/64; one
+  AMD64 generic-growth comparison is noisy. Four ARM64 RSS comparisons miss 5%.
+- [HTTP load](measurements/nested-resource-http-load-2026-11-10/README.md), run
+  `42797169205` at `cd661ff84`: all 34 trials pass, 26,228,542 attempts without
+  failures, successful shutdowns and flat sampled server RSS. Every process
+  trace reconstructs locally.
+
+Complete finished logs have been inspected. No compiler diagnostic or unexpected
+failure appears. The docs runner's deliberate failures, Homebrew's already-installed
+OpenSSL notice and measurement setup's missing C++ manual page remain visible.
+Full unfinished-job logs are not available yet. Final delivery still requires the
+exact-head nine production gates, docs and complete-log audit.
+
+Production compiler sources, libraries and input fixtures are unchanged since
+`c49af8a6e873380cd328d2679c1df2a6a795b489`; HTTP tools/settings are unchanged from
+`cd661ff84` to the PR head. Static diffs verify that earlier evidence applies.
 
 | Run | Source | ARM64 job | AMD64 job | Result |
 |---|---|---|---|---|
@@ -50,20 +73,19 @@ setup costs. Contract anchor `be57644e4` precedes production changes.
 
 ## Remaining validation
 
-- Count/fault checks pass. Dispatch `nested-resource-time` with an
-  exact `roadmap/weak-callback-time-*` tag and pass it through `weak_time_tag`.
-  The workflow measures contemporary C/Rust/Swift/fwp peers, then reference/candidate
-  binaries and identical copies using the audited C pilots. Two sessions per host;
-  sixteen balanced rounds; original 2% copy limit. Preserve every missed/noisy case.
-- Ordinary compiler costs cover four applications plus twelve growing inputs with
-  the explicit `nested-resources` contract (at most 2% extra time / 5% extra RSS).
-  A separate diagnostic compiler counts both proof scans and alias walks and must
-  emit identical C. That observer has not yet compiled or run natively.
-- Finish sustained HTTP load `42797169205`. Responses and disconnect/error cleanup
-  pass. Static HTTP selection does not establish an HTTP speedup.
-- Publish one normal PR. Finish nine exact-head production jobs, docs and the
-  complete-log audit before squash merging with one subject of at most 80 characters,
-  an empty body and no trailers. Then continue the remaining roadmap.
+- The [ordinary timing report](measurements/nested-resource-time-2026-11-10/README.md)
+  retains both hosts' original observations. Full service binary audits and all
+  altered-report controls pass on runners. Bounded local readers reconstruct raw
+  reference outputs/durations, timing summaries, all compiler comparisons and proof
+  counts. Full 76–79 MB artifacts were not downloaded locally.
+- The separate proof-counter compiler preserves exact C for all 16 inputs on both
+  hosts. Ordinary compiler measurements include all added proof/setup work.
+- Investigate fast RSS versus page-walk accounting with the frozen diagnostic.
+  The actual ordinary binaries remain unchanged. Do not infer no RSS growth merely
+  from unchanged heap requests or smaller reported static frames.
+- Keep one active PR. After the combined publication, require all exact-head gates
+  and the complete-log audit before squash merge: one subject, at most 80 characters,
+  empty body, no trailers. Continue the remaining roadmap after verified delivery.
 
 ## Earlier verified evidence
 
@@ -93,7 +115,7 @@ compilation improved. Four noisy AMD64 growth comparisons remain open.
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup; all gates | Recorded comparison limits apply |
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
-| 7 | In progress | Verified profiles, count reductions and file/HTTP lifetime checks | Ordinary timing, compiler costs, sustained load and final delivery |
+| 7 | In progress | Verified profiles, count reductions and file/HTTP lifetime checks | Original noisy timing/RSS acceptance and final delivery |
 
 
 ## Local checks and preservation
@@ -106,11 +128,15 @@ All local checks use `python3 scripts/local-guard.py` serially:
 - `test-nested-resource-timing.py`: three controls pass.
 - `test-compiler-build-comparison.py`: five controls pass, covering both contracts.
 - `test-nested-resource-analysis.py`: two controls pass after fixing repeated
-  instrumentation rejection; native observer verification is still pending.
+  instrumentation rejection; native observer verification also passes on both architectures.
+- `test-nested-resource-memory.py`: two counter-reader controls pass locally; two
+  Linux child-process controls are skipped on macOS and must pass on runners.
+- `actionlint` on the new memory workflow and numerics caller, plus Python syntax
+  checks for the diagnostic/reader/tests: pass.
 - `summarize-nested-resource-counts.py`: raw cases and both hosts agree.
 - Complete file-control ZIP hashes, member checksums, ELF architectures and results
   pass local verification; small HTTP reports agree with their raw outcomes.
-- `check-roadmap.py`: 463 link sets, 106 immutable preparation anchors and seven
+- `check-roadmap.py`: 466 link sets, 106 immutable preparation anchors and seven
   roadmap steps pass with these reports. Earlier reader/replay checks are recorded
   with their measurement reports.
 
@@ -119,3 +145,11 @@ below 1 GiB and the 180-second guard deadline. Last free space: about 108 GiB.
 Preserve unrelated root changes, old worktrees, stash
 `451bbf713d451f2d62d80fd7676839404875846a` and pre-rebase backup
 `540b0682408d751afb6e439d58a3b887bdcba373`.
+
+## Prepared local evidence
+
+The HTTP-load and ordinary-timing report directories contain small report ZIPs,
+complete native logs, source/toolchain identities and independently checked readers.
+Publish them with the diagnostic work. `/tmp/fwp-nested-time-{arm,amd}` holds the
+selected native reports; `/tmp/fwp-nested-time-{arm,amd}-analysis.json` reconstructs
+all original limits. Keep large binaries/raw page walks and full audits on runners.

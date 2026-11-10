@@ -1,0 +1,50 @@
+{
+  "amd-1-job.log.gz": {
+    "bytes": 13477,
+    "sha256": "6b07da1c2ed4e733cab3b8a49168e58962ca357cf55e327bec87552bf8fba090"
+  },
+  "amd-1-reports.zip": {
+    "bytes": 30575,
+    "sha256": "7ec861162d1e5573d3e5e13fcd19fa2094dcc1fec7e644c3ec99bae2997b68e8"
+  },
+  "amd-2-job.log.gz": {
+    "bytes": 13528,
+    "sha256": "c0188d7219650d913ca699a40bc5d6476c98a76e4839dddde2190bd757a988c2"
+  },
+  "amd-2-reports.zip": {
+    "bytes": 21544,
+    "sha256": "37cc8e6cc33ae714ec10f9a9313388294148c2040481135bf02e1b46ec7f1c42"
+  },
+  "analysis.json": {
+    "bytes": 54176,
+    "sha256": "e1a7c6c2cc93560092e47b06496a9bb0fb0bc6839c71b2a5bd9a7beee3f03c3d"
+  },
+  "arm-1-job.log.gz": {
+    "bytes": 13568,
+    "sha256": "20f03bb7ab3e915e896ae46687794389e1446dde1f6bca66a782dddf26bb5f00"
+  },
+  "arm-1-reports.zip": {
+    "bytes": 29386,
+    "sha256": "fd2f9f28a0a17a67c8863c7de7ff9ffff83bd7525842e0f7ca651fb3c9c4165a"
+  },
+  "arm-2-job.log.gz": {
+    "bytes": 13508,
+    "sha256": "fe8e2c808f6aa63607f4bbaf00c327db7704514cd3777ec06aa0299421eed5c2"
+  },
+  "arm-2-reports.zip": {
+    "bytes": 20720,
+    "sha256": "f0b91ab5ca794136735eebf4bc17eb414ab2f5f6f53868d7bf2f56923a595781"
+  },
+  "artifacts.json": {
+    "bytes": 2865,
+    "sha256": "c794524e1438d9e562d8e60f55833154df8b74abefa9a632c008a5a84da13fd0"
+  },
+  "review-traces.py": {
+    "bytes": 3867,
+    "sha256": "6169bbd81b365033117365c1a7c835ffdf09573141a0c46b2a2441b5caf03bd7"
+  },
+  "run.json": {
+    "bytes": 53999,
+    "sha256": "f4731b03b11f56c29c33494c36239f477314cb9e479966a937d4aff9de3d9612"
+  }
+}

@@ -161,7 +161,12 @@ direct comparison. Sorting implementations also differ. These differences belong
 to the results; they must not be presented as isolated ARC or dispatch costs.
 
 Three separate GNU-time runs of the same executables measure peak **resident
-memory**, the RAM occupied by the process, including runtime and mapped libraries:
+memory**, the kernel's process high-water estimate, including runtime and mapped
+libraries. Linux's fast RSS/high-water counters can be inaccurate, especially
+relative to small process footprints; [page walks provide more detail](https://man7.org/linux/man-pages/man5/proc_pid_status.5.html).
+Keep raw readings and failed limits. The [service RSS diagnosis](measurements/nested-resource-rss.md)
+compares counters with stopped-process page walks; sampled pages are not an exact
+transient peak. The table retains the original GNU-time observations:
 
 | Program | C peak KiB | Rust peak KiB | fwp peak KiB |
 |---|---:|---:|---:|

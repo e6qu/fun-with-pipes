@@ -1,0 +1,97 @@
+name: Nested service RSS accounting diagnosis
+on:
+  workflow_call:
+    inputs:
+      source_revision:
+        type: string
+        required: true
+      evidence_run:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  memory:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Native identity and memory-reader controls
+        run: |
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          gcc --version
+          getconf GNU_LIBC_VERSION
+          python3 -W error::ResourceWarning scripts/test-nested-resource-memory.py
+          python3 -W error::ResourceWarning scripts/test-parser-process-memory.py
+      - name: Verify and extract the original native artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          BINARY_SOURCE: ${{ inputs.source_revision }}
+          NATIVE_ARCH: ${{ matrix.arch }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+
+          repository = 'repos/' + os.environ['GITHUB_REPOSITORY']
+          run = os.environ['EVIDENCE_RUN']
+          listing = json.loads(subprocess.check_output(['gh', 'api', f'{repository}/actions/runs/{run}/artifacts?per_page=100']))
+          assert listing['total_count'] == len(listing['artifacts'])
+          artifact, = [a for a in listing['artifacts'] if a['name'] == 'nested-resource-time-' + os.environ['NATIVE_ARCH']]
+          assert not artifact['expired'] and artifact['workflow_run']['id'] == int(run)
+          assert artifact['workflow_run']['head_sha'] == os.environ['BINARY_SOURCE']
+          archive = Path('original-native.zip')
+          with archive.open('wb') as output:
+              subprocess.run(['gh', 'api', f"{repository}/actions/artifacts/{artifact['id']}/zip"], stdout=output, check=True)
+          assert archive.stat().st_size == artifact['size_in_bytes']
+          with archive.open('rb') as stream:
+              assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == artifact['digest']
+          destination = Path('original-native').resolve()
+          assert not destination.exists()
+          with zipfile.ZipFile(archive) as contents:
+              assert all((destination/name).resolve().is_relative_to(destination) for name in contents.namelist())
+              assert contents.testzip() is None
+              contents.extractall(destination)
+          Path('memory-download.json').write_text(json.dumps(artifact, indent=2) + '\n')
+          archive.unlink()
+          print('Original archive size, SHA-256, member CRCs and source verified')
+          PY
+      - name: Page walks of unchanged service executables
+        env:
+          BINARY_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 -W error::ResourceWarning scripts/measure-nested-resource-memory.py
+          --input original-native --output nested-memory --source "$BINARY_SOURCE"
+          --arch "${{ matrix.arch }}" --cc gcc --c-arch "${{ matrix.c_arch }}"
+          --rounds 4 --interval-ms 50 --deadline 30
+      - name: Reconstruct raw snapshots and reject changed reports
+        run: |
+          python3 scripts/audit-nested-resource-memory.py --mode audit --input nested-memory --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output memory-audit.json
+          python3 scripts/audit-nested-resource-memory.py --mode controls --input nested-memory --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output memory-audit-controls.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nested-resource-memory-${{ matrix.arch }}
+          path: |
+            memory-download.json
+            nested-memory/
+            memory-audit.json
+            memory-audit-controls.json
+          if-no-files-found: error

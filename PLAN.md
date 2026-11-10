@@ -86,7 +86,10 @@ those results; do not repeat unchanged cases to obtain qualification.
 Both Linux architectures pass [native counts and cleanup checks](docs/measurements/nested-resource-counts-2026-11-10/README.md):
 large-case cleanup registrations fall by 29.7–36.9%, actual count increments by
 4.85–5.34%, with unchanged heap use. The [omitted-owner control](docs/measurements/nested-resource-lifetime-2026-11-10/README.md)
-detects premature file closure. Ordinary timing, compiler costs and final delivery remain open.
+detects premature file closure. [Ordinary timing](docs/measurements/nested-resource-time-2026-11-10/README.md)
+shows 16–21% gains in qualified cases. One runtime and one compiler comparison
+are noisy, and four ARM64 RSS limits are missed. [Diagnose those readings](docs/measurements/nested-resource-rss.md)
+without replacing the original observations, then finish final delivery.
 [Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
 identify substantial count work and cleanup bookkeeping. Prove that an enclosing
 owner protects an inner parameter for its full lifetime; remove only that duplicate

@@ -1,7 +1,8 @@
 # Reuse an enclosing resource owner inside nested calls
 
 **Selected from [verified service CPU samples](service-cpu-attribution-2026-11-10/README.md);
-native correctness and count targets pass; ordinary timing remains open.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
+native correctness and count targets pass; runtime gains are measured, with original
+noisy/RSS limits still open.** Reference compiler/runtime: `65719f7fc2277a5b97c5a790df941fea6c5eb4d7`,
 retained by `roadmap/service-cpu-software-clock-2026-11-10`. Its ordinary code is
 unchanged from the recorded service source. Freeze this contract before changing
 production code. Keep earlier missed timing goals separate.
@@ -125,7 +126,10 @@ pass on both Linux architectures: 29.7–36.9% fewer cleanup registrations in la
 cases, 4.85–5.34% fewer actual count increments, unchanged heap use. The
 [omitted-owner control](nested-resource-lifetime-2026-11-10/README.md) exposes
 premature closure. The earlier formatter/linter setup is repaired and both pass.
-Ordinary performance acceptance and final delivery remain pending.
+[Ordinary timing](nested-resource-time-2026-11-10/README.md) verifies 16–21% gains
+in qualified cases. One runtime comparison and one compiler comparison are noisy;
+four ARM64 RSS limits are missed. The [separate diagnosis](nested-resource-rss.md)
+preserves those original limits. Full acceptance and final delivery remain pending.
 
 The comparisons build the exact frozen reference `65719f7fc` and the candidate
 from Rust source with the same toolchain. They retain source identities,
@@ -170,3 +174,7 @@ a deliberately small descriptor limit. A diagnostic build omits the actual
 protecting parameter holds. The second open must then succeed, exposing premature
 closure. This verifies that the test detects an invalid lifetime change; it is
 separate from leak controls and does not change production code.
+
+[HTTP load verification](nested-resource-http-load-2026-11-10/README.md) passes
+34 trials and 26.23 million attempts, with flat sampled server RSS. This is a
+fwp-only sustained-load check, not an ordinary reference/candidate speed claim.
