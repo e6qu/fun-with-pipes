@@ -45,7 +45,7 @@ def record_command(args, directory, command):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('probe', 'collect'))
-    for name in ('compiler', 'perf', 'demangler', 'swift-demangler', 'output'):
+    for name in ('compiler', 'perf', 'addr2line', 'demangler', 'swift-demangler', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)
     for name in ('source', 'tag', 'arch', 'cc', 'ar', 'rustc', 'swiftc', 'target', 'c-arch', 'rust-cpu', 'user-registers'):
         parser.add_argument('--'+name, required=True)
@@ -65,6 +65,7 @@ def main():
     assert args.source == os.environ['GITHUB_SHA'] and args.tag.startswith('roadmap/service-cpu-')
     for revision in ('HEAD', args.tag):
         assert subprocess.check_output(['git', 'rev-parse', revision], cwd=ROOT, text=True).strip() == args.source
+    assert Path(shutil.which('addr2line')).resolve() == args.addr2line.resolve()
     os.sched_setaffinity(0, {args.cpu})
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -117,7 +118,8 @@ def main():
         report['host'] = dict(kernel=platform.platform(), affinity=sorted(os.sched_getaffinity(0)),
             topology=run(['lscpu'], (0, None, ''), env)['stdout'])
         report['versions'] = {name: run([getattr(args, name), '--version'], (0, None, ''), env)['stdout']
-                              for name in ('cc', 'ar', 'rustc', 'swiftc', 'perf', 'demangler')}
+                              for name in ('cc', 'ar', 'rustc', 'swiftc', 'perf', 'demangler', 'addr2line')}
+        report['addr2lineSha256'] = digest(args.addr2line)
         if args.action == 'probe':
             directory = output/'probe'
             directory.mkdir()

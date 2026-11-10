@@ -1,85 +1,87 @@
 # Current work
 
-**Next:** finish [PR #275](https://github.com/e6qu/fun-with-pipes/pull/275):
-monitor its nine production jobs and audit complete logs before squash merge.
-Use one subject of at most 80 characters and an empty body; verify the resulting
-message and tree. Keep four noisy growth comparisons open after delivery.
+**Next:** finish [PR #275](https://github.com/e6qu/fun-with-pipes/pull/275): wait for
+all nine production jobs, run the complete-log audit, then squash-merge with one
+subject of at most 80 characters and an empty body. Verify the merge message and
+tree. Keep four noisy compiler-growth comparisons open. Independently replay the
+queued-service recordings with the prepared decoder repair; do not restart #275.
 
-## Current branch and verified baseline
+## Delivery gates
 
-Delivery worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`.
-PR #275 is open at `a232e1e35062a37aa013975ac77bbd8cb4620663`. Production run
-`42767361217` is active; docs run `42767360650`, job `129666864000`, passes.
-Keep its exact head stable. This separate worktree `.worktrees/service-cpu-costs`,
-branch `service-cpu-costs`, prepares [service CPU attribution](measurements/service-cpu-costs.md).
-No second PR or runtime change is introduced. Protocol commit `8fcea595d` is
-published as `roadmap/service-cpu-protocol-2026-11-10`. Local preparation extracts
-shared CPU readers and adds service/source accounting. Five compiler-reader and
-five service-reader controls pass. Extraction caught a missed call signature/import;
-both are fixed. Service controls caught valid C names (`f1`, `add`) being treated as
-hex addresses; the reader now compares bare addresses with the recorded IP.
-Native replay and service recording remain unverified; no workflow is dispatched.
-Rebase preparation onto the verified squash after #275 merges.
-PR #274 is merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree equals
-passing source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
-[All production/docs/audit gates pass](measurements/application-final-gates-2026-11-10/README.md).
-The redundant post-merge run `42760668107` was cancelled to free six runner slots;
-its complete logs are audited and retained. Interrupted uploads add no coverage.
+PR #275 is normal/open at `a232e1e35062a37aa013975ac77bbd8cb4620663`, tagged
+`roadmap/compiler-borrowed-delivery-2026-11-10`. Its worktree is
+`.worktrees/compiler-checking-costs`, branch `compiler-body-costs`; local handoff
+edits stay uncommitted while exact-head CI runs.
 
-## Compiler change and results
+Production run `42767361217`, attempt 1:
 
-Candidate `c65ecb37691538ef5a24619376f68b1d243cbdea`, retained by
-`roadmap/compiler-borrowed-types-2026-11-10`, borrows input type trees in
-`free_vars` and `zonk`. Variable chains stay iterative; normalization, variable
-order, rows, effects and diagnostics are preserved. Row flattening is unchanged.
-Reference `35a12dfee0266134237d03d1262649be69df7c41` has ordinary compiler sources
-identical to merged #274. Later branch commits retain evidence and clarify docs.
+| Gate | Job | Current result |
+|---|---|---|
+| Linux ARM / AMD | `129666869054` / `129666869605` | Running |
+| macOS ARM regular / ownership | `129666869689` / `129666869512` | Pass; complete logs audited |
+| macOS Intel regular / ownership | `129666869676` / `129666869663` | Pass; complete logs audited |
+| Windows ARM / AMD | `129666869805` / `129666869584` | Running |
+| C/Rust benchmarks | `129666869539` | Pass; complete log audited |
+| Documentation | `129666864000`, run `42767360650` | Pass; intended runner-failure controls only |
 
-[Focused run `42763406320`](measurements/compiler-borrowed-types-2026-11-10/README.md)
-passes ARM64 `129654174367` and AMD64 `129654174360`: seven type tests, eight
-report/option tests, signature/error snapshots, sixteen exact-C comparisons and
-all growth error locations. Both hosts remove the same 1.09–1.10 million copies
-per application (29–32%), with unchanged visit counts and C. Separate observer
-patch/source hashes and every complete log are verified.
+Mac logs `/tmp/fwp-m6-mac-{arm,amd}-{regular,ownership}.log` contain only the
+expected already-installed OpenSSL warning. Benchmark/docs logs are
+`/tmp/fwp-m6-final-{bench,docs}.log`. No production failure is currently reported.
 
-[Timing run `42764964658`](measurements/compiler-type-time-2026-11-10/README.md)
-passes its four execution jobs at that same candidate. Recomputed raw samples
-verify all sixteen complete-application targets: word counting uses 11–14% less
-emit-C time, callbacks 8–10%, numerical 5–7%, HTTP 3–4%. Peak RSS growth is at most
-0.18% across all 64 comparisons. ARM64 uses Neoverse-N2; AMD64 session 1 uses
-Xeon 8573C and session 2 EPYC 7763. Do not pool different CPUs.
+After all nine pass, dispatch `numerics.yml` on `compiler-body-costs` with
+`suite=production-log-audit`, `evidence_run=42767361217`, `production_attempt=1`,
+`documentation_job=129666864000`, `audit_host=all`, and
+`source_revision=a232e1e35062a37aa013975ac77bbd8cb4620663`. Verify all ten audit
+reports, exact sources and artifact hashes before merge. Record delivery in the
+next branch so a status-only push does not restart the passing matrix.
 
-Four AMD64 growth comparisons fail the frozen 2% copy-noise control: generic-8
-in both sessions, generic-128 and nesting-8 in session 2. Retain those as
-inconclusive, following the user's preference to keep verified gains while leaving
-timing goals open. Do not weaken the [contract](measurements/compiler-type-walks.md)
-or rerun unchanged noise to qualify it. All raw samples and failures are retained;
-copy reductions do not imply lower allocation bytes or application runtime cost.
+## Verified compiler work
 
-## Profiler and documentation repairs
+Candidate `c65ecb37691538ef5a24619376f68b1d243cbdea` borrows input types in
+`free_vars` and `zonk`; row flattening is unchanged. Reference `35a12dfee` has
+ordinary compiler sources identical to merged #274. [Focused checks](measurements/compiler-borrowed-types-2026-11-10/README.md)
+verify 29–32% fewer type copies, unchanged C/diagnostics and seven type controls
+on both native Linux architectures. [Two timing sessions per architecture](measurements/compiler-type-time-2026-11-10/README.md)
+verify 11–14% less word-count compilation time and 8–10% less callback compilation
+time. All application targets and memory limits pass. Four AMD growth comparisons
+remain inconclusive under the frozen 2% copy-noise limit; do not rerun them unchanged.
 
-[Replay `42763409910`](measurements/compiler-cpu-samples-2026-11-10/README.md)
-passes AMD64 `129654190514` and ARM64 `129654190596`, reusing source `5cab084d5`
-recordings from `42761474854`. Direct DWARF stack reading replaces the unavailable
-parent column; explicit Ubuntu 24.04/perf 6.8 avoids the original libdw load-base
-problem. A ten-second addr2line read deadline preserves the 120-second total limit.
-All eight reports retain exact sample/period totals with no empty stacks. Unnamed
-leaf frames account for 25–42% of periods; attribution is incomplete. Original
-failed replays and the ineffective per-thread experiment remain retained.
+#274 was merged as `e8997ac874f2c57009a5a13a7a5192c4f762272e`; its tree matches
+verified `9fdb5e7bd`. [All gates and the redundant main-run cancellation](measurements/application-final-gates-2026-11-10/README.md)
+are retained. Its application, compiler-growth and HTTP measurements complete M5.
 
-The docs explain type variables/substitution with examples, remove stale #274
-instructions, and distinguish measured gains from open acceptance. Recurring docs
-CI now runs all three compiler measurement-reader control suites.
+## Next preparation: queued-service CPU cost
 
-## Verification and local limits
+Worktree `.worktrees/service-cpu-costs`, branch `service-cpu-costs`; no second PR.
+Protocol `8fcea595d` is tagged `roadmap/service-cpu-protocol-2026-11-10`.
+Observation source `fac4a47440fb02667ddbf385dba959ae8f91a310` is tagged
+`roadmap/service-cpu-observation-2026-11-10`.
 
-Guarded local checks pass: sampling reader (5 controls), ordinary comparison
-reader (4), growth reader (3), changed workflow lint, Rust formatting and roadmap
-links. A renamed heading exposed one stale link; it was repaired. Small artifact
-members passed CRC; source/observer hashes, schedules, counts and timing results
-were rechecked. Full compiler builds, tests and measurements run only on GitHub.
-The final staged documentation check passes: 452 document link sets, 106
-immutable preparation anchors and all six milestone rows.
+[First run `42772697088`](measurements/service-cpu-first-2026-11-10/README.md)
+finishes both hosts with the same three decoding failures: fwp delivered,
+cancelled and handled-error profiles. ARM job/artifact `129683968936` /
+`13743108949`; AMD `129683968550` / `13744145167`. All 32 peer/case combinations
+run on each host. Every retained service result is correct, including sampled
+calls followed by a decoder failure. Full logs and all six stderr reports are retained.
+C/Rust/Swift and the expired fwp case decode; complete attribution is not accepted.
+
+The repair explicitly selects LLVM addr2line and replays all sixteen profiles
+from each host's saved recordings, after verifying hashes and actual outputs.
+Perf 6.8's GNU end-marker check can mistake short inline names for markers; a
+verbose replay of the actual failing GNU exchange will test that diagnosis.
+Do not rename generated functions, ignore diagnostics or rerun workloads.
+The replay workflow uses `suite=service-cpu-replay`, the new decoder's
+`service_cpu_tag`, `evidence_run=42772697088`, and `source_revision=fac4a47440fb02667ddbf385dba959ae8f91a310`.
+Native validation of this repair remains pending.
+
+[Shared-reader replay `42772707168`](measurements/service-reader-replay-2026-11-10/README.md)
+already passes ARM `129684008878` and AMD `129684008607`. Every compiler attribution
+row/count/period matches the previous verified reader. No compiler rebuild or
+new timing run was needed. Both complete logs are clean.
+
+After #275 merges, rebase this preparation onto the verified squash without losing
+the immutable observation tags or local docs. Attribute service/HTTP work before
+choosing and freezing a candidate optimization. Keep the public gradient API steady.
 
 ## Roadmap status
 
@@ -92,23 +94,15 @@ immutable preparation anchors and all six milestone rows.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load and pressure repair; all gates | Recorded observation limits apply |
 | 6 | In progress | Borrowed types: native correctness, fewer copies and all application speed/memory targets | Four noisy growth comparisons; final delivery gates |
 
-After delivery, attribute the queued service and HTTP cost to payloads, queues,
-protocol work and cleanup before selecting another implementation. Keep the public
-gradient API unchanged without representative evidence. Earlier noisy goals stay open.
+## Local verification and preservation
 
-Preserve unrelated root-worktree changes, old worktrees and handoff stash
-`451bbf713d451f2d62d80fd7676839404875846a`. Local checks remain serial through
-`python3 scripts/local-guard.py`: 64 GiB free, target data <2 GiB, sampled RSS
-<1 GiB, 180-second deadline. Last disk check: about 114 GiB free. Never raise or
-bypass limits. A guard serialization refusal earlier was resolved by waiting for
-the previous download to finish; no limits changed.
+Guarded reader controls pass: five compiler, five service and three collection/
+raw-record controls. Collection controls also verify replay source/hash/output
+checks. Changed workflows pass actionlint. Docs explain CPU samples with examples
+and cross-links; the latest audit passes 453 doc sets, 106 preparation anchors and
+six milestones. Run it again after staging the new evidence. Test stubs and the
+retainer's string run-ID check were repaired before passing. No local native builds.
 
-The service collector and workflow are now prepared locally: 32 exact-output
-controls, 16 large-case profiles, per-peer one-second calibration and independent
-raw-record reconstruction. Shared CPU decoding preserves unresolved work. Guarded
-controls pass (5 compiler-reader, 5 service-reader, 3 collection/audit), and changed
-workflow lint passes. Mock platform/path/archive stubs were repaired before these
-passes; no native collection has run yet. The emitted function table was checked
-against retained generated C, and Swift demangling preserves the stack format.
-Publish the observation source/tag and run its two native jobs plus compiler-profile
-replay while #275 finishes; keep one active PR and do not restart #275's CI.
+Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data <2 GiB,
+sampled RSS <1 GiB, 180 seconds. Last free space: about 112 GiB. Preserve unrelated
+root changes, old worktrees and stash `451bbf713d451f2d62d80fd7676839404875846a`.

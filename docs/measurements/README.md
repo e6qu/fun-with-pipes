@@ -9,6 +9,10 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Queued-service CPU attribution](service-cpu-costs.md) has [first native recordings](service-cpu-first-2026-11-10/README.md).
+All service outputs are correct, but six fwp decoder failures leave attribution
+incomplete. Repair and replay those recordings before selecting an optimization.
+
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
 Bodies dominate. [Exact type-copy counts](compiler-type-copies-2026-11-10/README.md)

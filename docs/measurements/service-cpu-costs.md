@@ -1,7 +1,8 @@
 # Locate queued-service CPU costs before changing its implementation
 
-**Observation tooling prepared; native results pending.** PR #275's delivery
-gates remain the immediate priority.
+**Recordings collected; decoder repair pending.** [The first native run](service-cpu-first-2026-11-10/README.md)
+verifies all outputs but rejects six fwp stack reports. PR #275's delivery gates
+remain the immediate priority.
 The [complete service comparison](weak-callback-time-2026-11-09/README.md) found
 that delivering 4,096 messages takes about 19–20 times C's service time and 5–7
 times Swift's. Different queues, representations and synchronization prevent
@@ -108,7 +109,10 @@ both the leaf symbol and the actual ancestor used for each classification.
 `service-cpu` in the [evidence workflow](../../.github/workflows/numerics.yml)
 requires an immutable `service_cpu_tag`. It runs both native Linux architectures
 in the existing Swift image with `CAP_PERFMON`, for process-local CPU sampling.
-The capability probe must pass before compiler builds. Sampling records, binaries,
+LLVM addr2line is selected explicitly for source names. Perf's script command
+locates it through a dedicated tool-directory symlink; the collector verifies
+that the resolved executable matches its required setting. The capability probe
+must pass before compiler builds. Sampling records, binaries,
 source mappings, commands and all failures are retained. No production source
 changes or new service profiling boundaries are part of this observation.
 
@@ -125,3 +129,8 @@ Check whether the same mechanism occurs in the maintained HTTP endpoint before
 claiming a shared improvement. Existing sustained-load checks provide its latency,
 throughput, slow-client and cleanup baselines. Source/API changes are allowed;
 never preserve an expensive representation solely for backward compatibility.
+
+The `service-cpu-replay` suite uses explicit recording run/source and a decoder
+source tag. It verifies retained hashes and every original service output, restores
+the matching binaries for decoding, and replays all sixteen profiles without
+executing the service again. The original failed reports remain separate evidence.

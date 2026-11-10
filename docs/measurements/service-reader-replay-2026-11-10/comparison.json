@@ -1,0 +1,54 @@
+{
+  "arm": {
+    "words": {
+      "samples": 261,
+      "period": 261785349,
+      "samplesWithUnknownFrames": 251,
+      "samplesWithoutFrames": 0
+    },
+    "numerical": {
+      "samples": 545,
+      "period": 546639905,
+      "samplesWithUnknownFrames": 533,
+      "samplesWithoutFrames": 0
+    },
+    "callbacks": {
+      "samples": 342,
+      "period": 343029078,
+      "samplesWithUnknownFrames": 328,
+      "samplesWithoutFrames": 0
+    },
+    "http": {
+      "samples": 1119,
+      "period": 1122367071,
+      "samplesWithUnknownFrames": 1035,
+      "samplesWithoutFrames": 0
+    }
+  },
+  "amd": {
+    "words": {
+      "samples": 307,
+      "period": 307923763,
+      "samplesWithUnknownFrames": 302,
+      "samplesWithoutFrames": 0
+    },
+    "numerical": {
+      "samples": 628,
+      "period": 629889652,
+      "samplesWithUnknownFrames": 616,
+      "samplesWithoutFrames": 0
+    },
+    "callbacks": {
+      "samples": 397,
+      "period": 398194573,
+      "samplesWithUnknownFrames": 395,
+      "samplesWithoutFrames": 0
+    },
+    "http": {
+      "samples": 1306,
+      "period": 1309929754,
+      "samplesWithUnknownFrames": 1291,
+      "samplesWithoutFrames": 0
+    }
+  }
+}
