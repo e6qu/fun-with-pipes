@@ -13,9 +13,12 @@ identities. Do not edit observations to make an old experiment describe new code
 [Milestone 5](application-tooling.md) now checks application workflows and prepares
 compiler-phase and sustained-load measurements; it has no new timing results yet.
 [Application workflows pass on both Linux architectures](application-workflows-2026-11-09/README.md).
-[Compiler/HTTP preparation](compiler-http-preparation-2026-11-09/README.md) verifies
-phase contracts and allocation cleanup, and retains the generic-cap and
-connection-policy failures awaiting repaired checks.
+
+[Compiler and HTTP correctness](compiler-http-checks-2026-11-09/README.md) now
+verifies all growth sizes, exact responses, allocation controls and slow-client
+cleanup. The recursive fixture repair remains pending.
+[Preparation](compiler-http-preparation-2026-11-09/README.md) retains the original
+generic-cap and connection-policy failures.
 
 [Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
 now separate construction, reading, release and RSS. ARM64 shows lower overall

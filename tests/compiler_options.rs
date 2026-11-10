@@ -324,9 +324,10 @@ fn independent_generic_uses_do_not_consume_the_recursive_expansion_budget() {
 #[test]
 fn recursive_type_expansion_remains_bounded_through_lifted_bodies() {
     let dir = fwp::cgen::TempDir::new("generic-recursion").unwrap();
+    let mut failures = Vec::new();
     for (name, program) in [
-        ("direct", "grow : a -> ()\ngrow = fn value -> grow [value]\nmain = 0 | grow\n"),
-        ("mutual", "grow : a -> ()\ngrow = fn value -> bridge [value]\nbridge : a -> ()\nbridge = fn value -> grow value\nmain = 0 | grow\n"),
+        ("direct", "rec grow : a -> ()\ngrow = fn value -> grow [value]\nmain = 0 | grow\n"),
+        ("mutual", "rec grow : a -> ()\ngrow = fn value -> bridge [value]\nrec bridge : a -> ()\nbridge = fn value -> grow value\nmain = 0 | grow\n"),
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, program).unwrap();
@@ -336,11 +337,15 @@ fn recursive_type_expansion_remains_bounded_through_lifted_bodies() {
             .output()
             .unwrap();
         let diagnostic = String::from_utf8_lossy(&result.stderr);
-        assert_eq!(result.status.code(), Some(1), "{result:?}");
-        assert!(diagnostic.contains("500 dependent instantiations"), "{diagnostic}");
-        assert!(diagnostic.contains(&format!("{name}.fwp:")), "{diagnostic}");
-        assert!(!source.with_extension("c").exists());
+        if result.status.code() != Some(1)
+            || !diagnostic.contains("500 dependent instantiations")
+            || !diagnostic.contains(&format!("{name}.fwp:"))
+            || source.with_extension("c").exists()
+        {
+            failures.push(format!("{name}: {result:?}"));
+        }
     }
+    assert!(failures.is_empty(), "{failures:#?}");
 }
 
 #[test]

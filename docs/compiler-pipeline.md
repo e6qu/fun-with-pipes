@@ -107,8 +107,9 @@ instance walks its ancestry. This is a resource bound, not a proof that arbitrar
 polymorphic recursion terminates or that compilation is always linear.
 
 The first growth run exposed the old global cap incorrectly rejecting 512
-independent uses. The path-based repair awaits native verification; see the
-[measurement protocol](measurements/application-tooling.md).
+independent uses. The corrected case passes on both Linux architectures; the
+[checks](measurements/compiler-http-checks-2026-11-09/README.md) retain original
+results and the remaining recursive-fixture verification.
 
 ## Lowering and execution details
 

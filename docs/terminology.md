@@ -350,6 +350,29 @@ If C takes **10 ms** and fwp takes **12 ms**:
 - That is language overhead only to the extent the compared work is equivalent.
   Explicit C derivatives do less work than general reverse-mode AD.
 
+### Service latency and load
+
+- **Latency** is the time for one request. State where its clock starts and ends.
+  **Throughput** counts completed work per second. In an illustrative 10-second
+  window with 100 attempts, 90 correct replies and 10 failures: throughput is
+  9 correct replies/s and the failure rate is `10 / 100 = 10%`.
+- **p95 / p99** are latency percentiles. This project's HTTP reader sorts the
+  observations and selects positions `ceil(0.95 × count)` and
+  `ceil(0.99 × count)`, starting at one. For 100 observations, p95 is the 95th.
+  Report successful-reply latency separately from time until a reply or failure;
+  a fast error must not make successful requests appear faster.
+- **Closed-loop load** waits for a reply before sending the next request on that
+  connection. Eight connections allow at most eight outstanding requests. A slow
+  server therefore reduces the offered request rate. **Open-loop load** schedules
+  arrivals independently; waiting requests can accumulate. One does not establish
+  the other's capacity.
+- **Backpressure** makes a producer wait for its consumer. For HTTP, a full
+  socket buffer can pause a write until the client reads more bytes. A **soak**
+  repeats work for a longer fixed interval to observe errors and memory growth.
+
+The [HTTP protocol](measurements/application-tooling.md#sustained-http-load)
+fixes the actual request, clock boundaries, percentiles and test duration.
+
 ### Why extra measurements can change a benchmark
 
 A **driver**, also called a harness, supplies inputs, calls the operation, checks

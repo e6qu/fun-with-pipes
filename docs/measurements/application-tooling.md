@@ -113,8 +113,10 @@ observed output, and early/late type errors with matching source locations.
 `compiler-scaling` then runs the two sessions per host. Every treatment gets one
 warmup; eight measured rounds alternate order. Identical compiler copies have
 matching SHA-256 digests. All sources, commands, failures, reports and samples
-are retained. The first checks expose a global instance-cap bug at 512 generic uses;
-its repair awaits verification. No timing session has run yet.
+are retained. All 12 sizes now [pass on both hosts](compiler-http-checks-2026-11-09/README.md),
+including the repaired 512-type case. A separate recursive-limit fixture needed
+its required `rec` declarations; that corrected negative control remains pending.
+No timing session has run yet.
 
 Additional required controls:
 
@@ -137,7 +139,7 @@ then freeze its own correctness, resource and timing acceptance before editing i
 ## Sustained HTTP load
 
 The existing 12,800-request correctness check is useful coverage but has no
-throughput/latency contract. Prepare a separate runner-side experiment using the
+throughput/latency contract. The separate runner-side experiment uses the
 existing [HTTP application checks](../../tests/support/http_application.rs).
 The first workload is plain HTTP/1.1 on loopback, `GET /items/42`, with the exact
 200 response body `{"id":42,"name":"item 42"}`. Use the maintained
@@ -153,8 +155,9 @@ automatic reconnection or limit increase is permitted during measurement.
 Pin server and a native load generator to two distinct CPUs from the allowed
 affinity mask; record guest topology and CPU usage for both. This does not prove
 exclusive physical-core access on a hosted runner. Use 1, 8, 32 and 64 persistent
-connections with one outstanding request per connection. This is closed-loop
-load: latency includes sending the request and consuming its complete response,
+connections with one outstanding request per connection. This is
+[closed-loop load](../terminology.md#service-latency-and-load): a connection waits
+for its reply before sending again. Latency includes sending the request and consuming its complete response,
 but not waiting for an available connection. It does not establish open-loop
 arrival-rate capacity or an internet latency guarantee.
 
@@ -175,7 +178,8 @@ Do not turn instrumentation overhead into an ordinary throughput result.
 
 The [native driver](../../scripts/load/http-load.rs) and
 [runner](../../scripts/measure-http-load.py) are implemented; [driver and allocation controls pass on both hosts](compiler-http-preparation-2026-11-09/README.md).
-The API connection-policy repair still needs verification. `http-load-checks` first verifies the driver against a controlled
+The API connection-policy repair and slow-client checks now
+[pass on both hosts](compiler-http-checks-2026-11-09/README.md). `http-load-checks` verifies the driver against a controlled
 server (correct/wrong/partial replies and timeout), exercises the actual API,
 and runs its existing physical cleanup/socket/cancellation controls. `http-load`
 is reserved for the complete timed protocol after those checks pass. Session 1
@@ -239,7 +243,7 @@ body, reads interleaved with another client, disconnects after partial responses
 and reuse after failures. The first full large transfer warms storage before
 applying the existing RSS bound. Every received body byte is checked; the same
 exact heap/socket/task checks and final slow-handler cancellation apply. The
-probe is implemented and awaits native verification. Its buffer setting and
+probe passes on both Linux architectures. Its buffer setting and
 instrumentation must never be used for ordinary throughput results.
 
 The runnable protocol must additionally retain:
@@ -268,9 +272,8 @@ shared improvement. A temporary weak-lookup result alone does not explain it.
 
 ## Delivery
 
-Keep one active PR. #273 is merged; the preparation branch is based on its
-verified squash merge. Publish this complete application/compiler/load batch
-as the next substantial PR. Update the guides and
-handoff with actual commands/results, and fix every encountered issue. Run focused
+Keep this batch in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274),
+based on #273’s verified squash merge. Update guides and the handoff with actual
+commands/results, and fix every encountered issue. Run focused
 checks during development, then one complete final matrix and log audit for the
 assembled batch. Keep full builds and all measurements on GitHub runners.

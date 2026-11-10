@@ -1,0 +1,999 @@
+{
+  "source": "7fa50257155abf63fa220cd17f9500ea6d9bdd16",
+  "runs": {
+    "42721015315": {
+      "conclusion": "failure",
+      "headSha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16",
+      "jobs": [
+        {
+          "completedAt": "2026-11-09T23:48:45Z",
+          "conclusion": "failure",
+          "databaseId": 129514701097,
+          "name": "application_tooling / applications (ubuntu-latest)",
+          "startedAt": "2026-11-09T23:43:54Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:43:56Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:43:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:44:38Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:43:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:44:40Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:44:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:44:41Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:44:40Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:44:41Z",
+              "conclusion": "skipped",
+              "name": "Read previous application diagnostics on the runner",
+              "number": 5,
+              "startedAt": "2026-11-09T23:44:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:44:49Z",
+              "conclusion": "success",
+              "name": "Native compiler and inspection dependencies",
+              "number": 6,
+              "startedAt": "2026-11-09T23:44:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:16Z",
+              "conclusion": "success",
+              "name": "Build production compiler",
+              "number": 7,
+              "startedAt": "2026-11-09T23:44:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:18Z",
+              "conclusion": "success",
+              "name": "Source formatting",
+              "number": 8,
+              "startedAt": "2026-11-09T23:46:16Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:35Z",
+              "conclusion": "success",
+              "name": "Compiler observation lint",
+              "number": 9,
+              "startedAt": "2026-11-09T23:46:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:44Z",
+              "conclusion": "failure",
+              "name": "Compiler observation command contracts",
+              "number": 10,
+              "startedAt": "2026-11-09T23:46:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:09Z",
+              "conclusion": "success",
+              "name": "Three applications through native and interactive tools",
+              "number": 11,
+              "startedAt": "2026-11-09T23:46:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:35Z",
+              "conclusion": "success",
+              "name": "Integer formatting boundaries and existing output contracts",
+              "number": 12,
+              "startedAt": "2026-11-09T23:47:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:01Z",
+              "conclusion": "success",
+              "name": "Retain C and actual native instructions at four levels",
+              "number": 13,
+              "startedAt": "2026-11-09T23:47:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:39Z",
+              "conclusion": "success",
+              "name": "Real notebook browser applications",
+              "number": 14,
+              "startedAt": "2026-11-09T23:48:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:39Z",
+              "conclusion": "success",
+              "name": "Retain exact source and toolchain",
+              "number": 15,
+              "startedAt": "2026-11-09T23:48:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:42Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 16,
+              "startedAt": "2026-11-09T23:48:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:42Z",
+              "conclusion": "skipped",
+              "name": "Post Run actions/cache@v6",
+              "number": 31,
+              "startedAt": "2026-11-09T23:48:42Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:42Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 32,
+              "startedAt": "2026-11-09T23:48:42Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:42Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 33,
+              "startedAt": "2026-11-09T23:48:42Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721015315/job/129514701097"
+        },
+        {
+          "completedAt": "2026-11-09T23:50:23Z",
+          "conclusion": "failure",
+          "databaseId": 129514701235,
+          "name": "application_tooling / applications (ubuntu-24.04-arm)",
+          "startedAt": "2026-11-09T23:45:45Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:45:47Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:45:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:27Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:45:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:29Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:46:27Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:30Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:46:29Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:36Z",
+              "conclusion": "success",
+              "name": "Read previous application diagnostics on the runner",
+              "number": 5,
+              "startedAt": "2026-11-09T23:46:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:51Z",
+              "conclusion": "success",
+              "name": "Native compiler and inspection dependencies",
+              "number": 6,
+              "startedAt": "2026-11-09T23:46:36Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:23Z",
+              "conclusion": "success",
+              "name": "Build production compiler",
+              "number": 7,
+              "startedAt": "2026-11-09T23:46:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:25Z",
+              "conclusion": "success",
+              "name": "Source formatting",
+              "number": 8,
+              "startedAt": "2026-11-09T23:48:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:43Z",
+              "conclusion": "success",
+              "name": "Compiler observation lint",
+              "number": 9,
+              "startedAt": "2026-11-09T23:48:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:55Z",
+              "conclusion": "failure",
+              "name": "Compiler observation command contracts",
+              "number": 10,
+              "startedAt": "2026-11-09T23:48:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:23Z",
+              "conclusion": "success",
+              "name": "Three applications through native and interactive tools",
+              "number": 11,
+              "startedAt": "2026-11-09T23:48:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:46Z",
+              "conclusion": "success",
+              "name": "Integer formatting boundaries and existing output contracts",
+              "number": 12,
+              "startedAt": "2026-11-09T23:49:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:18Z",
+              "conclusion": "success",
+              "name": "Retain C and actual native instructions at four levels",
+              "number": 13,
+              "startedAt": "2026-11-09T23:49:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:18Z",
+              "conclusion": "skipped",
+              "name": "Real notebook browser applications",
+              "number": 14,
+              "startedAt": "2026-11-09T23:50:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:18Z",
+              "conclusion": "success",
+              "name": "Retain exact source and toolchain",
+              "number": 15,
+              "startedAt": "2026-11-09T23:50:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:21Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 16,
+              "startedAt": "2026-11-09T23:50:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:21Z",
+              "conclusion": "skipped",
+              "name": "Post Run actions/cache@v6",
+              "number": 31,
+              "startedAt": "2026-11-09T23:50:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:21Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 32,
+              "startedAt": "2026-11-09T23:50:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:21Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 33,
+              "startedAt": "2026-11-09T23:50:21Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721015315/job/129514701235"
+        }
+      ],
+      "status": "completed"
+    },
+    "42721021055": {
+      "conclusion": "success",
+      "headSha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16",
+      "jobs": [
+        {
+          "completedAt": "2026-11-09T23:50:36Z",
+          "conclusion": "success",
+          "databaseId": 129514714557,
+          "name": "compiler_scaling / scaling (ubuntu-24.04-arm, 0)",
+          "startedAt": "2026-11-09T23:47:23Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:47:25Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:47:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:06Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:47:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:10Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:48:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:11Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:48:10Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:11Z",
+              "conclusion": "success",
+              "name": "Validate explicit selection and observer controls",
+              "number": 5,
+              "startedAt": "2026-11-09T23:48:11Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:18Z",
+              "conclusion": "success",
+              "name": "Native compiler measurement dependencies",
+              "number": 6,
+              "startedAt": "2026-11-09T23:48:11Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:39Z",
+              "conclusion": "success",
+              "name": "Fetch locked dependencies and build release compiler",
+              "number": 7,
+              "startedAt": "2026-11-09T23:48:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:40Z",
+              "conclusion": "success",
+              "name": "Record build settings",
+              "number": 8,
+              "startedAt": "2026-11-09T23:49:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:31Z",
+              "conclusion": "success",
+              "name": "Check or measure all declared families",
+              "number": 9,
+              "startedAt": "2026-11-09T23:49:40Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:34Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 10,
+              "startedAt": "2026-11-09T23:50:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:34Z",
+              "conclusion": "success",
+              "name": "Post Run actions/cache@v6",
+              "number": 19,
+              "startedAt": "2026-11-09T23:50:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:34Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 20,
+              "startedAt": "2026-11-09T23:50:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:34Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 21,
+              "startedAt": "2026-11-09T23:50:34Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721021055/job/129514714557"
+        },
+        {
+          "completedAt": "2026-11-09T23:51:43Z",
+          "conclusion": "success",
+          "databaseId": 129514714569,
+          "name": "compiler_scaling / scaling (ubuntu-latest, 0)",
+          "startedAt": "2026-11-09T23:48:46Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:48:48Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:48:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:28Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:48:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:28Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:49:28Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:30Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:49:28Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:31Z",
+              "conclusion": "success",
+              "name": "Validate explicit selection and observer controls",
+              "number": 5,
+              "startedAt": "2026-11-09T23:49:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:35Z",
+              "conclusion": "success",
+              "name": "Native compiler measurement dependencies",
+              "number": 6,
+              "startedAt": "2026-11-09T23:49:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:55Z",
+              "conclusion": "success",
+              "name": "Fetch locked dependencies and build release compiler",
+              "number": 7,
+              "startedAt": "2026-11-09T23:49:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:55Z",
+              "conclusion": "success",
+              "name": "Record build settings",
+              "number": 8,
+              "startedAt": "2026-11-09T23:50:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:51:37Z",
+              "conclusion": "success",
+              "name": "Check or measure all declared families",
+              "number": 9,
+              "startedAt": "2026-11-09T23:50:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:51:41Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 10,
+              "startedAt": "2026-11-09T23:51:37Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:51:41Z",
+              "conclusion": "success",
+              "name": "Post Run actions/cache@v6",
+              "number": 19,
+              "startedAt": "2026-11-09T23:51:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:51:41Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 20,
+              "startedAt": "2026-11-09T23:51:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:51:41Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 21,
+              "startedAt": "2026-11-09T23:51:41Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721021055/job/129514714569"
+        }
+      ],
+      "status": "completed"
+    },
+    "42721026186": {
+      "conclusion": "success",
+      "headSha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16",
+      "jobs": [
+        {
+          "completedAt": "2026-11-09T23:52:58Z",
+          "conclusion": "success",
+          "databaseId": 129514737033,
+          "name": "http_load / load (ubuntu-24.04-arm, 0)",
+          "startedAt": "2026-11-09T23:45:16Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:45:18Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:45:17Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:04Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:45:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:05Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:46:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:06Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:46:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:07Z",
+              "conclusion": "success",
+              "name": "Explicit selection and measurement reader controls",
+              "number": 5,
+              "startedAt": "2026-11-09T23:46:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:19Z",
+              "conclusion": "success",
+              "name": "Native dependencies and driver",
+              "number": 6,
+              "startedAt": "2026-11-09T23:46:07Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:46:22Z",
+              "conclusion": "success",
+              "name": "Real driver controls for success, wrong bytes, partial replies and timeout",
+              "number": 7,
+              "startedAt": "2026-11-09T23:46:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:49Z",
+              "conclusion": "success",
+              "name": "Build current compiler",
+              "number": 8,
+              "startedAt": "2026-11-09T23:46:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:49Z",
+              "conclusion": "success",
+              "name": "Retain source and toolchains",
+              "number": 9,
+              "startedAt": "2026-11-09T23:47:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:32Z",
+              "conclusion": "success",
+              "name": "Fixed API load protocol",
+              "number": 10,
+              "startedAt": "2026-11-09T23:47:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:38Z",
+              "conclusion": "success",
+              "name": "Independent physical cleanup, socket and cancellation controls",
+              "number": 11,
+              "startedAt": "2026-11-09T23:48:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:02Z",
+              "conclusion": "success",
+              "name": "Endpoint allocation traffic and broken-counter control",
+              "number": 12,
+              "startedAt": "2026-11-09T23:50:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:53Z",
+              "conclusion": "success",
+              "name": "Slow clients, actual write pressure and partial-response cleanup",
+              "number": 13,
+              "startedAt": "2026-11-09T23:52:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:55Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 14,
+              "startedAt": "2026-11-09T23:52:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:55Z",
+              "conclusion": "success",
+              "name": "Post Run actions/cache@v6",
+              "number": 27,
+              "startedAt": "2026-11-09T23:52:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:56Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 28,
+              "startedAt": "2026-11-09T23:52:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:56Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 29,
+              "startedAt": "2026-11-09T23:52:56Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721026186/job/129514737033"
+        },
+        {
+          "completedAt": "2026-11-09T23:54:11Z",
+          "conclusion": "success",
+          "databaseId": 129514737073,
+          "name": "http_load / load (ubuntu-latest, 0)",
+          "startedAt": "2026-11-09T23:47:06Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-09T23:47:08Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-09T23:47:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:55Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-09T23:47:08Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:56Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "number": 3,
+              "startedAt": "2026-11-09T23:47:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:57Z",
+              "conclusion": "success",
+              "name": "Run actions/cache@v6",
+              "number": 4,
+              "startedAt": "2026-11-09T23:47:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:47:58Z",
+              "conclusion": "success",
+              "name": "Explicit selection and measurement reader controls",
+              "number": 5,
+              "startedAt": "2026-11-09T23:47:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:22Z",
+              "conclusion": "success",
+              "name": "Native dependencies and driver",
+              "number": 6,
+              "startedAt": "2026-11-09T23:47:58Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:48:25Z",
+              "conclusion": "success",
+              "name": "Real driver controls for success, wrong bytes, partial replies and timeout",
+              "number": 7,
+              "startedAt": "2026-11-09T23:48:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:59Z",
+              "conclusion": "success",
+              "name": "Build current compiler",
+              "number": 8,
+              "startedAt": "2026-11-09T23:48:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:49:59Z",
+              "conclusion": "success",
+              "name": "Retain source and toolchains",
+              "number": 9,
+              "startedAt": "2026-11-09T23:49:59Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:50:34Z",
+              "conclusion": "success",
+              "name": "Fixed API load protocol",
+              "number": 10,
+              "startedAt": "2026-11-09T23:49:59Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:52:15Z",
+              "conclusion": "success",
+              "name": "Independent physical cleanup, socket and cancellation controls",
+              "number": 11,
+              "startedAt": "2026-11-09T23:50:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:53:23Z",
+              "conclusion": "success",
+              "name": "Endpoint allocation traffic and broken-counter control",
+              "number": 12,
+              "startedAt": "2026-11-09T23:52:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:54:06Z",
+              "conclusion": "success",
+              "name": "Slow clients, actual write pressure and partial-response cleanup",
+              "number": 13,
+              "startedAt": "2026-11-09T23:53:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:54:09Z",
+              "conclusion": "success",
+              "name": "Run actions/upload-artifact@v7",
+              "number": 14,
+              "startedAt": "2026-11-09T23:54:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:54:09Z",
+              "conclusion": "success",
+              "name": "Post Run actions/cache@v6",
+              "number": 27,
+              "startedAt": "2026-11-09T23:54:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:54:09Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 28,
+              "startedAt": "2026-11-09T23:54:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-09T23:54:09Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 29,
+              "startedAt": "2026-11-09T23:54:09Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42721026186/job/129514737073"
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "artifacts": [
+    {
+      "id": 13720999263,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMDk5OTI2Mw==",
+      "name": "application-tooling-ubuntu-24.04-arm",
+      "size_in_bytes": 13844000,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13720999263",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13720999263/zip",
+      "expired": false,
+      "digest": "sha256:6ddca014324740a717ced8bfd4532bbb407934977d06da685f6ac471c82c3241",
+      "created_at": "2026-11-09T23:50:21Z",
+      "updated_at": "2026-11-09T23:50:21Z",
+      "expires_at": "2027-02-07T23:30:38Z",
+      "workflow_run": {
+        "id": 42721015315,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    },
+    {
+      "id": 13720103496,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMDEwMzQ5Ng==",
+      "name": "application-tooling-ubuntu-latest",
+      "size_in_bytes": 15376583,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13720103496",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13720103496/zip",
+      "expired": false,
+      "digest": "sha256:a75b1b222b9ae9c2dddb03901273b31a55a653210c34af7628f6001996d72564",
+      "created_at": "2026-11-09T23:48:42Z",
+      "updated_at": "2026-11-09T23:48:42Z",
+      "expires_at": "2027-02-07T23:30:38Z",
+      "workflow_run": {
+        "id": 42721015315,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    },
+    {
+      "id": 13721163079,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMTE2MzA3OQ==",
+      "name": "compiler-scaling-ubuntu-24.04-arm-0",
+      "size_in_bytes": 4292218,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721163079",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721163079/zip",
+      "expired": false,
+      "digest": "sha256:e702e8cdc83b7769c8adf3aaeb36e03e1c48bb1b972aa5b620540b0e697c81fd",
+      "created_at": "2026-11-09T23:50:33Z",
+      "updated_at": "2026-11-09T23:50:33Z",
+      "expires_at": "2027-02-07T23:30:40Z",
+      "workflow_run": {
+        "id": 42721021055,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    },
+    {
+      "id": 13721049482,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMTA0OTQ4Mg==",
+      "name": "compiler-scaling-ubuntu-latest-0",
+      "size_in_bytes": 4294045,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721049482",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721049482/zip",
+      "expired": false,
+      "digest": "sha256:7acd2287dba561da5b70fd1ce3980678a1915e32a26d2362ddadc55eecc33d7c",
+      "created_at": "2026-11-09T23:51:40Z",
+      "updated_at": "2026-11-09T23:51:40Z",
+      "expires_at": "2027-02-07T23:30:40Z",
+      "workflow_run": {
+        "id": 42721021055,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    },
+    {
+      "id": 13721767185,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMTc2NzE4NQ==",
+      "name": "http-load-ubuntu-latest-0",
+      "size_in_bytes": 11404566,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721767185",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721767185/zip",
+      "expired": false,
+      "digest": "sha256:7f35b179afa5e1a7d0522c75f715097a11688df78ae6be7a376228e4c705e638",
+      "created_at": "2026-11-09T23:54:09Z",
+      "updated_at": "2026-11-09T23:54:09Z",
+      "expires_at": "2027-02-07T23:30:42Z",
+      "workflow_run": {
+        "id": 42721026186,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    },
+    {
+      "id": 13721154333,
+      "node_id": "MDg6QXJ0aWZhY3QxMzcyMTE1NDMzMw==",
+      "name": "http-load-ubuntu-24.04-arm-0",
+      "size_in_bytes": 10757080,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721154333",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13721154333/zip",
+      "expired": false,
+      "digest": "sha256:ca8f72363769a34a1b37195d412744e6de44bdd8984751d03097b82d5d58bd10",
+      "created_at": "2026-11-09T23:52:55Z",
+      "updated_at": "2026-11-09T23:52:55Z",
+      "expires_at": "2027-02-07T23:30:42Z",
+      "workflow_run": {
+        "id": 42721026186,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "application-tooling-costs",
+        "head_sha": "7fa50257155abf63fa220cd17f9500ea6d9bdd16"
+      }
+    }
+  ],
+  "verification": "All selected ZIP members passed CRC during bounded range reads. Artifact digests are GitHub metadata, not independently recomputed full-archive hashes. HTTP records were independently re-audited after extraction. Compiler checks are correctness receipts, not paired timings."
+}
