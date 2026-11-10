@@ -15,7 +15,8 @@ from compiler_scaling import APPLICATIONS, ROOT, cases, digest, program, resourc
 from process_wait import run_capture
 
 
-def comparison(samples, name):
+def comparison(samples, name, contract):
+    assert contract in ('compiler-types', 'nested-resources')
     roles = ('reference', 'reference-copy', 'candidate', 'candidate-copy')
     assert len(samples) == 36 and {row['role'] for row in samples} == set(roles)
     for role in roles:
@@ -31,7 +32,7 @@ def comparison(samples, name):
     rss_ratio = peaks['candidate']/peaks['reference']
     return dict(medianEmitNs=medians, identicalCopyRatios=controls, timingQualified=qualified,
         candidateRatio=ratio, peakRssKiB=peaks, peakRssRatio=rss_ratio,
-        acceptance=qualified and ratio <= (.95 if name in ('words', 'callbacks') else 1.02) and rss_ratio <= 1.05)
+        acceptance=qualified and ratio <= (.95 if contract == 'compiler-types' and name in ('words', 'callbacks') else 1.02) and rss_ratio <= 1.05)
 
 
 def main():
@@ -39,6 +40,7 @@ def main():
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--candidate', type=Path, required=True)
     parser.add_argument('--reference-source', required=True)
+    parser.add_argument('--contract', choices=('compiler-types', 'nested-resources'), required=True)
     parser.add_argument('--phase', choices=('check', 'measure'), required=True)
     parser.add_argument('--session', type=int, choices=(0, 1, 2), required=True)
     parser.add_argument('--time', type=Path, required=True)
@@ -64,7 +66,7 @@ def main():
                    if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', LC_ALL='C')
     identity = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-        referenceSource=args.reference_source, phase=args.phase, session=args.session,
+        referenceSource=args.reference_source, contract=args.contract, phase=args.phase, session=args.session,
         compilers={role: dict(path=str(path), sha256=digest(path)) for role, path in compilers.items()},
         cc=args.cc, ccVersion=subprocess.check_output([args.cc, '--version'], text=True),
         rustVersion=subprocess.check_output(['rustc', '-Vv'], text=True),
@@ -126,7 +128,7 @@ def main():
         case = dict(source=str(source), sourceSha256=digest(source), samples=[], correct=False)
         summary['cases'][name] = case
         try:
-            reference_c = None
+            emitted_c = {}
             rounds = range(-1, 8) if args.phase == 'measure' else (0,)
             for round_index in rounds:
                 roles = ['reference', 'reference-copy', 'candidate', 'candidate-copy'] if args.phase == 'measure' else ['reference', 'candidate']
@@ -136,10 +138,13 @@ def main():
                     cfile = directory/'generated.c'
                     row, _ = emit(role, source, cfile, directory/f'round-{round_index}-{role}', 0)
                     row['round'] = round_index
-                    if reference_c is None:
-                        reference_c = cfile.read_bytes()
-                        (directory/'retained.c').write_bytes(reference_c)
-                    assert cfile.read_bytes() == reference_c, 'candidate changed generated C'
+                    # A code-generation change may produce different C. Each
+                    # compiler and its identical copy must still agree exactly.
+                    role_key = 'all' if args.contract == 'compiler-types' else role.removesuffix('-copy')
+                    if role_key not in emitted_c:
+                        emitted_c[role_key] = cfile.read_bytes()
+                        (directory/('retained.c' if role_key == 'all' else role_key+'.c')).write_bytes(emitted_c[role_key])
+                    assert cfile.read_bytes() == emitted_c[role_key], 'compiler changed generated C within the selected equality contract'
                     case['samples'].append(row)
                     save()
             if args.phase == 'check' and generated is not None:
@@ -155,7 +160,7 @@ def main():
                         diagnostics.append(stderr)
                     assert diagnostics[0] == diagnostics[1], 'candidate changed diagnostics'
             if args.phase == 'measure':
-                case.update(comparison(case['samples'], name))
+                case.update(comparison(case['samples'], name, args.contract))
             case['correct'] = True
         except Exception:
             case['failure'] = traceback.format_exc()

@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** repair the focused workflow's missing rustfmt/Clippy components and
-publish the service operation-count comparison in the same batch. Then measure
-ordinary timing under [the frozen contract](measurements/nested-resource-owners.md).
+**Next:** publish the corrected focused/count batch using the exact frozen
+reference; verify all native jobs before starting the prepared ordinary timing
+workflow under [the frozen contract](measurements/nested-resource-owners.md).
 Deliver the compiler proof, profiler repairs, measurements and docs in one normal PR.
 
 The first native-lowering proof is implemented in `src/cgen/resource_borrows.rs`.
@@ -18,6 +18,22 @@ not installed; Clippy consequently did not run. Complete logs were inspected.
 No compiler diagnostic or native test failure appeared. [Complete logs and scope](measurements/nested-resource-first-checks-2026-11-10/README.md)
 are retained. Documentation run `42784998783` passes. This is focused correctness
 evidence, not final delivery or performance acceptance.
+
+Repair/count head `1df44e5f2de21ccd49b517a122112d6ffebf56a9`, run `42787231448`,
+was cancelled before its reference build/count measurements. Both jobs had started
+by cancellation and passed formatting/Clippy; their unit builds were interrupted.
+Its disabled-proof reference left
+some new setup work in the comparison compiler. The replacement builds exact
+reference `65719f7fc` instead; no measurements ran on that superseded setup.
+The candidate now removes an empty frame only when the proof removed its last
+parameter. Existing empty frames retain their original behavior.
+
+Prepared next: `nested-resource-time` runs contemporary C/Rust/Swift peers and
+ordinary reference/candidate service timings, then compiler costs on all 16 inputs.
+It requires an exact `roadmap/weak-callback-time-*` tag via `weak_time_tag`.
+Do not dispatch timing before count/fault checks pass. Preserve all noisy or failed
+observations; do not rerun unchanged cases for qualification. HTTP functional/load
+checks and final nine-job/docs/log-audit delivery are still outstanding.
 
 ## Verified delivery
 
@@ -102,9 +118,14 @@ reconstruct all 32 profiles. Actionlint passes the explicit verified-download st
 The attribution/contract docs audit passed 459 link sets / 106 anchors / seven
 milestones. Actionlint passes the focused proof workflow. Local formatting initially
 used the wrong edition; incidental changes were removed, keeping only the intended
-C-generator edit and new module. Native formatting/type checking runs in CI. No local builds.
+C-generator edit and new module. Formatting and Clippy pass on both native runners
+at the superseded head. Guarded final local formatting, Python syntax, four workflow
+lint checks, two count-observer controls, three timing-reader controls and five
+compiler-comparison controls pass. The latter tests both explicit contracts and
+continues later inputs after a changed-C failure. The latest docs audit passes
+460 link sets / 106 anchors / seven milestones. No local builds.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data <2 GiB,
-sampled RSS <1 GiB, 180 seconds. Last free space: about 112 GiB. Preserve unrelated
+sampled RSS <1 GiB, 180 seconds. Last free space: about 106 GiB. Preserve unrelated
 root changes, old worktrees and stash `451bbf713d451f2d62d80fd7676839404875846a`.
 Pre-rebase service backup: `540b0682408d751afb6e439d58a3b887bdcba373`.

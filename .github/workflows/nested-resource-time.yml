@@ -1,0 +1,141 @@
+name: Nested resource borrowing runtime and compiler costs
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  measurements:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+    runs-on: ${{ matrix.runner }}
+    container: swift:6.4.2-noble
+    timeout-minutes: 120
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_RELEASE_DEBUG: 'false'
+      FWP_LTO: '0'
+      REFERENCE_SOURCE: '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+    steps:
+      - name: Explicit native toolchains and measurement tools
+        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config time llvm
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        env:
+          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
+        with:
+          toolchain: 1.99.1
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-swift-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Verify source and both timing readers
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_TAG")" = "$GITHUB_SHA"
+          python3 scripts/test-weak-callback-timing.py
+          python3 scripts/test-nested-resource-timing.py
+          python3 scripts/test-compiler-build-comparison.py
+          python3 scripts/check-measurement-clocks.py --cc gcc
+      - name: Build ordinary production compilers at both exact revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir nested-time-setup
+          cargo fetch --locked 2>&1 | tee nested-time-setup/fetch.log
+          cargo build --release --locked --offline --bin fwp 2>&1 | tee nested-time-setup/candidate.log
+          git worktree add --detach ../nested-time-reference-checkout "$REFERENCE_SOURCE"
+          mkdir nested-time-reference
+          git -C ../nested-time-reference-checkout rev-parse HEAD > nested-time-reference/source.txt
+          test "$(cat nested-time-reference/source.txt)" = "$REFERENCE_SOURCE"
+          cargo build --release --locked --offline --bin fwp \
+            --manifest-path ../nested-time-reference-checkout/Cargo.toml \
+            --target-dir ../nested-time-reference-target 2>&1 | tee nested-time-setup/reference.log
+          cp ../nested-time-reference-target/release/fwp nested-time-reference/fwp
+          git -C ../nested-time-reference-checkout diff --exit-code HEAD
+          sha256sum target/release/fwp nested-time-reference/fwp > nested-time-reference/compilers.sha256
+      - name: Verify real timing callers and wrong-result, release and clock controls
+        run: >-
+          python3 scripts/check-weak-callback-timing.py --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --compiler target/release/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output nested-time-checks
+      - name: Contemporary C, Rust and Swift peers in two balanced sessions
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/measure-weak-callback-service.py collect
+          --compiler target/release/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
+          --arch "${{ matrix.arch }}" --cc gcc --ar ar --rustc rustc --swiftc swiftc
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
+          --objdump llvm-objdump --readelf readelf --output nested-time-peers
+      - name: Verify peer evidence and reject altered observations
+        run: |
+          python3 scripts/measure-weak-callback-service.py audit --input nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          python3 scripts/check-weak-callback-timing-audit.py --input nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output nested-time-peer-audit-controls
+      - name: Ordinary reference versus candidate using the same audited C pilots
+        run: >-
+          python3 scripts/measure-nested-resource-time.py --reference nested-time-reference/fwp
+          --reference-source "$REFERENCE_SOURCE" --peers nested-time-peers
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --cc gcc --c-arch "${{ matrix.c_arch }}"
+          --time /usr/bin/time --objdump llvm-objdump --readelf readelf --output nested-time-comparison
+      - name: Reconstruct all reference and candidate observations
+        run: |
+          python3 scripts/audit-nested-resource-time.py --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          python3 scripts/check-nested-resource-audits.py --kind time --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output nested-time-audit-controls
+      - name: Ordinary compiler costs and diagnostic agreement
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          compiler_cpu="$(python3 -c 'import os; print(min(os.sched_getaffinity(0)))')"
+          python3 scripts/compiler_build_comparison.py --contract nested-resources \
+            --reference nested-time-reference/fwp --candidate target/release/fwp \
+            --reference-source "$REFERENCE_SOURCE" --phase check --session 0 --time /usr/bin/time \
+            --cc gcc --cpu "$compiler_cpu" --deadline 120 --output nested-compiler-checks
+          for session in 1 2; do
+            python3 scripts/compiler_build_comparison.py --contract nested-resources \
+              --reference nested-time-reference/fwp --candidate target/release/fwp \
+              --reference-source "$REFERENCE_SOURCE" --phase measure --session "$session" --time /usr/bin/time \
+              --cc gcc --cpu "$compiler_cpu" --deadline 120 --output "nested-compiler-session-$session"
+          done
+      - name: Retain all observations, including incomplete or failed cases
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nested-resource-time-${{ matrix.arch }}
+          path: |
+            nested-time-setup/
+            nested-time-reference/*.txt
+            nested-time-reference/*.sha256
+            nested-time-checks/
+            nested-time-peers/
+            nested-time-peer-audit-controls/
+            nested-time-comparison/
+            nested-time-audit-controls/
+            nested-compiler-checks/
+            nested-compiler-session-*/
+          if-no-files-found: error

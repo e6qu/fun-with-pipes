@@ -44,9 +44,6 @@ const PACKED_PAIR_REUSE: bool = true;
 // Same-source reference disables only general exact scalar substitutions.
 const SCALAR_CONSTANT_VALUES: bool = true;
 
-// Same-source reference keeps all original nested resource parameter anchors.
-const NESTED_RESOURCE_BORROWS: bool = true;
-
 // Same-source reference disables only proved per-worker tape lookup reuse.
 const AD_RECORDING_LOOKUPS: bool = true;
 const AD_RECORDING_SCOPES: bool = true;
@@ -4575,9 +4572,7 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         bindings: &[Local],
         body: &Expr,
     ) -> Option<(HashMap<Local, ResourceSlot>, String, String, usize)> {
-        let inherited = if NESTED_RESOURCE_BORROWS
-            && self.in_loop.is_none()
-            && !self.g.uncounted.self_tail.contains(&self.me)
+        let inherited = if self.in_loop.is_none() && !self.g.uncounted.self_tail.contains(&self.me)
         {
             self.resource_parameter_borrows
                 .get_or_insert_with(|| {
@@ -4603,7 +4598,7 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
             .copied()
             .filter(|local| !inherited.contains(local))
             .collect();
-        if parameters.is_empty() && bindings.is_empty() {
+        if !inherited.is_empty() && parameters.is_empty() && bindings.is_empty() {
             return None;
         }
         let saved = self.resource_slots.clone();

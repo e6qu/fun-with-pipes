@@ -27,20 +27,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('compiler', 'reference', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    for name in ('source', 'arch', 'cc', 'c-arch'):
+    for name in ('source', 'reference-source', 'arch', 'cc', 'c-arch'):
         parser.add_argument('--' + name, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true'
     assert platform.system() == 'Linux' and platform.machine() == args.arch
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch]
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source == os.environ['GITHUB_SHA']
+    assert args.reference_source == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
     env = {key: value for key, value in os.environ.items()
            if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN', 'LD_PRELOAD', 'LD_LIBRARY_PATH')}
     env.update(LC_ALL='C', CC=args.cc, FWP_LTO='0', FWP_STACK='1')
     compilers = dict(reference=args.reference.resolve(), candidate=args.compiler.resolve())
-    report = dict(source=args.source, architecture=args.arch, root=str(folder),
+    report = dict(source=args.source, referenceSource=args.reference_source, architecture=args.arch, root=str(folder),
                   compilers={key: digest(value) for key, value in compilers.items()},
                   host=platform.uname()._asdict(), settings={key: str(value) for key, value in vars(args).items()},
                   builds=[], cases={}, controls=[], selection={}, comparisons={}, failures=[])

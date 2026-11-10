@@ -15,6 +15,7 @@ jobs:
       CC: gcc
       CXX: g++
       FWP_LTO: '0'
+      REFERENCE_SOURCE: '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
       CARGO_BUILD_JOBS: '2'
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
@@ -56,19 +57,20 @@ jobs:
       - name: Check operation observer boundaries
         if: ${{ !cancelled() }}
         run: python3 scripts/test-nested-resource-counts.py
-      - name: Build same-source reference with only nested borrowing disabled
+      - name: Build the exact frozen reference compiler
         if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -euo pipefail
-          git worktree add --detach ../nested-owner-reference-checkout "$GITHUB_SHA"
-          python3 scripts/prepare-nested-resource-reference.py \
-            --checkout ../nested-owner-reference-checkout --output nested-owner-reference
+          git fetch --depth=1 origin "$REFERENCE_SOURCE"
+          git worktree add --detach ../nested-owner-reference-checkout "$REFERENCE_SOURCE"
+          mkdir nested-owner-reference
+          git -C ../nested-owner-reference-checkout rev-parse HEAD > nested-owner-reference/source.txt
+          test "$(cat nested-owner-reference/source.txt)" = "$REFERENCE_SOURCE"
           cargo build --locked --bin fwp --manifest-path ../nested-owner-reference-checkout/Cargo.toml \
             --target-dir ../nested-owner-reference-target 2>&1 | tee nested-owner-reference/build.log
           cp ../nested-owner-reference-target/debug/fwp nested-owner-reference/fwp
-          git -C ../nested-owner-reference-checkout diff HEAD > nested-owner-reference/after-build.patch
-          cmp nested-owner-reference/reference.patch nested-owner-reference/after-build.patch
+          git -C ../nested-owner-reference-checkout diff --exit-code HEAD
           sha256sum target/debug/fwp nested-owner-reference/fwp > nested-owner-reference/compilers.sha256
       - name: Count actual calls and storage and verify observer fault controls
         if: ${{ !cancelled() }}
@@ -83,10 +85,13 @@ jobs:
           esac
           python3 scripts/measure-nested-resource-counts.py \
             --compiler target/debug/fwp --reference nested-owner-reference/fwp \
+            --reference-source "$REFERENCE_SOURCE" \
             --source "$GITHUB_SHA" --arch "$arch" --cc gcc --c-arch "$c_arch" \
             --output nested-owner-counts
           python3 scripts/audit-nested-resource-counts.py --input nested-owner-counts \
             --source "$GITHUB_SHA" --arch "$arch"
+          python3 scripts/check-nested-resource-audits.py --kind counts --input nested-owner-counts \
+            --source "$GITHUB_SHA" --arch "$arch" --output nested-owner-audit-controls
       - name: Retain source and exact toolchains
         if: always()
         run: |
@@ -104,9 +109,9 @@ jobs:
             nested-owner-identity/
             nested-owner-tests/
             nested-owner-evidence/
-            nested-owner-reference/*.json
-            nested-owner-reference/*.patch
+            nested-owner-reference/*.txt
             nested-owner-reference/*.log
             nested-owner-reference/*.sha256
             nested-owner-counts/
+            nested-owner-audit-controls/
           if-no-files-found: error

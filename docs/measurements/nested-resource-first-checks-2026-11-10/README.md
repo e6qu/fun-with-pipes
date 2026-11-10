@@ -31,3 +31,15 @@ passes.
   locally; no local archive-integrity claim is made.
 
 Next: [actual operation counts and ordinary performance acceptance](../nested-resource-owners.md).
+
+## Superseded measurement setup
+
+Run `42787231448`, source `1df44e5f2de21ccd49b517a122112d6ffebf56a9`, was
+cancelled before reference builds or count measurements. The initial setup
+disabled only the new proof in a current-source compiler; the replacement uses
+the exact frozen reference to include all added compiler setup work in its cost.
+
+The jobs appeared queued at the last status read, but the [cancellation receipt](superseded-run.json)
+shows both had started and passed formatting/Clippy. Unit builds were interrupted;
+this run does not establish completed test coverage. Complete [ARM log](superseded-arm-job.log.gz)
+and [AMD log](superseded-amd-job.log.gz) retain the successful lint steps and cancellation.

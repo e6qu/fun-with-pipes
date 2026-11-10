@@ -26,6 +26,7 @@ def main():
         assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == digest, name
     report = json.loads((folder / 'report.json').read_text())
     assert (report['source'], report['architecture']) == (args.source, args.arch)
+    assert report['referenceSource'] == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
     assert not report['failures']
     assert set(report['compilers']) == {'reference', 'candidate'}
     commands = [json.loads(line) for line in (folder / 'commands.jsonl').read_text().splitlines()]

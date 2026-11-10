@@ -125,12 +125,31 @@ both Linux architectures. The first workflow failed its setup for formatting and
 Clippy; the repair installs both components. Ordinary performance acceptance and
 final delivery remain pending.
 
-The count comparison builds the same source twice, disabling only
-`NESTED_RESOURCE_BORROWS` in the reference checkout. It retains that exact patch,
-compiler hashes, generated C and native binaries. Separate diagnostic builds count
+The comparisons build the exact frozen reference `65719f7fc` and the candidate
+from Rust source with the same toolchain. They retain source identities,
+compiler hashes, generated C and native binaries. Using the actual reference
+includes all added proof/setup work in the compiler-cost comparison; merely
+disabling selection would not establish that. Separate diagnostic builds count
 actual cleanup push/pop/unwind calls, retain/release calls, successful count
 increments/decrements and allocation requests. Peak charged storage includes slot
 padding; it is not process RSS. Each service call must restore its original live
 bytes and cleanup stack. Native controls add one real push/pop pair or omit the
 real result release. These measurements do not time instrumented code or infer
 elapsed-time gains from count reductions.
+
+The ordinary timing workflow first measures C/Rust/Swift/fwp peers with the
+existing service protocol. It then compares reference/candidate binaries and
+identical copies in a separate balanced schedule, using those audited C pilots.
+Each of four labels occupies each position four times over sixteen rounds.
+Both experiments retain two sessions on each native host. Peer ratios come from
+the peer experiment itself, never from times collected in different schedules.
+The four applications and twelve growing-input cases use the ordinary compiler
+comparison with an explicit `nested-resources` contract: at most 2% extra time
+and 5% extra RSS. Each compiler/copy must emit identical C; reference/candidate C
+may differ because this optimization deliberately changes native lowering.
+Earlier type-copy results keep their original exact-C and speed requirements.
+
+The native workflows retain successful and failed cases. Independent readers
+reconstruct every service output, counter difference, timing qualification and
+RSS ratio; altered-report controls must fail even with recomputed file hashes.
+Static HTTP selection is recorded separately from functional/load verification.
