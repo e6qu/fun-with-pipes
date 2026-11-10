@@ -1,17 +1,22 @@
 # Current work
 
-**Next:** monitor and audit the final native gates for the combined repair and
-compiler-checking work in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274).
-Audit all failures before the push. Merge only after nine production jobs,
-documentation and the complete-log audit pass for that exact final commit.
+**Next:** obtain function-level compiler CPU samples on both native Linux
+architectures under the [checking contract](measurements/compiler-checking.md#next-cpu-samples-inside-checking).
+This branch is preparation only; do not open a second PR while
+[PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) completes delivery.
+Its nine production jobs, documentation and complete-log audit must pass for
+the exact final source before squash merge. Preserve that source while it runs.
 
-Worktree `.worktrees/application-milestone`, branch `application-tooling-costs`.
-The branch combines the repair and `compiler-checking-costs` preparation. Its
-delivery candidate is retained by `roadmap/application-delivery-format-2026-11-10`.
-It supersedes the failed matrix at `a0261f9ccaa4a87651fbcae11966afee68208d4d`;
-the seven earlier passing jobs are not passing gates for this new combined source.
-Preserve unrelated root-worktree changes and the preparation worktree's local
-handoff. There is one active PR; no separate preparation PR.
+Worktree `.worktrees/compiler-checking-costs`, branch `compiler-body-costs`,
+based on delivery source `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`.
+The application worktree owns final delivery. This preparation changes only
+measurement scripts/workflows/docs: no compiler algorithm or runtime change.
+Use the new `compiler-sampling` suite on this branch; retain all four original
+applications, raw recordings and unknown samples. Review actual hot functions
+before selecting an optimization. Parser controls and workflow lint pass locally
+under the guard; no local fwp build or full suite ran. Native sampling is pending.
+Preserve unrelated root changes and the saved preparation handoff stash
+`451bbf713d451f2d62d80fd7676839404875846a`.
 
 ## Roadmap status
 
@@ -28,53 +33,45 @@ handoff. There is one active PR; no separate preparation PR.
 passing source, all gates and audit. Original milestone 1–3 timing limits remain
 open. Do not repeat unchanged noisy measurements to obtain qualification.
 
-## Current failure and focused repair
+## PR #274 final gates
 
-Combined head `88a3036592aba12030b9e74d4b506de502a4115c` exposed one formatting
-omission in the newly fixed timeout panic. Full-tree `cargo fmt --all -- --check`
-reproduced exactly that difference; formatting it and repeating the full check
-passes under the local guard. The repair has no behavior change.
-Production `42747990312` reports only formatting failures in both Linux and both
-regular macOS jobs so far. Benchmark `129604605646` and documentation
-`42747989925`/`129604600440` pass; both full logs audited, with only intentional
-runner controls in docs. Native work continues. After replacement jobs exist,
-cancel the superseded run and audit all available logs; never count cancellations
-as passes. Record any additional failure and fix it before final acceptance.
+Current published source: `9fdb5e7bd3b23e7a720c490c7b8a21a843b4221b`, retained by
+`roadmap/application-delivery-format-2026-11-10`. Preserve this head.
+Production `42749157893`, attempt 1, has all nine jobs; docs `42749157995`, job
+`129608390924`, passes. Benchmark `129608390557` passes. Both complete logs are
+clean apart from deliberate documentation failure controls. Eight native jobs
+are running, with no reported failure at the last check.
 
-Production `42730888995` at published head `a0261f9cc` is complete:
-seven jobs pass; both Windows jobs fail only
-`http_application::api_slow_clients_release_backpressured_output_o2`.
-All nine complete logs have been inspected: no other failed target or compiler
-warning. Docs `42730888467`, job `129548275958`, passes; deliberate runner-failure
-controls are expected. The passing matrix-wide log audit has not been run.
+| Gate | Job |
+|---|---|
+| Linux ARM64 / AMD64 | `129608390602` / `129608390809` |
+| macOS ARM64 regular / ownership | `129608390711` / `129608390510` |
+| macOS Intel regular / ownership | `129608390783` / `129608390960` |
+| Windows ARM64 / AMD64 | `129608390770` / `129608390842` |
 
-[The repair contract](measurements/http-backpressure.md) records the exact
-failure and acceptance. Both Windows server logs show eight connections waiting
-for reads, no blocked writes and no first cleanup checkpoint. Do not infer a
-runtime deadlock or accept absence of backpressure as a successful test.
+After these pass, dispatch `suite=production-log-audit`, `audit_host=all`, with
+that exact source, run, attempt and docs job. Only then squash-merge with one
+subject of at most 80 characters, an empty body and no trailers or attribution.
+Verify the merged tree/message and continue this preparation against merged main.
 
-- Original Windows jobs: ARM64 `129548282561`, AMD64 `129548282333`.
-- Failure-group artifacts: ARM64 `13729108766`, AMD64 `13730116338`.
-- Server artifacts: ARM64 `13729304404`, AMD64 `13730133131`; only small stderr,
-  RSS and exit-status members were downloaded from these large archives.
-- Original-send diagnostic: source `9054528ba`, immutable tag
-  `roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`, ARM64 job
-  `129586576306`. It confirms one successful send of all 8,388,717 bytes;
-  the small requested send buffer did not force a partial/blocked send.
-  It also reproduces the diagnostic mutex-poisoning bug repaired below.
-- Candidate: source `924eb8795`, tag `roadmap/http-pressure-bounds-2026-11-10`.
-  Diagnostic sends are capped at 16 KiB; the unread Windows client requests and
-  verifies a 256 KiB receive buffer. Same deadlines, exact bytes, real would-block
-  branch, other-client progress and cleanup. Ordinary runtime writes are unchanged.
-  Focused ARM64 `42744070652` and AMD64 `42744095817` both pass: 11 HTTP tests,
-  linting, real blocked writes in all six large-response cohorts, 72/72 sockets
-  closed, zero final managed bytes. Complete logs are clean; the
-  [receipt](measurements/http-pressure-repair-2026-11-10/README.md) retains originals
-  and repair evidence. RSS rises at most 96 KiB on ARM64 and 172 KiB on AMD64.
-- Subsequent local `e58842d01` fixes diagnostic error reporting: clone the log
-  before panicking, so the mutex is released and cleanup can retain evidence.
-  This does not change the candidate's success path. Final gates must test it.
-- Failure logs now publish before the next Windows test group.
+## Repairs already included
+
+- The original full matrix at `a0261f9cc` (`42730888995`) passed seven jobs;
+  both Windows jobs exposed an invalid backpressure-test assumption. Winsock
+  accepted the whole 8 MiB response despite a small requested send buffer.
+  The diagnostic test now bounds sends and verifies its receive buffer, retaining
+  real blocked-write events, exact output, progress and cleanup requirements.
+  Both native Windows focused repairs pass: 11 HTTP tests, all six blocked-write
+  cohorts, 72/72 sockets closed and zero final managed bytes. The
+  [repair receipt](measurements/http-pressure-repair-2026-11-10/README.md) retains
+  all original logs, reproduction, exact sources and both repaired results.
+- A diagnostic timeout now releases its log mutex before panicking, avoiding
+  poisoned cleanup. Formatting that panic is the only change from `88a303659`
+  to the current final source. Guarded whole-tree formatting passes.
+- Superseded production `42747990312` was cancelled only after all replacement
+  jobs existed. Its nine logs and docs are audited: four identical formatting
+  errors, requested cancellations and missing not-yet-created artifacts; no
+  additional test or compiler failure. Earlier passes do not verify the new head.
 
 ## Completed measurements and prepared compiler work
 

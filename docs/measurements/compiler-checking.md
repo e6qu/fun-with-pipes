@@ -44,6 +44,42 @@ expression checking and validation in those same applications to identify the
 costly operations before changing the algorithm. Do not use a trait index or
 library cache merely because it looks plausible in the source.
 
+## Next: CPU samples inside checking
+
+The prepared `compiler-sampling` workflow compiles the same four original
+applications on native Linux ARM64 and AMD64. It uses a release compiler with
+full debug information so the profiler can reconstruct inlined function calls.
+The compiler algorithm and optimization settings are unchanged. Each application
+gets one ordinary build and one sampled build; their generated C must be identical.
+
+- `perf record` samples user-space CPU activity at 997 Hz, including compiler
+  threads and child processes. It observes only the command's process tree.
+  A 32 KiB stack snapshot and 256 KiB event buffer are explicit settings.
+- Both builds use one allowed logical CPU, a 120-second deadline and GNU time
+  for process CPU/RSS. The CPU is not reserved exclusively. No C compilation or
+  application execution is included; the compiler phase reporter is disabled.
+- Reports retain every symbol, including unknown addresses and callers outside
+  type checking. A second view groups samples by `check_binding` or `check_effects`
+  in their call stacks. Both views must retain the same sample and event totals.
+- Keep raw recordings, the exact compiler binary, commands, emitted C, resource
+  reports, CPU/toolchain identities and failures. Attempt all four applications.
+  Unsupported profiling or unresolved checking stacks fail the probe.
+
+For example, if most samples below `check_binding` are in type substitution,
+inspect and count those substitutions next. That would justify investigating
+repeated substitution; it would not establish that a trait index would help.
+Sample percentages describe the observed user CPU activity, not elapsed time,
+ARC overhead or an ordinary-build speedup. They do not distinguish individual
+library definitions from user definitions. Kernel work and waiting are excluded.
+
+The ephemeral runner gives only the profiler executable `CAP_PERFMON`; fwp runs
+as the ordinary runner user. No system-wide recording or global kernel-policy
+change is requested. The [recording](https://raw.githubusercontent.com/torvalds/linux/master/tools/perf/Documentation/perf-record.txt)
+and [reporting](https://raw.githubusercontent.com/torvalds/linux/master/tools/perf/Documentation/perf-report.txt)
+references define the sampling and call-stack fields. These runs are diagnostic
+preparation; their results and profiler limitations must be reviewed before
+selecting an optimization.
+
 ## Questions and boundaries
 
 | Question | Evidence to collect |

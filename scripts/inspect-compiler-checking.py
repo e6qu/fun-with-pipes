@@ -9,16 +9,8 @@ import subprocess
 import time
 import traceback
 
-from compiler_scaling import ROOT, digest, phase_totals, profile, resources
+from compiler_scaling import APPLICATIONS, ROOT, digest, phase_totals, profile, resources
 from process_wait import run_capture
-
-
-APPLICATIONS = {
-    'words': 'examples/wordfreq.fwp',
-    'numerical': 'docs/tutorials/20-autodiff-and-devices/main.fwp',
-    'callbacks': 'tests/fixtures/weak_callback_service.fwp',
-    'http': 'examples/server/api.fwp',
-}
 
 
 def main():

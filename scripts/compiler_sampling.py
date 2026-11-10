@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Sample compiler CPU stacks on maintained applications; do not measure speedups."""
+import argparse
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import traceback
+
+from compiler_scaling import APPLICATIONS, ROOT, digest, resources
+from process_wait import run_capture
+
+
+def histogram(text, parent):
+    """Read explicitly selected perf TSV fields, keeping unresolved samples."""
+    keys = ['overheadPercent', 'samples', 'period'] + (['parent'] if parent else []) + ['dso', 'symbol']
+    rows = []
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith('#'):
+            continue
+        values = [part.strip() for part in line.split('\t')]
+        assert len(values) == len(keys), f'unexpected perf row: {line}'
+        row = dict(zip(keys, values))
+        row['overheadPercent'] = float(row['overheadPercent'].removesuffix('%'))
+        row['samples'] = int(row['samples'])
+        row['period'] = int(row['period'])
+        assert 0 <= row['overheadPercent'] <= 100 and row['samples'] > 0 and row['period'] > 0
+        rows.append(row)
+    assert rows, 'perf returned no samples'
+    return rows
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--perf', type=Path, required=True)
+    parser.add_argument('--time', type=Path, required=True)
+    parser.add_argument('--cc', required=True)
+    parser.add_argument('--cpu', type=int, required=True)
+    parser.add_argument('--frequency', type=int, required=True)
+    parser.add_argument('--stack-bytes', type=int, required=True)
+    parser.add_argument('--ring-bytes', type=int, required=True)
+    parser.add_argument('--deadline', type=float, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    assert os.environ.get('GITHUB_ACTIONS') == 'true', 'sample on GitHub runners'
+    assert platform.system() == 'Linux' and platform.machine() in ('aarch64', 'x86_64')
+    assert 0 < args.deadline <= 120 and 0 < args.frequency <= 1000
+    assert 0 < args.stack_bytes <= 65528 and args.stack_bytes % 8 == 0
+    assert args.ring_bytes > 0 and args.cpu in os.sched_getaffinity(0)
+    os.sched_setaffinity(0, {args.cpu})
+    output = args.output.resolve()
+    output.mkdir(exist_ok=False, parents=True)
+    compiler, perf = args.compiler.resolve(), args.perf.resolve()
+    environment = {k: v for k, v in os.environ.items()
+                   if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN')}
+    environment.update(CC=args.cc, FWP_LTO='0', LC_ALL='C', DEBUGINFOD_URLS='')
+    identity = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+        compilerSha256=digest(compiler), rust=subprocess.check_output(['rustc', '-Vv'], text=True),
+        perf=str(perf), perfVersion=subprocess.check_output([str(perf), '--version'], text=True),
+        cc=args.cc, ccVersion=subprocess.check_output([args.cc, '--version'], text=True),
+        kernel=platform.platform(), topology=subprocess.check_output(['lscpu'], text=True),
+        affinity=sorted(os.sched_getaffinity(0)), event='cpu-clock:u', frequency=args.frequency,
+        stackBytes=args.stack_bytes, ringBytes=args.ring_bytes, deadlineSeconds=args.deadline,
+        releaseDebug=os.environ.get('CARGO_PROFILE_RELEASE_DEBUG'),
+        scope='One ordinary and one sampled fresh-process emit-C build for each original application. '
+              'No phase reporter, GCC compilation or application execution. User CPU stacks include '
+              'the timed command and its descendants, not system-wide work. GNU time is also in that '
+              'process tree. Sampling, debug metadata and shared-runner effects prevent a speedup claim. '
+              'Parent reports locate body/effect checking; they do not identify individual library definitions.')
+    assert identity['releaseDebug'] == '2', 'full debug metadata required for inline stacks'
+    (output/'identity.json').write_text(json.dumps(identity, indent=2)+'\n')
+    shutil.copyfile(compiler, output/'fwp')
+    summary = dict(identity=identity, applications={}, failures=[])
+    for name, relative in APPLICATIONS.items():
+        directory = output/name
+        directory.mkdir()
+        row = dict(source=relative, sourceSha256=digest(ROOT/relative), correct=False, commands=[])
+        summary['applications'][name] = row
+        try:
+            shutil.copyfile(ROOT/relative, directory/'input.fwp')
+            for sampled in (False, True):
+                role = 'sampled' if sampled else 'ordinary'
+                cfile = directory/(role+'.c')
+                usage = directory/(role+'.resources')
+                command = [str(args.time), '-v', '-o', str(usage), str(compiler), 'build',
+                           '--target', 'native', '--emit-c', '-O2', str(ROOT/relative), '-o', str(cfile)]
+                if sampled:
+                    command = [str(perf), 'record', '--event', 'cpu-clock:u', '--freq', str(args.frequency),
+                        '--strict-freq', '--inherit', '--call-graph', f'dwarf,{args.stack_bytes}',
+                        '--mmap-pages', str(args.ring_bytes)+'B', '--no-buildid-cache',
+                        '--output', str(directory/'perf.data'), '--', *command]
+                entry = dict(role=role, command=command)
+                row['commands'].append(entry)
+                result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
+                    input_stream=subprocess.DEVNULL, text=False, encoding='utf-8', timeout=args.deadline, check=False)
+                entry['status'] = result.returncode
+                (directory/(role+'.stdout')).write_bytes(result.stdout)
+                (directory/(role+'.stderr')).write_bytes(result.stderr)
+                assert result.returncode == 0 and not result.stdout, entry
+                if sampled:
+                    assert all(re.fullmatch(r'\[ perf record: (Woken up \d+ times to write data|Captured and wrote .+) \]', line)
+                               for line in result.stderr.decode().splitlines()), result.stderr
+                    assert not re.search(r'lost|throttl|warning|error', result.stderr.decode(), re.I), result.stderr
+                else:
+                    assert not result.stderr, result.stderr
+                entry.update(resources(usage.read_text()), cSha256=digest(cfile))
+            assert (directory/'ordinary.c').read_bytes() == (directory/'sampled.c').read_bytes(), 'sampling changed C'
+            for parent in (False, True):
+                role = 'checking-parents' if parent else 'all-symbols'
+                fields = 'overhead,sample,period,' + ('parent,' if parent else '') + 'dso,symbol'
+                command = [str(perf), 'report', '--input', str(directory/'perf.data'), '--stdio',
+                    '--inline', '--no-children', '--no-exclude-other', '--call-graph', 'none', '--max-stack', '512',
+                    '--percent-limit', '0', '--percentage', 'absolute', '--field-separator', '\t',
+                    '--fields', fields, '--sort', ('parent,' if parent else '')+'dso,symbol']
+                if parent:
+                    command += ['--parent', 'fwp::infer::Infer::(check_binding|check_effects)']
+                entry = dict(role=role, command=command)
+                row['commands'].append(entry)
+                result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
+                    input_stream=subprocess.DEVNULL, text=True, encoding='utf-8', timeout=args.deadline, check=False)
+                entry['status'] = result.returncode
+                (directory/(role+'.tsv')).write_text(result.stdout)
+                (directory/(role+'.stderr')).write_text(result.stderr)
+                assert result.returncode == 0 and not result.stderr, entry
+                rows = histogram(result.stdout, parent)
+                row[role] = dict(samples=sum(r['samples'] for r in rows), period=sum(r['period'] for r in rows),
+                    unresolvedSamples=sum(r['samples'] for r in rows if '[unknown]' in r['symbol'] or re.search(r'\b0x[0-9a-f]+$', r['symbol'])), rows=rows)
+                if parent:
+                    assert any('check_binding' in r['parent'] for r in rows), 'no body-checking caller stacks'
+            assert row['all-symbols']['samples'] == row['checking-parents']['samples']
+            assert row['all-symbols']['period'] == row['checking-parents']['period']
+            row['correct'] = True
+        except Exception as error:
+            if isinstance(error, subprocess.TimeoutExpired):
+                entry['timeoutSeconds'] = error.timeout
+                (directory/(role+'.timeout.stdout')).write_bytes(error.output or b'')
+                (directory/(role+'.timeout.stderr')).write_bytes(error.stderr or b'')
+            row['failure'] = traceback.format_exc()
+            summary['failures'].append(name)
+        (output/'summary.json').write_text(json.dumps(summary, indent=2)+'\n')
+        print(f'{name}: {"pass" if row["correct"] else row["failure"]}', flush=True)
+    assert not summary['failures'], summary['failures']
+
+
+if __name__ == '__main__':
+    main()
