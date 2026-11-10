@@ -1,5 +1,4 @@
 """Account for DWARF user stacks directly, including unmatched samples."""
-import json
 import re
 import subprocess
 
@@ -61,20 +60,6 @@ def attribute(samples, flat):
                 samplesWithoutFrames=unavailable, rows=rows)
 
 
-def thread_periods(text):
-    threads = {}
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        sample = re.fullmatch(r'\s*(\d+)\s+(\d+)\s+cpu-clock:u:\s*', line)
-        assert sample is not None, f'unexpected thread sample: {line}'
-        tid, period = int(sample[1]), int(sample[2])
-        assert tid > 0 and period > 0
-        threads.setdefault(tid, []).append(period)
-    assert threads, 'missing thread samples'
-    return threads
-
-
 def decode(recording, output, perf, demangler, environment, deadline, flat, commands):
     def run(command, role, input_data):
         entry = dict(role=role, command=command)
@@ -94,28 +79,15 @@ def decode(recording, output, perf, demangler, environment, deadline, flat, comm
         assert result.returncode == 0 and not result.stderr, entry
         return result.stdout
 
-    # No IP field means no stack unwinding. Enumerate every recorded sample
-    # before starting a separate decoder process for each sampled thread.
-    census = run([str(perf), 'script', '--input', str(recording), '--hide-call-graph',
-                  '--fields', 'tid,period,event'], 'thread-samples', None)
-    threads = thread_periods(census)
-    assert sum(len(periods) for periods in threads.values()) == sum(row['samples'] for row in flat)
-    assert sum(sum(periods) for periods in threads.values()) == sum(row['period'] for row in flat)
-    (output/'threads.json').write_text(json.dumps(threads, indent=2)+'\n')
-    samples = []
-    for tid, periods in threads.items():
-        role = f'user-stacks-{tid}'
-        command = [str(perf), 'script', '--input', str(recording), '--tid', str(tid),
-                   '--inline', '--max-stack', '512', '--fields', 'period,event,ip,sym,dso']
-        raw_text = run(command, role, None)
-        raw = stacks(raw_text)
-        assert [sample['period'] for sample in raw] == periods, 'thread decoder lost or reordered samples'
-        decoded_text = run([str(demangler), '--no-strip-underscore', '--format=rust'],
-                           role+'.demangled', raw_text)
-        decoded = stacks(decoded_text)
-        assert len(decoded) == len(raw)
-        for original, sample in zip(raw, decoded):
-            assert original['period'] == sample['period'] and len(original['frames']) == len(sample['frames'])
-            assert all(a['ip'] == b['ip'] and a['dso'] == b['dso'] for a, b in zip(original['frames'], sample['frames']))
-        samples.extend(decoded)
+    command = [str(perf), 'script', '--input', str(recording), '--inline', '--max-stack', '512',
+               '--fields', 'period,event,ip,sym,dso']
+    raw_text = run(command, 'user-stacks', None)
+    raw = stacks(raw_text)
+    decoded_text = run([str(demangler), '--no-strip-underscore', '--format=rust'],
+                       'user-stacks.demangled', raw_text)
+    samples = stacks(decoded_text)
+    assert len(samples) == len(raw)
+    for original, sample in zip(raw, samples):
+        assert original['period'] == sample['period'] and len(original['frames']) == len(sample['frames'])
+        assert all(a['ip'] == b['ip'] and a['dso'] == b['dso'] for a, b in zip(original['frames'], sample['frames']))
     return attribute(samples, flat)

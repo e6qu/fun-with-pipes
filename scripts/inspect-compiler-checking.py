@@ -107,9 +107,9 @@ def main():
                             if parent is not None and events[parent]['phase'] in parts:
                                 group = parts[events[parent]['phase']]
                                 group[event['phase']] = group.get(event['phase'], 0) + event['inclusive_ns']
-                        for name, group in parts.items():
-                            group['group-setup-and-cleanup'] = phases[name]['exclusiveNs']
-                            assert sum(group.values()) == phases[name]['inclusiveNs']
+                        for group_name, group in parts.items():
+                            group['group-setup-and-cleanup'] = phases[group_name]['exclusiveNs']
+                            assert sum(group.values()) == phases[group_name]['inclusiveNs']
                         row['checkingPartsNs'] = parts
                 except subprocess.TimeoutExpired as error:
                     row.update(elapsedNs=time.perf_counter_ns() - start, status=124, timedOut=True)

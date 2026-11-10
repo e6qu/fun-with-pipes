@@ -1,9 +1,16 @@
 # Avoid temporary copies while checking types
 
-**Investigation; no compiler optimization implemented yet.** The CPU recordings
-described in [checking costs](compiler-checking.md) show type cloning, resolution
-and allocation/freeing among the larger costs. Caller-report verification is
-still pending. Count the relevant copies before selecting a change.
+**Selected candidate: borrow inputs in the two type traversals below.**
+[Exact counts](compiler-type-copies-2026-11-10/README.md) match on both native
+Linux architectures and preserve generated C: roughly 804,000–810,000 cloned
+nodes during unresolved-variable search and 469,000–471,000 during substitution
+per complete application. The existing compiler remains the reference at
+`35a12dfee0266134237d03d1262649be69df7c41`; ordinary compiler sources are identical
+to merged #274. No candidate speedup is measured yet.
+
+The ARM64 CPU profiles locate type copying under checking. AMD64 caller decoding
+is still being repaired; its flat samples and independent exact counters identify
+type-copy work, but establish no per-caller CPU attribution. Preserve that limit.
 
 ## What is copied?
 
@@ -50,7 +57,7 @@ missing application or unexpected source change fails verification.
 
 ## Acceptance before changing a walk
 
-If counts identify substantial copying, freeze the candidate against that source:
+The candidate is frozen against the counted source above:
 
 1. Preserve inferred signatures, diagnostics and their locations, macros,
    effects, nominal record constraints and generated C. Test bound-variable

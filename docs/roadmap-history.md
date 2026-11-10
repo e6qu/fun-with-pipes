@@ -11,6 +11,20 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current five milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Application workflows and compiler costs (PR #274)
+
+[PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) adds opt-in compiler
+phase reports and fixes independent generic uses hitting the recursion limit.
+Complete numerical, word-counting and callback programs pass the documented tools;
+sustained HTTP trials cover load, slow clients, cancellation and cleanup. A
+Windows test now creates verified backpressure instead of assuming a large write
+must block. [All final gates pass](measurements/application-final-gates-2026-11-10/README.md).
+
+[The measurements](measurements/application-compiler-load-2026-11-10/README.md)
+retain 48 qualifying compiler comparisons and 34 successful HTTP trials. Later
+checking boundaries expose repeated library work; their reporter overhead is
+unmeasured. Milestone 5 is delivered; earlier missed/noisy timing goals remain open.
+
 ## Ownership comparisons and parser input cleanup (PR #273)
 
 [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273) fixes an owning parser

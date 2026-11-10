@@ -93,11 +93,12 @@ does not populate parents reconstructed from DWARF user stacks. The replay reads
 `perf script` frames from the saved recordings, retains unknown/unmatched callers
 and checks totals against the original flat report. No new compilation is needed.
 
-The replay first lists every sample's thread and period without unwinding. It
-then decodes each sampled thread in a separate process and requires exact period
-sequences per thread, plus the original whole-recording totals. This avoids
-sharing the profiler's unwind cache across threads. The mixed-thread control is
-retained separately; native verification of this repair is pending.
+The per-thread control did not repair AMD64's missing callers and has been
+removed. Its ELF layout has unequal file/virtual offsets across load segments,
+which perf 7.0.14's libdw path handles incorrectly. The next recording explicitly
+uses Ubuntu 24.04's perf 6.8 environment on both architectures; production support
+and ordinary compiler settings remain unchanged. No failed profile becomes a
+pass, and no speed comparison pools these different hosts.
 
 GNU `c++filt --format=rust` decodes names explicitly; raw names remain retained.
 Perf's explicit-register warning is retained even with the complete requested

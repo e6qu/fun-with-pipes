@@ -11,7 +11,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
-Bodies dominate; no optimization or ordinary-speedup claim follows yet.
+Bodies dominate. [Exact type-copy counts](compiler-type-copies-2026-11-10/README.md)
+now select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
+no candidate speedup is measured yet.
 [Windows backpressure](http-backpressure.md) records a test assumption exposed
 by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
 
@@ -20,7 +22,7 @@ by native CI and the [verified native repair](http-pressure-repair-2026-11-10/RE
 all 48 compiler comparisons qualify under their copy controls, and 34 HTTP trials
 complete with zero failed requests and flat sampled server memory. The report
 separates compiler phases, GCC cost, HTTP latency and differing host CPUs.
-Final platform delivery remains in progress; the [protocol](application-tooling.md)
+[All final delivery gates pass](application-final-gates-2026-11-10/README.md); the [protocol](application-tooling.md)
 retains the explicit measurement settings.
 [Application workflows pass on both Linux architectures](application-workflows-2026-11-09/README.md).
 

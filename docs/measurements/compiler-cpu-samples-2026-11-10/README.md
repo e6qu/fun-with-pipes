@@ -60,3 +60,21 @@ use the installed GitHub CLI to download the exact named artifact instead.
 Selected ZIP members passed CRC. Archive digests come from GitHub metadata;
 whole archives were not downloaded/rehashed locally. Compiler binaries, C and raw
 recordings remain in the identified artifacts until their recorded expiration.
+
+## Remaining AMD64 limitation
+
+Per-thread replay `42759680401` passes ARM64 but still misses checking callers
+for AMD64 words and numerical. It does not validate the thread-cache hypothesis.
+The mixed-thread diagnostic reports 23 empty words stacks and incorrect unwind
+addresses. The original ELF header and recorded mappings expose a 4 KiB difference
+between the executable segment's file offset and virtual address. Perf 7.0.14's
+libdw load-base calculation ignores that difference. The
+[reported LLD/libdw limitation](https://sourceware.org/pipermail/elfutils-devel/2023q1/005892.html)
+and [libunwind load-base repair](https://lkml.iu.edu/hypermail/linux/kernel/2205.3/05076.html)
+explain why these engines cannot be treated as interchangeable implementations.
+
+The next recording explicitly selects Ubuntu 24.04/perf 6.8 for both diagnostic
+architectures, preserving full debug information and the compiler's ordinary
+optimization/link settings. This changes the diagnostic environment, not fwp's
+production support or accepted timing outcomes. It requires new verified caller
+reports; no automatic tool substitution is performed.
