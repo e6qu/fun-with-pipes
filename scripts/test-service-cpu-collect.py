@@ -16,6 +16,7 @@ from unittest.mock import patch
 import cpu_samples
 import service_cpu_collect
 from service_cpu_audit import audit
+from service_cpu_replay import verify_recordings
 from weak_callback_service import expected
 
 TABLE = 'static const fwp_fninfo fwp_fn_table[] = {\n    {1, e0, "service", &fwp_owned_info0},\n};\n'
@@ -29,6 +30,8 @@ class CollectionTests(unittest.TestCase):
         output = folder/'evidence'
         compiler = folder/'fwp'
         compiler.write_bytes(b'compiler identity')
+        addr2line = folder/'llvm-addr2line'
+        addr2line.write_bytes(b'addr2line identity')
         calls = []
 
         def child(command, **settings):
@@ -77,7 +80,7 @@ class CollectionTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0, stdout, stderr)
 
         arguments = ['service_cpu_collect.py', 'collect', '--compiler', str(compiler), '--perf', '/perf',
-            '--demangler', '/c++filt', '--swift-demangler', '/swift-demangle', '--output', str(output),
+            '--addr2line', str(addr2line), '--demangler', '/c++filt', '--swift-demangler', '/swift-demangle', '--output', str(output),
             '--source', 'source', '--tag', 'roadmap/service-cpu-control', '--arch', 'aarch64', '--cc', 'gcc',
             '--ar', 'ar', '--rustc', 'rustc', '--swiftc', 'swiftc', '--target', 'aarch64-unknown-linux-gnu',
             '--c-arch', 'armv8-a', '--rust-cpu', 'generic', '--user-registers', ','.join(cpu_samples.CORE_REGISTERS['aarch64']),
@@ -94,6 +97,7 @@ class CollectionTests(unittest.TestCase):
             stack.enter_context(patch.object(subprocess, 'check_output', return_value='source\n'))
             stack.enter_context(patch.object(service_cpu_collect, 'run_capture', side_effect=child))
             stack.enter_context(patch.object(cpu_samples, 'run_capture', side_effect=child))
+            stack.enter_context(patch.object(service_cpu_collect.shutil, 'which', return_value=str(addr2line)))
             stack.enter_context(patch.object(service_cpu_collect, 'boundary', side_effect=lambda s: s))
             stack.enter_context(redirect_stdout(io.StringIO()))
             if fault:
@@ -107,6 +111,11 @@ class CollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name:
             folder, report = self.exercise(Path(name), None)
             result = audit(folder, 'source', 'aarch64')
+            retained, counts = verify_recordings(folder, 'source', 'aarch64')
+            self.assertEqual(retained, report)
+            self.assertEqual(len(counts), 32)
+            with self.assertRaises(AssertionError):
+                verify_recordings(folder, 'wrong source', 'aarch64')
             self.assertEqual((result['cases'], result['profiles']), (32, 16))
             for row in report['cases'].values():
                 if row['pilots']:
@@ -126,6 +135,8 @@ class CollectionTests(unittest.TestCase):
             self.assertEqual(len(report['cases']), 32)
             self.assertEqual(len(report['failures']), 4)
             self.assertTrue(report['cases']['fwp-4096-3']['correct'])
+            with self.assertRaises(AssertionError):
+                verify_recordings(folder, 'source', 'aarch64')
             with self.assertRaises(AssertionError):
                 audit(folder, 'source', 'aarch64')
 

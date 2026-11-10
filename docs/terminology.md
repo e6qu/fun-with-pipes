@@ -420,6 +420,33 @@ construction plus consumption slower.
   64 GiB of address space does not mean using 64 GiB of RAM. A peak RSS reading is
   also different from the sum of all allocations made during the program.
 
+### CPU samples: where running time goes
+
+A **CPU sample** records what a program is doing at an instant. Its **call stack**
+shows the active function (**leaf**) and the callers that led there:
+
+```text
+service → dispatch → malloc    dispatch / allocation
+service → dispatch → free      dispatch / release
+```
+
+Both samples belong to dispatch. Their operations differ: allocating and freeing
+memory can happen within the same source phase.
+
+- A **sample period** is its recorded event weight. For our CPU-clock profiles,
+  periods represent CPU time. If dispatch samples total 2 million out of
+  10 million period units, their weighted share is 20%.
+- **Stack decoding** reconstructs callers from saved registers, stack memory and
+  compiler debug information. **Demangling** turns an encoded symbol into a readable
+  function name. Missing frames remain unknown; they are not evidence of ARC cost.
+- **Inlining** can erase a source function boundary. We classify a phase only when
+  retained symbols establish it; other samples remain unclassified.
+
+Sampling adds overhead and these profiles exclude time spent waiting. A 20% share
+is neither a 20% slowdown nor a count of allocations or reference updates. Use
+[ordinary paired timings](benchmarks.md) for speed comparisons and the
+[service protocol](measurements/service-cpu-costs.md) for this observation's scope.
+
 ### Memory: distinguish total from peak
 
 Allocating and freeing 1 MiB **100 times in sequence** means:

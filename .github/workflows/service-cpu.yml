@@ -2,11 +2,21 @@ name: Queued service CPU attribution
 on:
   workflow_call:
     inputs:
+      replay:
+        type: boolean
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
       source_tag:
         type: string
         required: true
 permissions:
   contents: read
+  actions: read
 jobs:
   samples:
     strategy:
@@ -43,7 +53,7 @@ jobs:
       SAMPLE_REGISTERS: ${{ matrix.registers }}
     steps:
       - name: Install native compilers and profiler
-        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic
+        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic llvm-18
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -81,7 +91,11 @@ jobs:
               output.write(f'SERVICE_PERF={profilers[0]}\n')
               output.write(f'SERVICE_CPU={min(os.sched_getaffinity(0))}\n')
           PY
+          mkdir "$RUNNER_TEMP/service-tools"
+          ln -s /usr/bin/llvm-addr2line-18 "$RUNNER_TEMP/service-tools/addr2line"
+          echo "$RUNNER_TEMP/service-tools" >> "$GITHUB_PATH"
       - name: Check recording and decoding before compiler builds
+        if: ${{ !inputs.replay }}
         run: >-
           python3 scripts/service_cpu_collect.py probe
           --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
@@ -89,9 +103,10 @@ jobs:
           --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
           --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
           --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
-          --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line /usr/bin/llvm-addr2line-18 --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-probe
       - name: Check readers and build fwp
+        if: ${{ !inputs.replay }}
         shell: bash
         run: |
           set -euo pipefail
@@ -102,6 +117,7 @@ jobs:
           cargo fetch --locked 2>&1 | tee service-cpu-setup/fetch.log
           cargo build --locked --offline --bin fwp 2>&1 | tee service-cpu-setup/build.log
       - name: Verify every case and sample each large service call
+        if: ${{ !inputs.replay }}
         run: >-
           python3 scripts/service_cpu_collect.py collect
           --compiler target/debug/fwp --source "$GITHUB_SHA" --tag "$SOURCE_TAG"
@@ -109,12 +125,33 @@ jobs:
           --c-arch "$SAMPLE_C_ARCH" --rust-cpu "$SAMPLE_RUST_CPU"
           --target "$SAMPLE_ARCH-unknown-linux-gnu" --perf "$SERVICE_PERF" --cpu "$SERVICE_CPU"
           --frequency 997 --stack-bytes 32768 --ring-bytes 262144 --user-registers "$SAMPLE_REGISTERS"
-          --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line /usr/bin/llvm-addr2line-18 --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-evidence
       - name: Reconstruct sample accounting and exact service results
+        if: ${{ !inputs.replay }}
         run: >-
           python3 scripts/service_cpu_audit.py --input service-cpu-evidence
           --source "$GITHUB_SHA" --arch "$SAMPLE_ARCH"
+      - name: Download the original recordings
+        if: inputs.replay
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.evidence_run }}
+          name: service-cpu-${{ matrix.arch }}
+          path: service-recordings
+      - name: Verify saved outputs and decode all original samples
+        if: inputs.replay
+        env:
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+          RECORDING_RUN: ${{ inputs.evidence_run }}
+        run: >-
+          python3 scripts/service_cpu_replay.py --recordings service-recordings
+          --source "$RECORDING_SOURCE" --run "$RECORDING_RUN" --arch "$SAMPLE_ARCH"
+          --perf "$SERVICE_PERF" --addr2line /usr/bin/llvm-addr2line-18
+          --gnu-addr2line /usr/bin/addr2line
+          --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
+          --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-replayed
       - name: Retain complete and failed observations
         if: always()
         uses: actions/upload-artifact@v7
@@ -123,5 +160,5 @@ jobs:
           path: |
             service-cpu-probe/
             service-cpu-setup/
-            service-cpu-evidence/
+            ${{ !inputs.replay && 'service-cpu-evidence/' || 'service-cpu-replayed/' }}
           if-no-files-found: error

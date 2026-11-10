@@ -57,6 +57,11 @@ cases, full-process time, allocation profiles, RSS and build costs. fwp's proces
 RSS is lower than Swift's here but higher than C/Rust's. This is a serial queued
 service, not the network throughput/latency experiment below.
 
+The [next CPU observation](measurements/service-cpu-costs.md) samples the four
+large cases in each language before selecting an optimization. It keeps unknown
+work visible and separates source phases from allocation/release operations.
+[How to read a CPU sample](terminology.md#cpu-samples-where-running-time-goes).
+
 ## Sustained service load
 
 The native HTTP correctness test runs 64 clients with 200 requests each and
