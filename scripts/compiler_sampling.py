@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import traceback
 
+from compiler_sample_stacks import decode
 from compiler_scaling import APPLICATIONS, ROOT, digest, resources
 from process_wait import run_capture
 
@@ -104,7 +105,7 @@ def main():
               'No phase reporter, GCC compilation or application execution. User CPU stacks include '
               'the timed command and its descendants, not system-wide work. GNU time is also in that '
               'process tree. Sampling, debug metadata and shared-runner effects prevent a speedup claim. '
-              'Parent reports locate body/effect checking; they do not identify individual library definitions.')
+              'Decoded user stacks locate body/effect checking; they do not identify individual library definitions.')
     assert identity['releaseDebug'] == '2', 'full debug metadata required for inline stacks'
     (output/'identity.json').write_text(json.dumps(identity, indent=2)+'\n')
     shutil.copyfile(compiler, output/'fwp')
@@ -142,45 +143,38 @@ def main():
                     assert not result.stderr, result.stderr
                 entry.update(resources(usage.read_text()), cSha256=digest(cfile))
             assert (directory/'ordinary.c').read_bytes() == (directory/'sampled.c').read_bytes(), 'sampling changed C'
-            for parent in (False, True):
-                role = 'checking-parents' if parent else 'all-symbols'
-                fields = 'overhead,sample,period,' + ('parent,' if parent else '') + 'dso,symbol'
-                command = [str(perf), 'report', '--input', str(directory/'perf.data'), '--stdio',
-                    '--inline', '--no-children', '--no-exclude-other', '--call-graph', 'none', '--max-stack', '512',
-                    '--percent-limit', '0', '--percentage', 'absolute', '--field-separator', '\t',
-                    '--fields', fields, '--sort', ('parent,' if parent else '')+'dso,symbol']
-                if parent:
-                    command += ['--parent', 'check_binding|check_effects']
-                entry = dict(role=role, command=command)
-                row['commands'].append(entry)
-                result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
-                    input_stream=subprocess.DEVNULL, text=True, encoding='utf-8', timeout=args.deadline, check=False)
-                entry['status'] = result.returncode
-                (directory/(role+'.tsv')).write_text(result.stdout)
-                (directory/(role+'.stderr')).write_text(result.stderr)
-                assert result.returncode == 0 and not result.stderr, entry
-                raw_rows = histogram(result.stdout, parent)
-                demangle_command = [str(args.demangler), '--no-strip-underscore', '--format=rust']
-                decoded = run_capture(demangle_command, env=environment, cwd=ROOT, input_data=result.stdout,
-                    input_stream=None, text=True, encoding='utf-8', timeout=args.deadline, check=False)
-                entry['demangleCommand'] = demangle_command
-                entry['demangleStatus'] = decoded.returncode
-                (directory/(role+'.demangled.tsv')).write_text(decoded.stdout)
-                (directory/(role+'.demangle.stderr')).write_text(decoded.stderr)
-                assert decoded.returncode == 0 and not decoded.stderr, entry
-                rows = histogram(decoded.stdout, parent)
-                assert len(rows) == len(raw_rows)
-                for raw, sample in zip(raw_rows, rows):
-                    assert all(raw[key] == sample[key] for key in ('overheadPercent', 'samples', 'period', 'dso'))
-                    sample['rawSymbol'] = raw['symbol']
-                    if parent:
-                        sample['rawParent'] = raw['parent']
-                row[role] = dict(samples=sum(r['samples'] for r in rows), period=sum(r['period'] for r in rows),
-                    unresolvedSamples=sum(r['samples'] for r in rows if '[unknown]' in r['symbol'] or re.search(r'\b0x[0-9a-f]+$', r['symbol'])), rows=rows)
-                if parent:
-                    assert any(re.search(r'::infer::Infer>?::check_binding', r['parent']) for r in rows), 'no decoded body-checking caller stacks'
-            assert row['all-symbols']['samples'] == row['checking-parents']['samples']
-            assert row['all-symbols']['period'] == row['checking-parents']['period']
+            role = 'all-symbols'
+            fields = 'overhead,sample,period,dso,symbol'
+            command = [str(perf), 'report', '--input', str(directory/'perf.data'), '--stdio',
+                '--inline', '--no-children', '--no-exclude-other', '--call-graph', 'none', '--max-stack', '512',
+                '--percent-limit', '0', '--percentage', 'absolute', '--field-separator', '\t',
+                '--fields', fields, '--sort', 'dso,symbol']
+            entry = dict(role=role, command=command)
+            row['commands'].append(entry)
+            result = run_capture(command, env=environment, cwd=ROOT, input_data=None,
+                input_stream=subprocess.DEVNULL, text=True, encoding='utf-8', timeout=args.deadline, check=False)
+            entry['status'] = result.returncode
+            (directory/(role+'.tsv')).write_text(result.stdout)
+            (directory/(role+'.stderr')).write_text(result.stderr)
+            assert result.returncode == 0 and not result.stderr, entry
+            raw_rows = histogram(result.stdout, False)
+            demangle_command = [str(args.demangler), '--no-strip-underscore', '--format=rust']
+            decoded = run_capture(demangle_command, env=environment, cwd=ROOT, input_data=result.stdout,
+                input_stream=None, text=True, encoding='utf-8', timeout=args.deadline, check=False)
+            entry['demangleCommand'] = demangle_command
+            entry['demangleStatus'] = decoded.returncode
+            (directory/(role+'.demangled.tsv')).write_text(decoded.stdout)
+            (directory/(role+'.demangle.stderr')).write_text(decoded.stderr)
+            assert decoded.returncode == 0 and not decoded.stderr, entry
+            rows = histogram(decoded.stdout, False)
+            assert len(rows) == len(raw_rows)
+            for raw, sample in zip(raw_rows, rows):
+                assert all(raw[key] == sample[key] for key in ('overheadPercent', 'samples', 'period', 'dso'))
+                sample['rawSymbol'] = raw['symbol']
+            row[role] = dict(samples=sum(r['samples'] for r in rows), period=sum(r['period'] for r in rows),
+                unresolvedSamples=sum(r['samples'] for r in rows if '[unknown]' in r['symbol'] or re.search(r'\b0x[0-9a-f]+$', r['symbol'])), rows=rows)
+            row['checking-callers'] = decode(directory/'perf.data', directory, perf, args.demangler,
+                environment, args.deadline, row['all-symbols']['rows'], row['commands'])
             row['correct'] = True
         except Exception as error:
             if isinstance(error, subprocess.TimeoutExpired):
