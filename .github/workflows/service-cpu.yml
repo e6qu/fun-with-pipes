@@ -53,7 +53,7 @@ jobs:
       SAMPLE_REGISTERS: ${{ matrix.registers }}
     steps:
       - name: Install native compilers and profiler
-        run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
+        run: apt-get update && apt-get install -y git make gcc g++ python3 binutils curl libssl-dev pkg-config linux-tools-generic flex bison libdw-dev libelf-dev libcap-dev libzstd-dev liblzma-dev zlib1g-dev
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -163,7 +163,7 @@ jobs:
       - name: Reconstruct sample accounting and exact service results
         if: ${{ !inputs.replay }}
         run: >-
-          python3 scripts/service_cpu_audit.py --input service-cpu-evidence
+          python3 scripts/service_cpu_audit.py collection --input service-cpu-evidence
           --source "$GITHUB_SHA" --arch "$SAMPLE_ARCH"
       - name: Download the original recordings
         if: inputs.replay
@@ -185,6 +185,14 @@ jobs:
           --reference-perf "$SERVICE_REFERENCE_PERF"
           --demangler /usr/bin/c++filt --swift-demangler /usr/bin/swift-demangle
           --addr2line-timeout-ms 10000 --deadline 120 --output service-cpu-replayed
+      - name: Independently reconstruct every replayed result and attribution
+        if: inputs.replay
+        env:
+          RECORDING_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/service_cpu_audit.py replay --decoder "$GITHUB_SHA"
+          --functions service-recordings/service-cpu-evidence/function-names.json
+          --input service-cpu-replayed --source "$RECORDING_SOURCE" --arch "$SAMPLE_ARCH"
       - name: Retain complete and failed observations
         if: always()
         uses: actions/upload-artifact@v7

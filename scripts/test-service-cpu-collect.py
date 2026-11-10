@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Exercise collection and independent reconstruction without native workloads."""
 from contextlib import ExitStack, redirect_stdout
+import gzip
 import hashlib
 import io
 import json
 import os
 from pathlib import Path
+import shutil
 import struct
 import subprocess
 import sys
@@ -15,7 +17,7 @@ from unittest.mock import patch
 
 import cpu_samples
 import service_cpu_collect
-from service_cpu_audit import audit
+from service_cpu_audit import audit, audit_replay
 from service_cpu_replay import verify_recordings
 from weak_callback_service import expected
 
@@ -30,7 +32,7 @@ class CollectionTests(unittest.TestCase):
         output = folder/'evidence'
         compiler = folder/'fwp'
         compiler.write_bytes(b'compiler identity')
-        addr2line = folder/'llvm-addr2line'
+        addr2line = folder/'addr2line'
         addr2line.write_bytes(b'addr2line identity')
         calls = []
 
@@ -128,6 +130,52 @@ class CollectionTests(unittest.TestCase):
             (folder/'sha256.json').write_text(json.dumps(manifest))
             with self.assertRaises(AssertionError):
                 audit(folder, 'source', 'aarch64')
+
+    def test_replay_audit_reconstructs_outputs_pilots_and_each_attribution(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            folder, original = self.exercise(root, None)
+            _, counts = verify_recordings(folder, 'source', 'aarch64')
+            replay = root/'replay'
+            replay.mkdir()
+            report = dict(recordingSource='source', decoderSource='decoder',
+                originalFailures=original['failures'], failures=[],
+                verifiedOutputCounts=counts, profiles={})
+            for key, row in original['cases'].items():
+                if '-64-' in key:
+                    continue
+                shutil.copytree(folder/key, replay/key)
+                report['profiles'][key] = dict(correct=True,
+                    commands=[dict(role=role, status=0) for role in ('user-stacks', 'user-stacks.demangled')],
+                    attribution=row['profile']['attribution'])
+
+            def save():
+                (replay/'summary.json').write_text(json.dumps(report))
+                (replay/'original-summary.json.gz').write_bytes(gzip.compress(json.dumps(original).encode()))
+                manifest = {str(p.relative_to(replay)): hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in replay.rglob('*') if p.is_file() and p.name != 'sha256.json'}
+                (replay/'sha256.json').write_text(json.dumps(manifest))
+
+            save()
+            result = audit_replay(replay, 'source', 'decoder', 'aarch64', ['service'])
+            self.assertEqual((result['cases'], result['profiles']), (32, 16))
+            with self.assertRaises(AssertionError):
+                audit_replay(replay, 'source', 'wrong decoder', 'aarch64', ['service'])
+            original['cases']['fwp-4096-0']['pilots'].pop(0)
+            save()
+            with self.assertRaises(AssertionError):
+                audit_replay(replay, 'source', 'decoder', 'aarch64', ['service'])
+            original = json.loads((folder/'summary.json').read_text())
+            report['profiles']['fwp-4096-0']['attribution']['rows'][0]['phase'] = 'dispatch'
+            save()
+            with self.assertRaises(AssertionError):
+                audit_replay(replay, 'source', 'decoder', 'aarch64', ['service'])
+            report['profiles']['fwp-4096-0']['attribution'] = original['cases']['fwp-4096-0']['profile']['attribution']
+            path = replay/'c-4096-0/user-stacks.demangled.txt'
+            path.write_text(path.read_text().replace('1000 cpu-clock', '999 cpu-clock'))
+            save()
+            with self.assertRaises(AssertionError):
+                audit_replay(replay, 'source', 'decoder', 'aarch64', ['service'])
 
     def test_wrong_results_fail_and_other_cases_continue(self):
         with tempfile.TemporaryDirectory() as name:

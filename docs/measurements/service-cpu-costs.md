@@ -134,4 +134,6 @@ never preserve an expensive representation solely for backward compatibility.
 The `service-cpu-replay` suite uses explicit recording run/source and a decoder
 source tag. It verifies retained hashes and every original service output, restores
 the matching binaries for decoding, and replays all sixteen profiles without
-executing the service again. The original failed reports remain separate evidence.
+executing the service again. An independent audit reconstructs original output checks, calibration stop points,
+raw/decoded sample periods and every attribution row. The original failed reports
+remain separate evidence.

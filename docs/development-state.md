@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** publish the GNU marker-reader repair and replay all saved queued-service
+**Next:** publish the combined build-dependency/audit repair and replay all saved queued-service
 profiles on native Linux ARM64/AMD64. Verify every result, sample count, period,
 source hash and diagnostic before selecting a service optimization. Then freeze
 its correctness/time/memory/compiler-cost contract and deliver it with these
@@ -10,7 +10,7 @@ measurement repairs in one substantial normal PR.
 
 [PR #275](https://github.com/e6qu/fun-with-pipes/pull/275) is merged as
 `13d31fc4041a664129ed5674845750836faa0a84`. Its tree equals verified head
-`a232e1e35062a37aa013975ac77bbd8cb4620663`; its message is one line, 48 characters,
+`a232e1e35062a37aa013975ac77bbd8cb4620663`; its message is one line, 49 characters,
 with an empty body and no trailers. [All final gates and the merge receipt](measurements/compiler-borrowed-final-gates-2026-11-10/README.md)
 are retained: production `42767361217`, docs `42767360650`, complete-log audit
 `42778134759`. All ten audit reports match the exact passing head; the complete
@@ -46,7 +46,15 @@ with perf 6.8. Both complete logs, archives and diagnostics are retained. The
 unpatched GNU control confirms the underlying bug: short inline names such as
 `f100` are mistaken for zero-address end markers (149 ARM / 96 AMD errors).
 
-The prepared repair builds Linux perf source
+First patched-reader run `42780083932` fails on both hosts before decoding because
+the Swift image lacks `make`. Complete logs are retained with the decoder diagnosis.
+The combined repair installs it explicitly and adds independent reconstruction of
+all saved outputs, pilot choices, periods and attribution. Four guarded collection/
+replay controls pass, including altered-period, wrong-phase and skipped-pilot faults.
+The test exposed differing unresolved/resolved temporary paths on macOS; matching
+the actual retained recording path fixes that without changing source identities.
+
+The repair builds Linux perf source
 `e8f897f4afef0031fe618a8e94127a0934896aba` with exactly one condition changed:
 require the `0x` prefix before reading an end marker. GNU addr2line stays explicit.
 Require libdw unwind features; retain patch, build log and binary hash. Replay all
@@ -81,8 +89,8 @@ claiming a shared improvement. Keep the public gradient API unchanged.
 
 Prior guarded controls pass: five compiler-reader, five service-reader and three
 collection/raw-record controls. The latter check replay source/hash/output integrity.
-The latest marker repair still needs the affected controls, actionlint and docs
-audit before publication. No local native builds.
+The marker repair passes all four affected collection/replay controls, actionlint, and
+the docs audit (457 link sets, 106 preparation anchors, seven milestones). No local native builds.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data <2 GiB,
 sampled RSS <1 GiB, 180 seconds. Last free space: about 112 GiB. Preserve unrelated

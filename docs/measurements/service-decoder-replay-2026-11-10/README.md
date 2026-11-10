@@ -48,3 +48,13 @@ The only packaging warning concerns an absent optional g++ manual page.
 [Original recordings](../service-cpu-first-2026-11-10/README.md) remain unchanged.
 [The protocol](../service-cpu-costs.md) defines acceptance and prevents treating
 these failed profiles as runtime performance evidence.
+
+## Native build setup repair
+
+The first GNU-reader replay (`42780083932`, source `795302954b686ad6f2342a0f2ff092ae2e433ac1`,
+`roadmap/service-cpu-gnu-marker-2026-11-10`) stops before decoding on both hosts:
+the Swift image has compilers but no `make`. Both jobs (`129707755121` AMD,
+`129707755410` ARM) fail with status 127. The patch preparation itself succeeds.
+The workflow now explicitly installs `make`. The complete
+[AMD](gnu-build-amd.log.gz)/[ARM](gnu-build-arm.log.gz) logs retain both failures;
+optional bison/g++ manual-page notices are the only other package warnings.
