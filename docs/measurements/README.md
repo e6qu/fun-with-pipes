@@ -9,6 +9,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
+now separates bodies, constraints and validation on four complete programs.
+Bodies dominate; no optimization or ordinary-speedup claim follows yet.
+[Windows backpressure](http-backpressure.md) records a test assumption exposed
+by native CI and the focused repair still under verification.
+
 [The complete ownership comparison passes all delivery gates](ownership-peer-final-gates-2026-11-09/README.md).
 [Milestone 5 measurements now pass](application-compiler-load-2026-11-10/README.md):
 all 48 compiler comparisons qualify under their copy controls, and 34 HTTP trials

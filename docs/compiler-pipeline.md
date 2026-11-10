@@ -96,8 +96,8 @@ Use the parent's inclusive time for all type checking; its exclusive time now
 excludes those children. [Focused native checks](measurements/compiler-checking-preparation-2026-11-10/README.md)
 pass on Linux ARM64/AMD64. The group report further separates expression bodies,
 deferred operations, constraints, validation and generalization, with remaining
-group setup/cleanup explicit. Those added spans need their own verification;
-the handoff records it. Full platform verification belongs to this combined
+group setup/cleanup explicit. [Their focused checks also pass](measurements/compiler-checking-parts-2026-11-10/README.md).
+Full platform verification belongs to this combined
 delivery batch. The earlier coarse report's overhead measurement does not cover
 these additional spans.
 The native compiler supports one ordinary build, including `--emit-c`; profiling

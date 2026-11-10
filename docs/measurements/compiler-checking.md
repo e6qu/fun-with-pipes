@@ -18,7 +18,11 @@ This is most of the word-count compiler process, but only part of the HTTP
 server's 1.2–1.4 seconds. Attribute internal checking work and retain the other
 compiler stages before choosing a change.
 
-The next observation divides each group into five existing operations:
+The [finer observation now passes](compiler-checking-parts-2026-11-10/README.md)
+on both Linux architectures. Bodies account for roughly three quarters of
+library-group time; validation is next. AMD64 used EPYC 9V45, so its smaller
+absolute times cannot be compared as a speedup against the earlier EPYC 7763.
+Each group is divided into five existing operations:
 
 - **Bodies:** infer expressions and unify each definition with its signature.
 - **Deferred operations:** decide unresolved pipes and record-field operations
@@ -31,8 +35,11 @@ The next observation divides each group into five existing operations:
 Report group setup/cleanup separately. These spans observe existing code; they
 do not change trait selection or omit checks. The application report must account
 for every nanosecond of each group using its direct children and its remainder.
-These finer observations need their own checks; earlier results use only the
-coarser library/user boundaries.
+Their eight report contracts and four application comparisons pass on each host;
+earlier results use only the coarser library/user boundaries. Next, profile
+expression checking and validation in those same applications to identify the
+costly operations before changing the algorithm. Do not use a trait index or
+library cache merely because it looks plausible in the source.
 
 ## Questions and boundaries
 

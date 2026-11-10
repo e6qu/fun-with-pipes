@@ -47,7 +47,9 @@ runtime deadlock or accept absence of backpressure as a successful test.
   RSS and exit-status members were downloaded from these large archives.
 - Original-send diagnostic: source `9054528ba`, immutable tag
   `roadmap/http-pressure-diagnosis-2026-11-10`, run `42742448906`, ARM64 job
-  `129586576306`. It records actual large-send results; currently running.
+  `129586576306`. It confirms one successful send of all 8,388,717 bytes;
+  the small requested send buffer did not force a partial/blocked send.
+  It also reproduces the diagnostic mutex-poisoning bug repaired below.
 - Candidate: source `924eb8795`, tag `roadmap/http-pressure-bounds-2026-11-10`.
   Diagnostic sends are capped at 16 KiB; the unread Windows client requests and
   verifies a 256 KiB receive buffer. Same deadlines, exact bytes, real would-block
@@ -81,11 +83,16 @@ are attribution, not speedup or observer-overhead measurements.
 Finer parts (bodies, deferred operations, constraints, validation, generalization)
 are prepared at `7761a41544c0c9538880f75cb5b1a177de3d2f6c`, tag
 `roadmap/compiler-checking-parts-2026-11-10`, run `42743138148`. ARM64 job
-`129588849571` and AMD64 `129588850096` are running. They verify eight report
+`129588849571` and AMD64 `129588850096` both pass. They verify eight report
 contracts at production Rust O1, then use release fwp on all four applications.
 No solver algorithm or trait lookup changed. Select an optimization only from
 attributed costs under the [investigation contract](measurements/compiler-checking.md).
 The original coarse report's measured overhead does not cover these added spans.
+The [receipt](measurements/compiler-checking-parts-2026-11-10/README.md) retains
+both clean logs and all group partitions. ARM64 body checking is 156–158 ms;
+AMD64 (different EPYC 9V45 host) is 105–110 ms. Bodies dominate, validation is
+next. These are observed boundaries, not ordinary timings or function-level CPU
+attribution. Keep the new observer's overhead explicitly unmeasured.
 
 ## Delivery and local limits
 

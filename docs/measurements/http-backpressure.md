@@ -12,11 +12,18 @@ tests `a0261f9ccaa4a87651fbcae11966afee68208d4d`. Both Windows architectures fai
 arrives within 15 seconds. Their remaining completed HTTP tests pass.
 
 The ARM64 server log shows eight connections waiting for reads and none for
-writes before the first cleanup checkpoint. This suggests the response was
-accepted into transport buffers; it does not establish a runtime deadlock.
-An isolated diagnostic records each large send's actual return value:
+writes before the first cleanup checkpoint. An isolated diagnostic confirms
+the cause: `send` accepts all **8,388,717 bytes** (headers and body) at once,
+returning success. No would-block event occurs. The test incorrectly assumed
+the requested send-buffer size limited this individual send.
+The actual return value is retained by:
 tag `roadmap/http-pressure-diagnosis-2026-11-10`,
 [run 42742448906](https://github.com/e6qu/fun-with-pipes/actions/runs/42742448906).
+
+That diagnostic also exposed its own cleanup bug: formatting a panic while
+holding the log mutex poisoned it, then cleanup panicked again. Local commit
+`e58842d01` clones the log and releases the mutex before panicking. The final
+combined source includes this correction; the diagnostic tag preserves the failure.
 
 The original test requests an 8 MiB response and a 16 KiB send buffer, then
 assumes the write must block. A successful socket send does not establish that
