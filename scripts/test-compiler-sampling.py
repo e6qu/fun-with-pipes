@@ -2,10 +2,18 @@
 """Keep unmatched and unresolved samples; reject malformed CPU reports."""
 import unittest
 
-from compiler_sampling import histogram
+from compiler_sampling import REGISTER_WARNING, histogram, recording_messages
 
 
 class CompilerSamplingTests(unittest.TestCase):
+    def test_recording_diagnostics_remain_strict(self):
+        recording_messages(REGISTER_WARNING+'\n[ perf record: Woken up 1 times to write data ]\n')
+        recording_messages('[ perf record: Captured and wrote 0.100 MB output.data (10 samples) ]\n')
+        for text in ('WARNING: lost samples', '[ perf record: Captured and wrote LOST samples ]',
+                     'Error: permission denied', 'WARNING: other unwind error'):
+            with self.subTest(text=text), self.assertRaises(AssertionError):
+                recording_messages(text)
+
     def test_unresolved_and_unmatched_samples_are_retained(self):
         text = ('# Overhead\tSamples\tPeriod\tParent\tShared Object\tSymbol\n'
                 '60.00%\t6\t6000\tfwp::infer::Infer::check_binding\tfwp\t[.] infer_expr\n'
