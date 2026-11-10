@@ -240,6 +240,9 @@ diagnostics pass on both hosts; they establish no timing claim.
 A separate diagnostic route `/pressure/:bytes` returns a runtime-sized string.
 It is added only to the saved test source, not the example or timed endpoint.
 The probe requests 8 MiB and sets accepted sockets' send-buffer request to 16 KiB.
+The [Windows backpressure repair](http-backpressure.md) records the subsequent
+native failure, diagnostic and bounded-buffer candidate; its verification is
+pending. Earlier Linux observations do not establish Windows support.
 It observes the TCP write's would-block branch before the ordinary wait, then
 verifies another client receives its item response before consuming the large
 body. This gives direct evidence of the exercised path, rather than guessing
