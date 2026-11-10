@@ -1,10 +1,22 @@
 name: Count original resource holder fields
 on:
   workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
 permissions:
   contents: read
+  actions: read
 jobs:
   census:
+    if: inputs.phase == 'compile'
     strategy:
       fail-fast: false
       matrix:
@@ -70,4 +82,127 @@ jobs:
             resource-field-build/*.log
             resource-field-setup/
             resource-field-observations/
+          if-no-files-found: error
+  executed:
+    if: inputs.phase == 'execute'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check observer controls and native toolchain
+        run: |
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          gcc --version
+          python3 scripts/test-resource-field-census.py
+          python3 scripts/test-nested-resource-counts.py
+      - name: Verify and extract the saved compiler census
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+          CENSUS_RUNNER: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import zipfile
+
+          repository = 'repos/' + os.environ['GITHUB_REPOSITORY']
+          run = os.environ['EVIDENCE_RUN']
+          state = json.loads(subprocess.check_output(['gh', 'api', f'{repository}/actions/runs/{run}']))
+          assert state['status'] == 'completed' and state['conclusion'] == 'success'
+          assert state['head_sha'] == os.environ['COMPILER_SOURCE']
+          listing = json.loads(subprocess.check_output(['gh', 'api', f'{repository}/actions/runs/{run}/artifacts?per_page=100']))
+          assert listing['total_count'] == len(listing['artifacts'])
+          artifact, = [row for row in listing['artifacts'] if row['name'] == 'resource-field-census-' + os.environ['CENSUS_RUNNER']]
+          assert not artifact['expired'] and artifact['workflow_run']['id'] == int(run)
+          assert artifact['workflow_run']['head_sha'] == os.environ['COMPILER_SOURCE']
+          assert artifact['size_in_bytes'] < 64 * 1024 * 1024
+          archive = Path('field-census.zip')
+          with archive.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"{repository}/actions/artifacts/{artifact['id']}/zip"], stdout=stream, check=True)
+          assert archive.stat().st_size == artifact['size_in_bytes']
+          with archive.open('rb') as stream:
+              assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == artifact['digest']
+          destination = Path('field-census').resolve()
+          assert not destination.exists()
+          with zipfile.ZipFile(archive) as contents:
+              assert all((destination/name).resolve().is_relative_to(destination) for name in contents.namelist())
+              assert contents.testzip() is None
+              contents.extractall(destination)
+          Path('field-census-download.json').write_text(json.dumps(artifact, indent=2) + '\n')
+          archive.unlink()
+          print('Verified source, archive size/hash and every member checksum')
+          PY
+      - name: Count actual holds and verify an actual extra hold and release
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/measure-resource-field-holds.py --input field-census
+          --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
+          --cc gcc --output resource-field-holds
+      - name: Reconstruct all raw executions and verify native images
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/audit-resource-field-holds.py --input resource-field-holds
+          --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}'
+      - name: Reject a changed summary even with refreshed checksums
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+          NATIVE_ARCH: ${{ matrix.arch }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+
+          copy = Path('field-hold-altered-summary')
+          shutil.copytree('resource-field-holds', copy)
+          report_path = copy / 'report.json'
+          report = json.loads(report_path.read_text())
+          report['cases']['O2/attributed/4096-0']['selected']['plainHolds'] += 1
+          report_path.write_text(json.dumps(report, indent=2) + '\n')
+          manifest_path = copy / 'manifest.json'
+          manifest = json.loads(manifest_path.read_text())
+          manifest['report.json'] = hashlib.sha256(report_path.read_bytes()).hexdigest()
+          manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+          result = subprocess.run(['python3', 'scripts/audit-resource-field-holds.py', '--input', str(copy),
+              '--source', os.environ['COMPILER_SOURCE'], '--arch', os.environ['NATIVE_ARCH']],
+              capture_output=True, text=True, check=False)
+          (copy / 'audit.stdout').write_text(result.stdout)
+          (copy / 'audit.stderr').write_text(result.stderr)
+          assert result.returncode != 0 and 'raw output disagrees with summary' in result.stderr
+          print('Changed selected-hold summary rejected from raw execution output')
+          PY
+      - name: Retain raw counts, C, binaries, controls and failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resource-field-holds-${{ matrix.arch }}
+          path: |
+            field-census-download.json
+            resource-field-holds/
+            field-hold-altered-summary/report.json
+            field-hold-altered-summary/manifest.json
+            field-hold-altered-summary/audit.*
           if-no-files-found: error

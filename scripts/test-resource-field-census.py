@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import unittest
 
-from resource_field_census import MARKER, PREFIX, decode, instrument, validate_contexts
+from resource_field_census import MARKER, PREFIX, decode, instrument, observe_holds, validate_contexts
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -47,6 +47,39 @@ class FieldCensus(unittest.TestCase):
                          dict(frames=1, fields=1, plainFields=1, variants=0))
         with self.assertRaises(AssertionError):
             validate_contexts(original + declaration, [row])
+
+    def test_reused_temporary_names_do_not_count_another_workers_owners(self):
+        row = dict(function=2, context=8, variable='t4', node='t5', variants=0,
+                   fields=[dict(slot=0, observable=False, type='Array[I64]')])
+        other = '''static V other(V x) {
+    fwp_owner_ctx9 t4 = {0};
+    fwp_rc_dup(x); t4.v0 = x;
+    return x;
+}
+'''
+        source = '''typedef uint64_t V;
+static void counters(void) { observed_retains++; observed_decrements++; }
+static void fwp_owner_release8(void *arg) { fwp_owner_ctx8 *c = arg; drop_array(c->v0); }
+static V worker(V x) {
+    fwp_owner_ctx8 t4 = {0};
+    fwp_rc_dup(x); t4.v0 = x;
+    /* original resource frame */ fwp_cleanup_pop(&t5); fwp_owner_release8(&t4);
+    return x;
+}
+''' + other + '''ServiceStats service_run(size_t population, int mode) {
+    size_t baseline = fwp_heap.live;
+    return result;
+}
+'''
+        for control in (False, True):
+            with self.subTest(control=control):
+                observed, selected = observe_holds(source, [row], control)
+                self.assertIn(other, observed)
+                self.assertEqual(selected, [dict(context=8, slot=0, holdSites=1, drop='drop_array')])
+                self.assertIn('FWP_PLAIN_HOLDS', observed)
+                self.assertEqual('observed_extraPair = 1;' in observed, control)
+        with self.assertRaisesRegex(AssertionError, 'missing field initialization'):
+            observe_holds(source.replace('fwp_rc_dup(x); t4.v0 = x;', 't4.v0 = x;'), [row], False)
 
 
 if __name__ == '__main__':

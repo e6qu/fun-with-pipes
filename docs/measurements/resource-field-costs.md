@@ -1,6 +1,7 @@
 # Keep only necessary fields in resource-lifetime records
 
-**Investigation; no production optimization yet.** Baseline: PR #276's verified
+**Both native compiler censuses pass; executed-count checks are next.**
+No production optimization is implemented yet. Baseline: PR #276's verified
 compiler tree, merged as `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`.
 [Its original timing and RSS limits remain open](nested-resource-time-2026-11-10/README.md).
 
@@ -56,3 +57,7 @@ The initial diagnostic uses `resource_field_census.py` and the explicit
 `--kind plain-fields` mode of `inspect-nested-resource-analysis.py`. Its census
 reports emitted field slots; dynamic operation counts are a separate next step.
 There is no new source syntax or runtime setting.
+
+[Initial census](resource-field-census-2026-11-10/README.md): both hosts identify
+five plain service slots and twenty HTTP slots, with unchanged emitted C. These
+site counts do not justify a speedup or finish the executed-operation step.

@@ -1,0 +1,8 @@
+{
+  "source": "9b24e6965dd4c7cfb6e88163a34722e0b99ec901",
+  "kind": "plain-fields",
+  "file": "src/cgen.rs",
+  "originalSha256": "747ad8d479a622c49becb39fefcf6c8d09cd409414aea79b1f90b936cd294aa1",
+  "observedSha256": "76db1f8a173049ff0365fa13f2a7bede1289fcce92f007456c1c0e2b00b85be4",
+  "patchSha256": "903e8826079030ddbb7aff770fc7c0ec00e5ec80b94fd0d9d086800ea43c0d9b"
+}

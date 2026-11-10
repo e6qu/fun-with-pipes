@@ -1,6 +1,6 @@
 # Current work
 
-**Next: publish and run the plain-field lifetime census on native Linux ARM64/AMD64.**
+**Next: publish and run the executed service-hold counter and its failure controls.**
 PR #276 is merged and fully verified. The next branch prepares a diagnostic;
 it does not yet change production ownership or claim a speedup. Follow
 [the ordered investigation](measurements/resource-field-costs.md), then bundle
@@ -8,7 +8,13 @@ any worthwhile proven improvement, controls and measurements in one normal PR.
 
 Worktree `.worktrees/service-cpu-costs`, branch `resource-field-costs`, based on
 `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`. No next PR is open yet.
-The new diagnostic and delivery receipts are local changes, not published.
+Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
+`roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
+run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
+Both complete logs are clean. [Retained census](measurements/resource-field-census-2026-11-10/README.md)
+reconstructs all 17 inputs on both hosts; each C hash and classification agrees.
+The complete production matrix has not been restarted. Executed-count tools and
+this census report are local changes awaiting the next preparation push.
 
 ## Verified delivery
 
@@ -52,9 +58,15 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
   The new mode compares exact emitted C on 17 inputs, including the exported service.
 - `resource-field-census.yml` builds both compilers on native runners and retains
   all C, classifications, commands and failures. No ordinary runtime is timed.
-- After compiler census checks, add actual executed-operation counts and their
-  added-hold/release control. Apply them to service modes and HTTP cleanup before
-  selecting the production proof and freezing numerical acceptance.
+- Census finds five plain field slots in the service and twenty in HTTP; these
+  are emitted sites, not executed counts or a speedup.
+- `measure-resource-field-holds.py` is prepared to reuse the saved service C at
+  GCC O1/O2: baseline totals, attributed holds, one actual added hold/release and
+  all eight service cases. Its raw-command auditor checks native binaries and
+  rejects changed summaries even with refreshed checksums. Native execution is
+  still pending; do not claim these controls passed.
+- After native service counts, add HTTP executed counts/cleanup before selecting
+  the production proof and freezing numerical acceptance.
 - Scope is separately represented fields. Keep ordinary owners, opaque closures,
   variants and containers. Do not infer captures from arrow types or classify an
   ordinary cleanup record as an original resource-lifetime record.
@@ -70,16 +82,19 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | Plain-field census prepared locally | Native census, executed counts, selected proof and complete measurements/delivery |
+| 8 | In progress | Both native field censuses pass; executed counter prepared | Executed service/HTTP counts, selected proof and complete measurements/delivery |
 
 ## Local checks and preservation
 
-All checks use `python3 scripts/local-guard.py` serially. The new census reader's
-three tests and the existing proof reader's two tests pass. Changed-workflow
+All checks use `python3 scripts/local-guard.py` serially. The census reader's
+four tests and the existing proof reader's two tests pass. Changed-workflow
 `actionlint` passes. No local compiler build, full suite or benchmark ran.
 The explicit census CLI check passes. After staging new docs, the roadmap check
 passes 471 doc link sets, 106 immutable preparation anchors and eight milestone
-statuses. `git diff --cached --check` passes.
+statuses. Real saved service C matches all five typed counter hooks; no compiler
+was run locally. The retained census reader reconstructs both reports. The
+executed-counter/auditor CLI checks and changed-workflow actionlint pass. Recheck
+newly tracked doc links before publication; native counter controls remain pending.
 
 Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and the
 180-second guard deadline. Last free space: about 107 GiB. Preserve unrelated root

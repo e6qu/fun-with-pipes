@@ -78,7 +78,8 @@ All 34 HTTP load trials pass; they are capacity evidence, not an HTTP speedup.
 **Next: count unnecessary plain-data holds in mixed resource-lifetime records.**
 The [investigation](docs/measurements/resource-field-costs.md) first matches exact
 compiler contexts to unchanged generated C, then counts executed holds in the
-queued service and HTTP endpoint. Select a bounded field proof only after those
+queued service and HTTP endpoint. [Both native static censuses pass](docs/measurements/resource-field-census-2026-11-10/README.md),
+identifying five service slots and twenty HTTP slots; their executed cost is next. Select a bounded field proof only after those
 counts show worthwhile work; freeze ordinary measurement targets before changing
 production code. Keep original disposal timing and ordinary argument ownership.
 
