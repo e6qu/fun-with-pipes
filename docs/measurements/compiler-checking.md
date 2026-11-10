@@ -121,7 +121,10 @@ requires row periods to equal the complete event total. Rust symbols are decoded
 explicitly with GNU `c++filt --format=rust`, retaining the original names too;
 perf 6.8 does not decode the compiler's current Rust symbol format itself.
 Caller matching accepts encoded names, then requires decoded checking functions.
-The repaired report interpretation still needs native verification.
+The next attempt (`7a2cfc919`, run `42753509308`) decoded the first ARM64
+report but exposed a Python variable overwriting its application record. The
+repair now has a complete reporting-flow regression, including continuation
+after a child failure. Native caller-report verification remains pending.
 
 ## Questions and boundaries
 

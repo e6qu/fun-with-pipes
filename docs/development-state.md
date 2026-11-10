@@ -33,7 +33,14 @@ confirmed by retained event attributes. Both jobs then reject perf's extra IPC
 placeholder column; all eight saved reports pass the repaired reader locally
 under the guard, including zero-loss accounting and exact event totals.
 The next source also explicitly decodes Rust symbols and matches caller names
-before decoding. Native report verification remains pending.
+before decoding. Fourth source `7a2cfc919`, run `42753509308`, decodes the first ARM64 report but
+exposes a sample-loop variable overwriting the application result. That prevents
+later applications from running. The repair renames that variable and adds a
+complete local report-flow regression: all four applications complete, and one
+failed child still allows the others to run. Four tests pass under the guard;
+the test's mocked platform identity was corrected locally too. AMD64 is still
+queued for the obsolete source. Cancel it after publishing the repaired probe;
+never count it as a pass. Final native report verification remains pending.
 Preserve unrelated root changes and the saved preparation handoff stash
 `451bbf713d451f2d62d80fd7676839404875846a`.
 

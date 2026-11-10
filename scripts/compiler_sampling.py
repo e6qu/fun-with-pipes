@@ -170,11 +170,11 @@ def main():
                 assert decoded.returncode == 0 and not decoded.stderr, entry
                 rows = histogram(decoded.stdout, parent)
                 assert len(rows) == len(raw_rows)
-                for raw, row in zip(raw_rows, rows):
-                    assert all(raw[key] == row[key] for key in ('overheadPercent', 'samples', 'period', 'dso'))
-                    row['rawSymbol'] = raw['symbol']
+                for raw, sample in zip(raw_rows, rows):
+                    assert all(raw[key] == sample[key] for key in ('overheadPercent', 'samples', 'period', 'dso'))
+                    sample['rawSymbol'] = raw['symbol']
                     if parent:
-                        row['rawParent'] = raw['parent']
+                        sample['rawParent'] = raw['parent']
                 row[role] = dict(samples=sum(r['samples'] for r in rows), period=sum(r['period'] for r in rows),
                     unresolvedSamples=sum(r['samples'] for r in rows if '[unknown]' in r['symbol'] or re.search(r'\b0x[0-9a-f]+$', r['symbol'])), rows=rows)
                 if parent:
