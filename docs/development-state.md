@@ -4,6 +4,20 @@
 prepared [compiler-checking investigation](measurements/compiler-checking.md).
 Only [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) is active.
 
+Published preparation: `f43dfcd1c52292dfe84253cba5801bf3749597e6`.
+Focused native verification: `42736751196`, suite `application-tooling`, both
+Linux architectures; dispatched while all final PR jobs already had runners.
+Both application jobs pass, including all eight compiler-report contracts,
+three application workflows, integer checks, O0–O3 inspection and AMD64 browser.
+Release growth diagnostics: `42737726682`, `compiler-scaling-checks`, immutable
+tag `roadmap/compiler-checking-preparation-2026-11-10` at the same `f43dfcd1c`.
+Both release jobs pass. This is one correctness/attribution pass per host, not a
+paired timing rerun. The [receipt](measurements/compiler-checking-preparation-2026-11-10/README.md)
+retains four clean logs and all 24 positive and 48 early/late error observations.
+Library checking costs about 206–210 ms on N2 and 223–227 ms on EPYC 7763; dependency
+ordering is 3–5 ms. Do not select an ordering optimization or skip validation
+from this result. Attribute library-body/constraint work on actual applications.
+
 This is a separate preparation worktree, `.worktrees/compiler-checking-costs`,
 branch `compiler-checking-costs`, based on final PR head
 `a0261f9ccaa4a87651fbcae11966afee68208d4d`. Preserve unrelated root-worktree work and
@@ -29,9 +43,11 @@ open; do not repeat unchanged noisy runs to obtain qualification.
 
 Final head: `a0261f9ccaa4a87651fbcae11966afee68208d4d`.
 
-- Production `42730888995`: nine required jobs; Windows AMD64 has started,
-  others queued at this preparation update. No failed jobs reported.
-- Docs `42730888467`, job `129548275958`: queued.
+- Production `42730888995`: benchmark and both macOS ARM64 jobs pass; six native
+  jobs remain active. Complete passing logs are audited. No failed steps reported;
+  both Windows jobs reached native TLS/executable checks.
+- Docs `42730888467`, job `129548275958`: passes. Full log audited; its
+  deliberate runner-failure/timeout controls pass, no unexpected diagnostics.
 - After all nine and docs pass, dispatch `suite=production-log-audit` with
   `source_revision=a0261f9ccaa4a87651fbcae11966afee68208d4d`,
   `evidence_run=42730888995`, `production_attempt=1`,
@@ -50,7 +66,7 @@ were cancelled after their replacements existed. All available full logs were
 audited; the earlier missing-`rec` fixture was repaired, with no other failures
 or compiler warnings. Cancellation is not passing platform evidence.
 
-## Prepared work, not verified support
+## Prepared work, focused checks pass
 
 - Added nested reporting for superclass validation, dependency ordering and
   library/user/mixed binding groups. Inference and implementation lookup are
@@ -65,8 +81,10 @@ or compiler warnings. Cancellation is not passing platform evidence.
 
 Local `python3 scripts/local-guard.py rustfmt --edition 2021 src/infer.rs tests/compiler_options.rs`
 passes. The guarded roadmap audit also passes: 441 link sets, 106 immutable
-anchors and five roadmap rows. Native verification is pending; no local compiler
-build or full suite ran.
+anchors and five roadmap rows before adding the receipt. The complete receipt
+audit now passes 442 link sets; all 19 staged file hashes and 72 group partitions
+are verified. Focused native checks
+now pass as above; no local compiler build or full suite ran.
 Finish the preparation as a coherent diagnostic batch, verify it on runners,
 then select and freeze the actual optimization contract from the resulting costs.
 Keep 64 GiB free disk, generated targets below 2 GiB, sampled workload RSS below

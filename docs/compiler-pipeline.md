@@ -93,7 +93,9 @@ and each library/user/mixed binding group. A group contains mutually dependent
 definitions; its classification describes source modules, not independence from
 the rest of the type environment. Group counts sum to the parent's binding count.
 Use the parent's inclusive time for all type checking; its exclusive time now
-excludes those children. Native verification of these added boundaries is pending.
+excludes those children. [Focused native checks](measurements/compiler-checking-preparation-2026-11-10/README.md)
+pass on Linux ARM64/AMD64; full platform verification belongs to the next delivery
+batch.
 The native compiler supports one ordinary build, including `--emit-c`; profiling
 rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
 Cross-target output from a native compiler remains a build of that selected

@@ -1,0 +1,78 @@
+{
+  "README.md": {
+    "bytes": 4300,
+    "sha256": "8bdbf598b622016c5cdcc2b13a31d3e5bfdc04447ab33b4a85627934177b8b55"
+  },
+  "amd/archive-file-list.json.gz": {
+    "bytes": 1633,
+    "sha256": "d13978c9940238cc5ec05ebae58e8167398c66089d96782286d84733307d5970"
+  },
+  "amd/compiler-build.txt": {
+    "bytes": 631,
+    "sha256": "591cd3006d8d49a9468c0bb46d146d728dc500ce1a94a21fae4e510658889795"
+  },
+  "amd/compiler-scaling/commands.jsonl.gz": {
+    "bytes": 3440,
+    "sha256": "656e408189292b6dc3a04f27e9e4c5d011d2a172044d1d3fcedd1c7d13380f33"
+  },
+  "amd/compiler-scaling/identity.json": {
+    "bytes": 4566,
+    "sha256": "f11ebbbf717c3e41b241a0342b4af101fd74be4b02ede94d08af52f8a6e23629"
+  },
+  "amd/compiler-scaling/summary.json.gz": {
+    "bytes": 17438,
+    "sha256": "2d279efd18c4552c5f2d6e4d28d78e3ea7b209e6557c312ad86719d7bdc628a3"
+  },
+  "amd/compiler-source.txt": {
+    "bytes": 41,
+    "sha256": "65249a118011561611790c97a5167beaaf40f6e7c122cd14f751fe993607bbaa"
+  },
+  "analysis.json": {
+    "bytes": 5340,
+    "sha256": "079fef21673f5d1208c0fdd61c39c343f30d8efb5e1606148d32814ddd4e1202"
+  },
+  "arm/archive-file-list.json.gz": {
+    "bytes": 1631,
+    "sha256": "86b7724f8c3bdadf2459eb3cd6600f0acad0de300ecc8d24fdbfcf7f20aea135"
+  },
+  "arm/compiler-build.txt": {
+    "bytes": 632,
+    "sha256": "88e8e7847a164f0e3815f70b4e9f07317d8d32fe6761b3c7d233079e58fc3aaa"
+  },
+  "arm/compiler-scaling/commands.jsonl.gz": {
+    "bytes": 3405,
+    "sha256": "e6cfa8ff753afbd803750b6e136b0468aa0915a775879d0db8bb3764edb56e5a"
+  },
+  "arm/compiler-scaling/identity.json": {
+    "bytes": 3738,
+    "sha256": "d4a63fa5228c1105a4a1575850e6e5e8d550a3c7e6081bf4b5898b20f3b4a998"
+  },
+  "arm/compiler-scaling/summary.json.gz": {
+    "bytes": 16709,
+    "sha256": "5041d0dc9a20a2b7320ba653dce6c2366e41f7c8fb5f69e9a530bf8686727a21"
+  },
+  "arm/compiler-source.txt": {
+    "bytes": 41,
+    "sha256": "65249a118011561611790c97a5167beaaf40f6e7c122cd14f751fe993607bbaa"
+  },
+  "audit.json": {
+    "bytes": 24876,
+    "sha256": "709ff05debb0642086ef86b2412f49a45364419e52208c7145fb1d31be9f35ba"
+  },
+  "job-129567756469.log.gz": {
+    "bytes": 16102,
+    "sha256": "62bd1a12281f52f2ddd76b5bac1f89c5255ce8c66a5161e0cd1ff3586277d8c2"
+  },
+  "job-129567756595.log.gz": {
+    "bytes": 20504,
+    "sha256": "920871dd5304409acb8e41449ec4fb7f5edbc2d0821d43b3ee75be9ae955a996"
+  },
+  "job-129570966074.log.gz": {
+    "bytes": 12136,
+    "sha256": "c466945e36ed8c237b7cd40decd62901373293efa70305c758049b8ee34c7bbe"
+  },
+  "job-129570966428.log.gz": {
+    "bytes": 12133,
+    "sha256": "910135976f7649f7b8bbd5436221baf1ce294eff111dd0a2db7147e1d5b8ab81"
+  }
+}

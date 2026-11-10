@@ -1,9 +1,16 @@
 # Find the repeated compiler work before changing inference
 
-**Preparation only.** PR #274 still needs its final delivery gates. Its
+**Initial attribution passes on both Linux architectures.** PR #274 still needs
+its final delivery gates. The [first diagnostic receipt](compiler-checking-preparation-2026-11-10/README.md)
+separates 1,590 library bindings from user work: library checking takes about
+206–227 ms across these inputs, while dependency ordering takes 3–5 ms. These
+are single observations, not a speedup or observer-overhead comparison.
+PR #274's
 [measurements](application-compiler-load-2026-11-10/README.md) show type checking
 accounts for 57–69% of fwp time on the largest inputs, but do not separate library
-checking, dependency analysis or solving constraints. No optimization is selected.
+checking, dependency analysis or solving constraints. The new boundaries locate
+the fixed cost in library checking; its internal work still needs attribution.
+No optimization is selected.
 
 ## Questions and boundaries
 
@@ -18,6 +25,12 @@ A group contains definitions that depend on one another and must be checked
 together. Group classification describes where definitions came from. It does
 not prove that library checking is independent of user trait implementations,
 macros, inferred effects or the rest of the environment.
+
+A [trait](../reference.md#declarations) specifies operations a type supports.
+For example, `Field[T]` requires `Ring[T]` and `Div[T]`, where `T` is the type.
+Superclass validation checks that an implementation supplies those prerequisites.
+Dependency ordering checks required definitions before their callers; mutually
+dependent definitions form one group.
 
 ## First observation change
 
