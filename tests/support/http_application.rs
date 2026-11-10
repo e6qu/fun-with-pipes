@@ -1,7 +1,11 @@
 //! Bounded-live cohorts through the maintained JSON API, including failures.
 use super::{example, fwp, http_server_process};
+#[cfg(windows)]
+use std::ffi::c_char;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
+#[cfg(windows)]
+use std::os::windows::io::{AsRawSocket, RawSocket};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::{mpsc, Arc, Mutex};
@@ -12,6 +16,26 @@ use std::time::{Duration, Instant};
 mod memory;
 #[path = "process_memory.rs"]
 mod process_memory;
+
+#[cfg(windows)]
+#[link(name = "ws2_32")]
+extern "system" {
+    fn setsockopt(
+        socket: RawSocket,
+        level: i32,
+        option: i32,
+        value: *const c_char,
+        size: i32,
+    ) -> i32;
+    fn getsockopt(
+        socket: RawSocket,
+        level: i32,
+        option: i32,
+        value: *mut c_char,
+        size: *mut i32,
+    ) -> i32;
+    fn WSAGetLastError() -> i32;
+}
 
 struct Observed {
     child: Child,
@@ -560,7 +584,7 @@ pressure =
         ("        if (k < 0 && (fwp_socket_again(errno))) {\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);",
          "        if (k < 0 && (fwp_socket_again(errno))) {\n            int pressure_errno = errno;\n            fprintf(stderr, \"http-wait-pressure-write\\n\"); fflush(stderr); errno = pressure_errno;\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);"),
         ("            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);\n        if (k > 0)",
-         "            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);\n        if (len >= 1048576) { int saved = errno; fprintf(stderr, \"http-wait-pressure-send %zu/%zu %lld error=%d\\n\", off, len, (long long)k, k < 0 ? saved : 0); fflush(stderr); errno = saved; }\n        if (k > 0)"),
+         "            k = fwp_socket_send(fd, STR(data)->d + off, len - off > 16384 ? 16384 : len - off, MSG_NOSIGNAL);\n        if (len >= 1048576 && (off == 0 || (k > 0 && off + (size_t)k == len))) { int saved = errno; fprintf(stderr, \"http-wait-pressure-send %zu/%zu %lld error=%d\\n\", off, len, (long long)k, k < 0 ? saved : 0); fflush(stderr); errno = saved; }\n        if (k > 0)"),
     ] {
         assert_eq!(code.matches(before).count(), 1, "{before}");
         code = code.replacen(before, after, 1);
@@ -578,6 +602,45 @@ pressure =
             continue;
         }
         let mut large = connection(&server.address);
+        // Constrain the unread client's buffering as well as the sender. A large
+        // nonblocking Winsock send need not stop at the requested SO_SNDBUF size.
+        // The diagnostic also limits each actual send above; the real would-block
+        // branch and readiness wait must still occur before the client reads.
+        #[cfg(windows)]
+        {
+            const SOL_SOCKET: i32 = 0xffff;
+            const SO_RCVBUF: i32 = 0x1002;
+            let requested = 256 * 1024_i32;
+            let socket = large.get_ref().as_raw_socket();
+            let mut size = std::mem::size_of_val(&requested) as i32;
+            let result = unsafe {
+                setsockopt(
+                    socket,
+                    SOL_SOCKET,
+                    SO_RCVBUF,
+                    (&requested as *const i32).cast(),
+                    size,
+                )
+            };
+            assert_eq!(result, 0, "pressure receive buffer: {}", unsafe {
+                WSAGetLastError()
+            });
+            let mut actual = 0_i32;
+            let result = unsafe {
+                getsockopt(
+                    socket,
+                    SOL_SOCKET,
+                    SO_RCVBUF,
+                    (&mut actual as *mut i32).cast(),
+                    &mut size,
+                )
+            };
+            assert_eq!(result, 0, "read pressure receive buffer: {}", unsafe {
+                WSAGetLastError()
+            });
+            assert_eq!(size, std::mem::size_of_val(&actual) as i32);
+            assert_eq!(actual, requested);
+        }
         let path = format!("/pressure/{BODY_BYTES}");
         if round == 1 {
             write!(large.get_mut(), "GET {path} HTTP/1.1\r\nhost:").unwrap();
