@@ -182,6 +182,23 @@ A **call stage** runs when its argument is supplied. In
 `fn divisor -> let n = 10 / divisor in fn x -> x + n`, supplying `0` must fail
 immediately; the compiler cannot postpone the division until `x` arrives.
 
+### Type variables and substitution
+
+While checking a function, the compiler may represent an unknown type by `a`.
+Suppose its internal type is `a -> List[a]`, and later checking establishes
+that `a` must be `I64`:
+
+| Operation | Before `a` is known | After `a = I64` |
+|---|---|---|
+| Find unresolved variables (`free_vars`) | `[a]`, counted once | `[]` |
+| Substitute resolved types (`zonk`) | `a -> List[a]` | `I64 -> List[I64]` |
+
+These are compiler operations, not fwp keywords. A **type tree** stores the
+function, input, result and nested element types. **Borrowing** that tree lets a
+walk read its nodes without copying them; substitution still constructs its
+required result. [The measured compiler change](measurements/compiler-type-walks.md)
+removes temporary copies while preserving variable order and inferred types.
+
 See [the compiler pipeline](compiler-pipeline.md) for parser classification,
 macro expansion and optimization order.
 

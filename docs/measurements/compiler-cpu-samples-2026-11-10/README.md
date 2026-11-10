@@ -1,8 +1,8 @@
 # Compiler CPU samples, November 10
 
-**Recordings work; caller attribution is still being verified.** This is a
+**Direct caller decoding passes on both architectures; unnamed frames remain.** This is a
 compiler-cost investigation, not a speedup result. The
-[protocol](../compiler-checking.md#next-cpu-samples-inside-checking) defines the
+[protocol](../compiler-checking.md#cpu-sampling-protocol) defines the
 four applications, CPU event, stack/register settings and acceptance checks.
 
 Each application has one ordinary and one sampled fresh-process emit-C build.
@@ -27,26 +27,21 @@ explicit general-purpose set. The warning is retained. Other recording warnings,
 lost samples and unmatched report totals still fail verification.
 
 The parent-column limitation is visible in
-[Linux perf's source](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/util/machine.c):
+[perf's source](https://raw.githubusercontent.com/torvalds/linux/v6.8/tools/perf/util/machine.c):
 its DWARF unwind path builds a call cursor without assigning the parent field.
-Replay `42757176892`, decoder source `63ae40d08`, reads `perf script` frames from
-the saved `f7f4336f7` binaries/recordings. It requires sample and period totals
-to match the original flat report, retains unknown/unmatched callers, and requires
-resolved `check_binding` frames. No compiler rebuild or new sampling is needed.
-All four ARM64 applications pass; AMD64 callbacks pass. AMD64 has 23 empty
-stacks out of 294 samples for words, 337/585 for numerical and 686/1,311 for HTTP.
-Retaining these periods prevents biased totals, but does not recover callers:
-words and numerical still have no decoded body-checking caller. They remain
-failed attribution probes. The candidate replay retains verbose mixed-thread diagnostics alongside a
-separate decoding process for each sampled thread. It verifies every thread's
-period sequence and the original combined totals. Perf 7.0.14's
-[source](https://raw.githubusercontent.com/gregkh/linux/v7.0.14/tools/perf/util/unwind-libdw.c)
-contains the cached-thread lookup defect described in the
-[upstream repair](https://lists.openwall.net/linux-kernel/2026/07/24/1598).
-That is a candidate explanation for these recordings; native verification must
-show both the original failure and recovered callers before accepting it.
-The artifact download action also emitted a deprecated Node Buffer warning;
-use the installed GitHub CLI to download the exact named artifact instead.
+Direct `perf script` decoding retains every sample period, including unknown and
+unavailable stacks, and requires totals to match the original flat report.
+
+| Later run | Decoder source | Result |
+|---|---|---|
+| [42757176892](https://github.com/e6qu/fun-with-pipes/actions/runs/42757176892) | `63ae40d08` | Replays saved `f7f4336f7` recordings. ARM64 passes; AMD64 has empty stacks: words 23/294, numerical 337/585, HTTP 686/1,311. |
+| [42757980005](https://github.com/e6qu/fun-with-pipes/actions/runs/42757980005) | `35a12dfee` | Preserving empty-stack periods fixes accounting, but AMD64 words/numerical still lack checking callers. ARM64 was cancelled during decoding after two applications passed. |
+| [42759680401](https://github.com/e6qu/fun-with-pipes/actions/runs/42759680401) | `e66521244` | Isolating each thread's decoder does not repair AMD64. ARM64 passes. The ineffective workaround was removed. |
+| [42761474854](https://github.com/e6qu/fun-with-pipes/actions/runs/42761474854) | `5cab084d5` | Fresh Ubuntu 24.04 recordings: all ARM64 apps and AMD64 words/HTTP pass. AMD64 numerical/callback decoding reports addr2line read errors. |
+| [42763409910](https://github.com/e6qu/fun-with-pipes/actions/runs/42763409910) | `c65ecb376` | Explicit ten-second addr2line deadline: all eight reports pass, with matching sample/period totals and no empty stacks. |
+
+The deprecated Node Buffer warning came from the artifact download action. The
+workflow now uses the installed GitHub CLI to fetch the exact named archive.
 
 ## What is retained
 
@@ -61,20 +56,37 @@ Selected ZIP members passed CRC. Archive digests come from GitHub metadata;
 whole archives were not downloaded/rehashed locally. Compiler binaries, C and raw
 recordings remain in the identified artifacts until their recorded expiration.
 
-## Remaining AMD64 limitation
+## AMD64 decoder repairs
 
-Per-thread replay `42759680401` passes ARM64 but still misses checking callers
-for AMD64 words and numerical. It does not validate the thread-cache hypothesis.
-The mixed-thread diagnostic reports 23 empty words stacks and incorrect unwind
-addresses. The original ELF header and recorded mappings expose a 4 KiB difference
-between the executable segment's file offset and virtual address. Perf 7.0.14's
-libdw load-base calculation ignores that difference. The
-[reported LLD/libdw limitation](https://sourceware.org/pipermail/elfutils-devel/2023q1/005892.html)
-and [libunwind load-base repair](https://lkml.iu.edu/hypermail/linux/kernel/2205.3/05076.html)
-explain why these engines cannot be treated as interchangeable implementations.
+The original AMD64 perf 7.0.14 build uses libdw. Its load-base calculation
+subtracts a mapped segment's file offset from its virtual address. In the recorded
+compiler binary those offsets differ by 4 KiB, producing the wrong image base.
+The [LLD/libdw report](https://sourceware.org/pipermail/elfutils-devel/2023q1/005892.html)
+and [libunwind repair](https://lkml.iu.edu/hypermail/linux/kernel/2205.3/05076.html)
+describe this limitation. The retained mixed-thread diagnostic shows failed
+unwinding; per-thread replay does not repair it.
 
-The next recording explicitly selects Ubuntu 24.04/perf 6.8 for both diagnostic
-architectures, preserving full debug information and the compiler's ordinary
-optimization/link settings. This changes the diagnostic environment, not fwp's
-production support or accepted timing outcomes. It requires new verified caller
-reports; no automatic tool substitution is performed.
+The diagnostic workflow explicitly selects Ubuntu 24.04/perf 6.8 on both hosts.
+It preserves the compiler's optimization/link settings and full debug information;
+production support is unchanged. The fresh run resolves AMD64 checking callers,
+but two applications fail the decoder's one-second addr2line read deadline.
+Replay `42763409910` uses an explicit ten-second internal deadline and the unchanged
+120-second total command deadline. Unexpected warnings still fail verification.
+It reuses the `5cab084d5` binaries and recordings; it does not remeasure compilation.
+Both complete job logs are audited. All eight reports pass with no empty stacks.
+Compiler/source identities and the exact decoder configuration are retained.
+
+| Application | ARM64 samples / checking share | AMD64 samples / checking share |
+|---|---|---|
+| Word counting | 261 / 35.6% | 307 / 40.1% |
+| Numerical tutorial | 545 / 28.3% | 628 / 20.4% |
+| Queued callbacks | 342 / 28.9% | 397 / 45.6% |
+| HTTP API | 1,119 / 13.7% | 1,306 / 9.8% |
+
+Checking share means periods with a decoded `check_binding` caller, divided by
+all recorded user-CPU periods. These single observations are not precise timing
+comparisons. Most stacks still contain at least one unnamed frame; all remain
+in the report. Unknown leaf symbols account for 25–42% of sampled periods,
+so named work is incomplete. The independent [exact copy counters](../compiler-type-copies-2026-11-10/README.md)
+quantify the selected change without relying on missing names. No ordinary-build
+speedup follows from these profiles.

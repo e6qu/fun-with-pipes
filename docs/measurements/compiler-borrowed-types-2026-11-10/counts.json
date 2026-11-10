@@ -1,0 +1,30 @@
+{
+  "words": {
+    "type_clones": 2376227,
+    "free_vars_clones": 104871,
+    "zonk_clones": 72612,
+    "free_vars_visits": 359272,
+    "zonk_visits": 155533
+  },
+  "numerical": {
+    "type_clones": 2508067,
+    "free_vars_clones": 104943,
+    "zonk_clones": 72643,
+    "free_vars_visits": 361226,
+    "zonk_visits": 156666
+  },
+  "callbacks": {
+    "type_clones": 2417622,
+    "free_vars_clones": 105786,
+    "zonk_clones": 72845,
+    "free_vars_visits": 361776,
+    "zonk_visits": 156520
+  },
+  "http": {
+    "type_clones": 2665223,
+    "free_vars_clones": 105608,
+    "zonk_clones": 73023,
+    "free_vars_visits": 362079,
+    "zonk_visits": 156666
+  }
+}

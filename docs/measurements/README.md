@@ -12,8 +12,10 @@ identities. Do not edit observations to make an old experiment describe new code
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
 Bodies dominate. [Exact type-copy counts](compiler-type-copies-2026-11-10/README.md)
-now select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
-no candidate speedup is measured yet.
+select a borrowing candidate under a [frozen contract](compiler-type-walks.md);
+[focused native checks](compiler-borrowed-types-2026-11-10/README.md) verify
+29–32% fewer type copies and unchanged C on both architectures.
+No candidate speedup is measured yet.
 [Windows backpressure](http-backpressure.md) records a test assumption exposed
 by native CI and the [verified native repair](http-pressure-repair-2026-11-10/README.md).
 

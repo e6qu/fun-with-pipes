@@ -1,0 +1,115 @@
+[
+  {
+    "path": "amd/archive-file-list.json.gz",
+    "bytes": 1533,
+    "sha256": "62bd62b59436e67d0c8d6051743337dd6a61a2491f857fa187ed80c144e226d5",
+    "originalBytes": 21337,
+    "originalSha256": "66254836b7b857524b63e97c772e2bf351c0b99170baf97c9a7ce7f70a9ba7f3"
+  },
+  {
+    "path": "amd/compiler-comparison/summary.json.gz",
+    "bytes": 5246,
+    "sha256": "d62c1cce13f9f82c85ac8f35e6137dbf14ccd121809dfce15825e12f54151de1",
+    "originalBytes": 42520,
+    "originalSha256": "f085ba423cbf654cfba1c89ec67ecd3f9cfb582fe197390af47ae61318508b99"
+  },
+  {
+    "path": "amd/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "amd/job.log.gz",
+    "bytes": 18976,
+    "sha256": "b57d7c805b8244c00823742e8501193f3d5361ada052ca541a94c43dd7d0826d",
+    "originalBytes": 86923,
+    "originalSha256": "69e676ce9a72f87e2795c3ed88d12eab189af0a59747bc47a2084333fa4a466d"
+  },
+  {
+    "path": "amd/type-walk-checking/summary.json.gz",
+    "bytes": 5871,
+    "sha256": "79cd3b7738c65a42ca44b397812472db29a12eb36950fa0a75724e7731f5f3f2",
+    "originalBytes": 37682,
+    "originalSha256": "1d24e1b1e44d085cfb23aeeedf59e11424ff800ed21258ad39e1741e7fc156cf"
+  },
+  {
+    "path": "amd/type-walk-probe/manifest.json.gz",
+    "bytes": 409,
+    "sha256": "e1fbdc595549196d32d858e46d2ebaf27dfc57a17dd32e441250b27f376a2319",
+    "originalBytes": 646,
+    "originalSha256": "b0f654eb9d55026d910ca62cfe19cc327f4c91d200f82128421a4a4691e87890"
+  },
+  {
+    "path": "amd/type-walk-probe/observer.patch.gz",
+    "bytes": 1515,
+    "sha256": "386b276441b52a20e93caa1119a19e18bb97d4bd189476913250c7f55bd7ae6e",
+    "originalBytes": 4482,
+    "originalSha256": "36fc1096e2b5cd97cb76a514e52160a9da368fd7ccb46500b28585f03959e23c"
+  },
+  {
+    "path": "arm/archive-file-list.json.gz",
+    "bytes": 1519,
+    "sha256": "5026add4611968db85ee527c7d7bd949537a308817aa77a0eda0b203c7568727",
+    "originalBytes": 21337,
+    "originalSha256": "c6db81d7527e04970efadab5fd27f44a6f655fccb0df8f9f7e88cf4f94c8821e"
+  },
+  {
+    "path": "arm/compiler-comparison/summary.json.gz",
+    "bytes": 4744,
+    "sha256": "94a9b4bd8629152f3868b804ac4529be7b3761ba15e87740e59aada9274d949b",
+    "originalBytes": 41544,
+    "originalSha256": "e2dae3ad49619d83d37527b6d4d0681766a240ab42ed5a653b68b71d5759f512"
+  },
+  {
+    "path": "arm/compiler-source.txt.gz",
+    "bytes": 59,
+    "sha256": "244a89e22a3653ad3d858b77be20a50c2cf82a43531e153d9d48b03ec37a970b",
+    "originalBytes": 41,
+    "originalSha256": "683e60b3ce144ad93d7df857cdff1121e8cd10b58c3347f111e439ee39f11385"
+  },
+  {
+    "path": "arm/job.log.gz",
+    "bytes": 18998,
+    "sha256": "1fdaae53c7c0eda28cbc1ce44d0943f593f028701bc6ff6331de274298f0268f",
+    "originalBytes": 86995,
+    "originalSha256": "55e94b599944a32ae65e582aea9934aaf868f41bb259bd8ce9fcac572c44565d"
+  },
+  {
+    "path": "arm/type-walk-checking/summary.json.gz",
+    "bytes": 5330,
+    "sha256": "b63f4fde4b985a6a1662ccbd30150e4af20df2f2f7d6a1f20313326df85d9c57",
+    "originalBytes": 36717,
+    "originalSha256": "9170795e7636f8b3b69acbe6b201bcb2d63dbd552867826cc5f9f5060520fec3"
+  },
+  {
+    "path": "arm/type-walk-probe/manifest.json.gz",
+    "bytes": 409,
+    "sha256": "e1fbdc595549196d32d858e46d2ebaf27dfc57a17dd32e441250b27f376a2319",
+    "originalBytes": 646,
+    "originalSha256": "b0f654eb9d55026d910ca62cfe19cc327f4c91d200f82128421a4a4691e87890"
+  },
+  {
+    "path": "arm/type-walk-probe/observer.patch.gz",
+    "bytes": 1515,
+    "sha256": "386b276441b52a20e93caa1119a19e18bb97d4bd189476913250c7f55bd7ae6e",
+    "originalBytes": 4482,
+    "originalSha256": "36fc1096e2b5cd97cb76a514e52160a9da368fd7ccb46500b28585f03959e23c"
+  },
+  {
+    "path": "artifacts.json",
+    "bytes": 1472,
+    "sha256": "e97c3e1175da5154ea6d8a9bc9c75ab15b61a2ef3a82f3801a5e3bc84b1b27d4"
+  },
+  {
+    "path": "counts.json",
+    "bytes": 658,
+    "sha256": "d003262178bb0ac006524a950f7807c0bfb23fa8ebec5f7217bfc0ba293423d7"
+  },
+  {
+    "path": "run.json",
+    "bytes": 17089,
+    "sha256": "291d84340bbe5b4a4f806b1ffab834b5ab41c670f244e144e9d7cf1f59e1bfc8"
+  }
+]

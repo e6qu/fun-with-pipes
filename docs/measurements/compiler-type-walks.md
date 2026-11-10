@@ -8,9 +8,9 @@ per complete application. The existing compiler remains the reference at
 `35a12dfee0266134237d03d1262649be69df7c41`; ordinary compiler sources are identical
 to merged #274. No candidate speedup is measured yet.
 
-The ARM64 CPU profiles locate type copying under checking. AMD64 caller decoding
-is still being repaired; its flat samples and independent exact counters identify
-type-copy work, but establish no per-caller CPU attribution. Preserve that limit.
+CPU profiles now locate type copying under checking on both architectures.
+[Caller decoding passes](compiler-cpu-samples-2026-11-10/README.md), but unnamed
+frames remain. Exact counters quantify copies; profiles establish no speedup.
 
 ## What is copied?
 
@@ -28,8 +28,9 @@ Two existing traversals are candidates for borrowing:
   It needs that output, but may not need temporary copies of every subtree on
   the way to producing it. The input tree remains unchanged.
 
-Both currently call `resolve`, which returns an owned type. This is a hypothesis
-about removable copies, not proof of their cost or of a safe replacement.
+The reference calls `resolve`, which returns an owned type, from both walks.
+The candidate borrows their inputs instead. Correctness checks and measurements
+below determine whether that replacement is safe and useful.
 
 ## Count the existing work
 

@@ -73,12 +73,15 @@ retain all 48 qualifying compiler comparisons and 34 successful HTTP trials.
 The later checking subdivisions have unmeasured reporter overhead; they establish
 no ordinary-build speedup.
 
-**Milestone 6:** implement the [selected borrowing candidate](docs/measurements/compiler-type-walks.md).
+**Milestone 6:** measure and deliver the [borrowed type traversals](docs/measurements/compiler-type-walks.md).
 The [exact counters](docs/measurements/compiler-type-copies-2026-11-10/README.md)
 match on both architectures: each complete application makes roughly 804,000–810,000
 type-node copies while searching for unresolved variables, and 469,000–471,000
 while substituting resolved types. Borrow the existing input trees and build only
 required outputs. Keep row flattening unchanged initially; report remaining copies.
+[Focused checks pass](docs/measurements/compiler-borrowed-types-2026-11-10/README.md)
+on both architectures: 29–32% fewer total type copies, unchanged visit counts,
+exact C and preserved diagnostics. Ordinary speed and memory results are pending.
 
 The frozen target is at least 5% less ordinary emit-C time for word counting and
 queued callbacks, with numerical/HTTP/growth regressions limited to 2% and peak
@@ -87,9 +90,9 @@ limit distinguish a measured gain from noise. Preserve language behavior and
 exact C; no count reduction alone completes timing acceptance. Bundle the compiler
 change, profiler/observation repairs, docs and final delivery evidence in one PR.
 
-Continue repairing [AMD64 caller attribution](docs/measurements/compiler-checking.md)
-without changing ordinary compiler behavior to accommodate the profiler. Its
-missing stacks remain unaccepted; the independent counters are verified.
+[Caller decoding now passes](docs/measurements/compiler-cpu-samples-2026-11-10/README.md)
+on both architectures with every sample accounted for. Unnamed frames remain
+visible; independent counters quantify copies. Neither proves a compiler speedup.
 
 After this compiler milestone, attribute CPU time in the queued service and HTTP
 endpoint to payload construction, queues/channels, protocol work and cleanup.
