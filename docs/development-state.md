@@ -27,6 +27,13 @@ setup but exposed perf's optional-argument syntax: the register list requires
 The next source corrects that syntax, keeps the exact known register-list warning
 visible, and runs six bounded capability probes before rebuilding fwp. Verify
 this repair before interpreting samples; no compiler or runtime behavior changed.
+Third source `1ae957feceeeed0564d769951c3a96b0af91d248`, run `42752530541`,
+records all eight applications with identical C. The register-mask cause is
+confirmed by retained event attributes. Both jobs then reject perf's extra IPC
+placeholder column; all eight saved reports pass the repaired reader locally
+under the guard, including zero-loss accounting and exact event totals.
+The next source also explicitly decodes Rust symbols and matches caller names
+before decoding. Native report verification remains pending.
 Preserve unrelated root changes and the saved preparation handoff stash
 `451bbf713d451f2d62d80fd7676839404875846a`.
 
