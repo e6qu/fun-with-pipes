@@ -37,7 +37,8 @@ The [original acceptance contract](nested-resource-owners.md) remains unchanged.
 
 ## Environment correction after the first diagnostic
 
-Run `42810648965` passes all observation controls on both hosts, with lower
+[Run `42810648965`](nested-resource-host-memory-2026-11-10/README.md) passes all
+observation controls on both hosts, with lower
 candidate page residency and zero fast-RSS/page-walk disagreement. It runs on
 the runner host, whereas the original measurements ran inside Swift's container.
 It therefore does not reproduce the original library environment or explain the
@@ -53,5 +54,16 @@ or permission to replace original RSS observations.
 usage across `exec`; it can therefore reflect the Python observer's inherited
 memory, even when fwp's own snapshots remain small. Keep that raw value, label
 its whole-child scope and verify this with an allocation-before-exec control.
+The original comparison uses GNU `time` as its launcher; this observer-specific
+issue does not establish a cause for its missed limits.
 Use the stopped-process page readings for memory categories; none is an exact
 transient peak. [Linux accounting semantics](https://man7.org/linux/man-pages/man2/getrusage.2.html).
+
+## Corrected result
+
+[Run `42812351743`](nested-resource-memory-2026-11-10/README.md) passes both native
+jobs and all controls in the pinned image. Candidate resident-page peaks are lower
+in every case, and fast RSS agrees with all page walks. The original missed
+high-water limits remain unexplained; they are not replaced or reclassified.
+No compiler repair or relaxed limit follows from this diagnostic. Finish the
+combined PR's delivery checks with the original acceptance limits still open.

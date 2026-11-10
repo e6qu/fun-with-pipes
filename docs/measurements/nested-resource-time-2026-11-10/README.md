@@ -67,6 +67,9 @@ Each peak is the maximum of three fresh-process observations, not heap bytes or
 an exact allocator peak. Candidate readings for the first row are 1,800, 1,920 and
 1,672 KiB. [The separate RSS diagnosis](../nested-resource-rss.md) investigates
 page categories and Linux counter accuracy; it does not erase these missed limits.
+[The completed diagnostic](../nested-resource-memory-2026-11-10/README.md) finds
+lower observed candidate residency and no counter discrepancy. The cause of the
+original misses remains unproved.
 
 Code and static frame observations provide additional context, not a dynamic
 stack bound or a substitute for working-memory measurements:
@@ -117,4 +120,5 @@ complexity or speed from instrumented compilation.
 Selected ZIP members were CRC-checked. Full 76–79 MB native archives remain on
 GitHub; their recorded whole-archive digests were not independently recomputed
 locally. [Sustained HTTP load](../nested-resource-http-load-2026-11-10/README.md)
-also passes; final platform gates and the RSS investigation remain separate.
+also passes. [Pre-publication platform gates](../nested-resource-prepublication-gates-2026-11-10/README.md)
+pass; the combined final head still needs delivery checks.

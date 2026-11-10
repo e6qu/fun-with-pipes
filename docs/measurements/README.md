@@ -20,9 +20,11 @@ pass count/cleanup checks and the [actual omitted-owner fault control](nested-re
 [All 34 sustained HTTP trials](nested-resource-http-load-2026-11-10/README.md) pass
 with flat sampled RSS. [Ordinary timing](nested-resource-time-2026-11-10/README.md) shows 16–21% less
 elapsed time in qualified cases. One runtime and one compiler comparison are noisy;
-four ARM64 RSS misses need [diagnosis](nested-resource-rss.md). Final delivery remains open. Unknown leaves,
-erased phase boundaries and all failed decoder
-attempts remain explicit.
+four ARM64 RSS misses remain unexplained. The [memory diagnostic](nested-resource-memory-2026-11-10/README.md)
+finds lower observed resident-page peaks and no fast-counter disagreement. It does
+not replace original high-water limits. [Pre-publication gates pass](nested-resource-prepublication-gates-2026-11-10/README.md);
+final combined-head delivery remains open. Unknown profile leaves and erased
+phase boundaries stay explicit.
 
 [Library-checking attribution](compiler-checking-parts-2026-11-10/README.md)
 now separates bodies, constraints and validation on four complete programs.
@@ -73,8 +75,8 @@ show substantial C/Rust lookup gaps and mixed Swift results. The
 16-byte result allocation per successful lookup in this caller.
 [Queued-service results and cleanup](weak-callback-service-2026-11-09/README.md)
 and [native service allocation profiles](weak-callback-profiles-2026-11-09/README.md)
-pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) now passes
-both sessions on both hosts: large full delivery takes 18.65–20.23× C's time and
+pass. [The earlier complete-service timing](weak-callback-time-2026-11-09/README.md) passes
+both sessions on both hosts at its recorded source: large full delivery takes 18.65–20.23× C's time and
 5.12–6.70× Swift's, with less process RSS than Swift but more than C/Rust.
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
@@ -86,6 +88,11 @@ peak occurs during tokenization; evaluation allocates nothing. [Arena retry
 and mapped observation also pass](parser-allocator-paths-2026-11-09/README.md).
 
 ## Latest deliveries
+
+- #275: [borrowed compiler types](compiler-borrowed-final-gates-2026-11-10/README.md);
+  application compilation is faster, with four noisy growth comparisons still open.
+- #274: [application/tool workflows, compiler growth and HTTP load](application-final-gates-2026-11-10/README.md).
+- #273: [ownership/peer comparisons and parser cleanup](ownership-peer-final-gates-2026-11-09/README.md).
 
 Merged #272 delivers known array callback specialization and structured-gradient
 comparisons. [All final gates pass](structured-callback-delivery-2026-11-09/README.md);
@@ -119,8 +126,8 @@ separate useful work from input construction and release.
 - [Native proof cases](computed-numeric-inputs-2026-11-07/README.md): values,
   shared inputs, evaluation/trap order and the actual four-number call.
 
-These results lead to the [structured autodiff comparison](structured-autodiff.md)
-in [PLAN.md](../../PLAN.md).
+These earlier results motivated the [structured autodiff comparison](structured-autodiff.md).
+[PLAN.md](../../PLAN.md) records current work.
 Older reports below retain their own sources and decisions; “current” in a dated
 experiment names its measured variant, not the latest compiler.
 

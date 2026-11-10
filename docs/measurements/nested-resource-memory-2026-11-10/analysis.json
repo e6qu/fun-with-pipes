@@ -1,0 +1,1170 @@
+{
+  "arm": {
+    "identity": {
+      "observerSource": "94882ca7c860771ee9106211fc2567789c187070",
+      "binarySource": "d80357c8c81d206c9d9934b141b5a5fafe97c430",
+      "architecture": "aarch64",
+      "kernel": "7.0.0-1017-azure",
+      "pageBytes": 4096,
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per cluster:                     4\nSocket(s):                               -\nCluster(s):                              1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "image": "swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0",
+      "libcPackage": "2.39-0ubuntu8.9",
+      "wait4Scope": "Whole child lifetime, including pre-exec memory inherited from the observer; not fwp-only RSS.",
+      "settings": {
+        "input": "/__w/fun-with-pipes/fun-with-pipes/original-native",
+        "output": "/__w/fun-with-pipes/fun-with-pipes/nested-memory",
+        "source": "d80357c8c81d206c9d9934b141b5a5fafe97c430",
+        "arch": "aarch64",
+        "cc": "gcc",
+        "c_arch": "armv8-a",
+        "image": "swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0",
+        "rounds": 4,
+        "interval_ms": 50,
+        "deadline": 30
+      },
+      "binaries": {
+        "reference": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/fwp-reference-2-plain/program",
+          "sha256": "890229a973994f21b7bf220b5eaf37e98918c37fd83d72164159e49b24b37106"
+        },
+        "reference-copy": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/reference-copy",
+          "sha256": "890229a973994f21b7bf220b5eaf37e98918c37fd83d72164159e49b24b37106"
+        },
+        "candidate": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/candidate",
+          "sha256": "d65962aaecdad2139037779376c6aeb485cfd755515bd763c52291a786042181"
+        },
+        "candidate-copy": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/candidate-copy",
+          "sha256": "d65962aaecdad2139037779376c6aeb485cfd755515bd763c52291a786042181"
+        }
+      },
+      "scope": "Stopped snapshots of unchanged ordinary binaries. Not timing or exact transient peak acceptance. Original RSS misses remain recorded."
+    },
+    "cases": {
+      "64-0": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2136,
+            2140
+          ],
+          "observedAnonymousPeakKiB": [
+            216,
+            220
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2116,
+            2120
+          ],
+          "observedAnonymousPeakKiB": [
+            212,
+            216
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              152,
+              152
+            ]
+          }
+        }
+      },
+      "64-1": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2136,
+            2136
+          ],
+          "observedAnonymousPeakKiB": [
+            216,
+            216
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2116,
+            2116
+          ],
+          "observedAnonymousPeakKiB": [
+            212,
+            212
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              152,
+              152
+            ]
+          }
+        }
+      },
+      "64-2": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2124,
+            2128
+          ],
+          "observedAnonymousPeakKiB": [
+            204,
+            208
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              144,
+              144
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2104,
+            2104
+          ],
+          "observedAnonymousPeakKiB": [
+            200,
+            200
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              140,
+              140
+            ]
+          }
+        }
+      },
+      "64-3": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2136,
+            2136
+          ],
+          "observedAnonymousPeakKiB": [
+            216,
+            216
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2116,
+            2120
+          ],
+          "observedAnonymousPeakKiB": [
+            212,
+            216
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              152,
+              152
+            ]
+          }
+        }
+      },
+      "4096-0": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3200,
+            3200
+          ],
+          "observedAnonymousPeakKiB": [
+            1280,
+            1280
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3180,
+            3184
+          ],
+          "observedAnonymousPeakKiB": [
+            1276,
+            1280
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1216,
+              1216
+            ]
+          }
+        }
+      },
+      "4096-1": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3200,
+            3204
+          ],
+          "observedAnonymousPeakKiB": [
+            1280,
+            1284
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3180,
+            3180
+          ],
+          "observedAnonymousPeakKiB": [
+            1276,
+            1276
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1216,
+              1216
+            ]
+          }
+        }
+      },
+      "4096-2": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3152,
+            3152
+          ],
+          "observedAnonymousPeakKiB": [
+            1232,
+            1232
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1172,
+              1172
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3132,
+            3132
+          ],
+          "observedAnonymousPeakKiB": [
+            1228,
+            1228
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1168,
+              1168
+            ]
+          }
+        }
+      },
+      "4096-3": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3200,
+            3200
+          ],
+          "observedAnonymousPeakKiB": [
+            1280,
+            1280
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              128,
+              128
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3180,
+            3180
+          ],
+          "observedAnonymousPeakKiB": [
+            1276,
+            1276
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              12
+            ],
+            "executable": [
+              112,
+              112
+            ],
+            "otherFiles": [
+              1832,
+              1832
+            ],
+            "otherMappings": [
+              1216,
+              1216
+            ]
+          }
+        }
+      }
+    },
+    "totalSnapshots": 3093,
+    "fastMinusWalkRangeKiB": [
+      0,
+      0
+    ],
+    "wholeChildWait4RangeKiB": [
+      25416,
+      78324
+    ],
+    "scope": "Summaries audited on runners; local review verifies schedule, summaries and one raw snapshot. Page snapshots are not exact transient peaks. Whole-child wait4 includes pre-exec memory."
+  },
+  "amd": {
+    "identity": {
+      "observerSource": "94882ca7c860771ee9106211fc2567789c187070",
+      "binarySource": "d80357c8c81d206c9d9934b141b5a5fafe97c430",
+      "architecture": "x86_64",
+      "kernel": "7.0.0-1017-azure",
+      "pageBytes": 4096,
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "image": "swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0",
+      "libcPackage": "2.39-0ubuntu8.9",
+      "wait4Scope": "Whole child lifetime, including pre-exec memory inherited from the observer; not fwp-only RSS.",
+      "settings": {
+        "input": "/__w/fun-with-pipes/fun-with-pipes/original-native",
+        "output": "/__w/fun-with-pipes/fun-with-pipes/nested-memory",
+        "source": "d80357c8c81d206c9d9934b141b5a5fafe97c430",
+        "arch": "x86_64",
+        "cc": "gcc",
+        "c_arch": "x86-64",
+        "image": "swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0",
+        "rounds": 4,
+        "interval_ms": 50,
+        "deadline": 30
+      },
+      "binaries": {
+        "reference": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/fwp-reference-2-plain/program",
+          "sha256": "157936ae28a916c043261bc3f8e4538d56af433813d265c5489b0895e32da450"
+        },
+        "reference-copy": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/reference-copy",
+          "sha256": "157936ae28a916c043261bc3f8e4538d56af433813d265c5489b0895e32da450"
+        },
+        "candidate": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/candidate",
+          "sha256": "1982f456bf0cb9ed6e0da84750b5e48ece426215a03693518cd56b166575b96a"
+        },
+        "candidate-copy": {
+          "path": "/__w/fun-with-pipes/fun-with-pipes/original-native/nested-time-comparison/candidate-copy",
+          "sha256": "1982f456bf0cb9ed6e0da84750b5e48ece426215a03693518cd56b166575b96a"
+        }
+      },
+      "scope": "Stopped snapshots of unchanged ordinary binaries. Not timing or exact transient peak acceptance. Original RSS misses remain recorded."
+    },
+    "cases": {
+      "64-0": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2464,
+            2532
+          ],
+          "observedAnonymousPeakKiB": [
+            224,
+            228
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              160,
+              160
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2440,
+            2504
+          ],
+          "observedAnonymousPeakKiB": [
+            224,
+            224
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              16,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        }
+      },
+      "64-1": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2480,
+            2512
+          ],
+          "observedAnonymousPeakKiB": [
+            224,
+            228
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2152,
+              2180
+            ],
+            "otherMappings": [
+              160,
+              160
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2436,
+            2504
+          ],
+          "observedAnonymousPeakKiB": [
+            220,
+            224
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        }
+      },
+      "64-2": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2468,
+            2520
+          ],
+          "observedAnonymousPeakKiB": [
+            212,
+            216
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2152,
+              2200
+            ],
+            "otherMappings": [
+              148,
+              148
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2424,
+            2488
+          ],
+          "observedAnonymousPeakKiB": [
+            208,
+            212
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              144,
+              144
+            ]
+          }
+        }
+      },
+      "64-3": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            2464,
+            2512
+          ],
+          "observedAnonymousPeakKiB": [
+            224,
+            228
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2136,
+              2184
+            ],
+            "otherMappings": [
+              160,
+              160
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            2452,
+            2488
+          ],
+          "observedAnonymousPeakKiB": [
+            220,
+            224
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2152,
+              2184
+            ],
+            "otherMappings": [
+              156,
+              156
+            ]
+          }
+        }
+      },
+      "4096-0": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3532,
+            3592
+          ],
+          "observedAnonymousPeakKiB": [
+            1288,
+            1292
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              1224,
+              1224
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3500,
+            3536
+          ],
+          "observedAnonymousPeakKiB": [
+            1284,
+            1288
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2168
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        }
+      },
+      "4096-1": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3532,
+            3596
+          ],
+          "observedAnonymousPeakKiB": [
+            1288,
+            1292
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              1224,
+              1224
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3500,
+            3552
+          ],
+          "observedAnonymousPeakKiB": [
+            1284,
+            1288
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2184
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        }
+      },
+      "4096-2": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3496,
+            3532
+          ],
+          "observedAnonymousPeakKiB": [
+            1240,
+            1244
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2148,
+              2184
+            ],
+            "otherMappings": [
+              1176,
+              1176
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3468,
+            3488
+          ],
+          "observedAnonymousPeakKiB": [
+            1236,
+            1240
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2152,
+              2168
+            ],
+            "otherMappings": [
+              1172,
+              1172
+            ]
+          }
+        }
+      },
+      "4096-3": {
+        "reference": {
+          "observedResidentPeakKiB": [
+            3548,
+            3580
+          ],
+          "observedAnonymousPeakKiB": [
+            1288,
+            1292
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              148,
+              148
+            ],
+            "otherFiles": [
+              2152,
+              2184
+            ],
+            "otherMappings": [
+              1224,
+              1224
+            ]
+          }
+        },
+        "candidate": {
+          "observedResidentPeakKiB": [
+            3504,
+            3564
+          ],
+          "observedAnonymousPeakKiB": [
+            1284,
+            1288
+          ],
+          "categoryResidentPeaksKiB": {
+            "heap": [
+              8,
+              8
+            ],
+            "stack": [
+              12,
+              16
+            ],
+            "executable": [
+              124,
+              124
+            ],
+            "otherFiles": [
+              2136,
+              2200
+            ],
+            "otherMappings": [
+              1220,
+              1220
+            ]
+          }
+        }
+      }
+    },
+    "totalSnapshots": 2662,
+    "fastMinusWalkRangeKiB": [
+      0,
+      0
+    ],
+    "wholeChildWait4RangeKiB": [
+      26212,
+      70868
+    ],
+    "scope": "Summaries audited on runners; local review verifies schedule, summaries and one raw snapshot. Page snapshots are not exact transient peaks. Whole-child wait4 includes pre-exec memory."
+  }
+}

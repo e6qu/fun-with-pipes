@@ -121,8 +121,9 @@ failure cleanup and the point at which a file closes or weak target expires reta
 their existing rules. The interpreter keeps its original scope metadata.
 [Native Linux counts/cleanup](measurements/nested-resource-counts-2026-11-10/README.md)
 and the [omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md)
-pass. [Ordinary timing and final platform verification](measurements/nested-resource-owners.md)
-remain open. This is distinct from borrowing an ordinary function argument below.
+pass. [Ordinary timing](measurements/nested-resource-time-2026-11-10/README.md)
+shows 16–21% gains in qualified cases. Noisy comparisons, four process-RSS misses
+and final delivery remain open. This differs from borrowing an ordinary argument below.
 
 ### Borrowing across direct calls
 

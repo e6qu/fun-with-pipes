@@ -57,7 +57,7 @@ Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: locate and reduce queued-service costs
+## Current work: verify queued-service gains
 
 #270–272 delivered fresh-array stores, captured-map ownership and known array
 callbacks with structured-gradient comparisons. Their original noisy or unmet
@@ -88,8 +88,9 @@ large-case cleanup registrations fall by 29.7–36.9%, actual count increments b
 4.85–5.34%, with unchanged heap use. The [omitted-owner control](docs/measurements/nested-resource-lifetime-2026-11-10/README.md)
 detects premature file closure. [Ordinary timing](docs/measurements/nested-resource-time-2026-11-10/README.md)
 shows 16–21% gains in qualified cases. One runtime and one compiler comparison
-are noisy, and four ARM64 RSS limits are missed. [Diagnose those readings](docs/measurements/nested-resource-rss.md)
-without replacing the original observations, then finish final delivery.
+are noisy, and four ARM64 RSS limits are missed. The [memory diagnostic](docs/measurements/nested-resource-memory-2026-11-10/README.md)
+finds lower observed resident-page peaks, but does not establish the cause of those
+misses. Keep their acceptance open; finish final delivery without repeating timings.
 [Verified service profiles](docs/measurements/service-cpu-attribution-2026-11-10/README.md)
 identify substantial count work and cleanup bookkeeping. Prove that an enclosing
 owner protects an inner parameter for its full lifetime; remove only that duplicate
@@ -100,8 +101,8 @@ cost. The contract defines exact targets and negative lifetime controls.
 Check the same selected mechanism in the maintained HTTP endpoint. Keep profile
 limitations explicit: inlining erased fwp phase boundaries, and peer libraries have
 substantial unresolved leaf work.
-The 4,096-message service still takes 18.65–20.23 times C's time and 5.12–6.70 times
-Swift's, with differing representations and synchronization. Do not call that entire gap
+The new 4,096-message full-delivery comparison takes 14.93–16.78 times C's time
+and 4.32–5.34 times Swift's, with differing representations and synchronization. Do not call that entire gap
 an ARC cost or infer peer timing ratios from CPU samples. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.
 
