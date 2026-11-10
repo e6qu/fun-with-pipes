@@ -7,7 +7,7 @@ documentation and the complete-log audit pass for that exact final commit.
 
 Worktree `.worktrees/application-milestone`, branch `application-tooling-costs`.
 The branch combines the repair and `compiler-checking-costs` preparation. Its
-delivery candidate is retained by `roadmap/application-delivery-candidate-2026-11-10`.
+delivery candidate is retained by `roadmap/application-delivery-format-2026-11-10`.
 It supersedes the failed matrix at `a0261f9ccaa4a87651fbcae11966afee68208d4d`;
 the seven earlier passing jobs are not passing gates for this new combined source.
 Preserve unrelated root-worktree changes and the preparation worktree's local
@@ -29,6 +29,17 @@ passing source, all gates and audit. Original milestone 1–3 timing limits rema
 open. Do not repeat unchanged noisy measurements to obtain qualification.
 
 ## Current failure and focused repair
+
+Combined head `88a3036592aba12030b9e74d4b506de502a4115c` exposed one formatting
+omission in the newly fixed timeout panic. Full-tree `cargo fmt --all -- --check`
+reproduced exactly that difference; formatting it and repeating the full check
+passes under the local guard. The repair has no behavior change.
+Production `42747990312` reports only formatting failures in both Linux and both
+regular macOS jobs so far. Benchmark `129604605646` and documentation
+`42747989925`/`129604600440` pass; both full logs audited, with only intentional
+runner controls in docs. Native work continues. After replacement jobs exist,
+cancel the superseded run and audit all available logs; never count cancellations
+as passes. Record any additional failure and fix it before final acceptance.
 
 Production `42730888995` at published head `a0261f9cc` is complete:
 seven jobs pass; both Windows jobs fail only
