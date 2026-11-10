@@ -38,6 +38,7 @@ Reconstruct all retained totals and classifications:
 python3 scripts/local-guard.py python3 docs/measurements/resource-field-census-2026-11-10/read.py
 ```
 
-[Next](../resource-field-costs.md): count actual holds and releases in the service
-and HTTP, then choose and freeze a production change. No elapsed-time target has
-been selected or passed by this census.
+[Executed service counts](../resource-field-holds-2026-11-10/README.md) now pass
+on both hosts. [The investigation](../resource-field-costs.md) still needs HTTP
+and callable attribution before choosing a production change. No elapsed-time
+target has been selected or passed by this census.

@@ -1,0 +1,20 @@
+{
+  "id": 13771352240,
+  "node_id": "MDg6QXJ0aWZhY3QxMzc3MTM1MjI0MA==",
+  "name": "resource-field-census-ubuntu-24.04-arm",
+  "size_in_bytes": 6524938,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13771352240",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13771352240/zip",
+  "expired": false,
+  "digest": "sha256:2c85f98caa0a32b23957b19e611779d87cc84818596bdbe1697b9ba8e4079c86",
+  "created_at": "2026-11-10T14:08:35Z",
+  "updated_at": "2026-11-10T14:08:35Z",
+  "expires_at": "2027-02-08T14:03:36Z",
+  "workflow_run": {
+    "id": 42830283981,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "resource-field-costs",
+    "head_sha": "9b24e6965dd4c7cfb6e88163a34722e0b99ec901"
+  }
+}

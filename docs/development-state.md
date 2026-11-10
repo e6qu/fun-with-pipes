@@ -1,20 +1,27 @@
 # Current work
 
-**Next: publish and run the executed service-hold counter and its failure controls.**
-PR #276 is merged and fully verified. The next branch prepares a diagnostic;
-it does not yet change production ownership or claim a speedup. Follow
+**Next: finish final-head CI and the complete-log audit for the `resource-field-costs` PR.**
+PR #276 is merged and fully verified. This branch delivers verified diagnostics
+and retained results;
+it does not change production ownership or claim a new speedup. Follow
 [the ordered investigation](measurements/resource-field-costs.md), then bundle
 any worthwhile proven improvement, controls and measurements in one normal PR.
 
 Worktree `.worktrees/service-cpu-costs`, branch `resource-field-costs`, based on
-`b2bbd0389d227ea097ea1239d8d02ec6346f4be7`. No next PR is open yet.
+`b2bbd0389d227ea097ea1239d8d02ec6346f4be7`. Publication of all current work as a
+normal PR follows this report commit; require the nine production jobs, docs and complete-log audit
+on its exact head before squash merge. Keep the final head unchanged unless a
+real failure requires repair.
 Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
 `roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
 run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
 Both complete logs are clean. [Retained census](measurements/resource-field-census-2026-11-10/README.md)
 reconstructs all 17 inputs on both hosts; each C hash and classification agrees.
-The complete production matrix has not been restarted. Executed-count tools and
-this census report are local changes awaiting the next preparation push.
+Executed counts at `b4b11d4a9f545b03a6af4b03f37612fb15650c9c`, retained by
+`roadmap/resource-field-holds-preparation-2026-11-10`, also pass both jobs in run
+`42833961349`: ARM64 `129891087787`, AMD64 `129891088346`. Complete logs are clean.
+[Both reports](measurements/resource-field-holds-2026-11-10/README.md) reconstruct
+all 34 executions per host, unchanged totals and real extra-pair controls.
 
 ## Verified delivery
 
@@ -28,10 +35,6 @@ without body or trailers. [Final receipts](measurements/nested-resource-final-ga
 - Complete-log audit `42828337804`, job `129871448955`: pass; ten reports, no issues.
 - Audit artifact `13770546233`: full size/SHA-256/member checksums pass locally.
 - Duplicate main checks `42829037660` and `42829037694` cancelled after equal-tree proof.
-
-The merge verifier initially required a terminal newline, which GitHub omits.
-Accepting the exact subject with or without that final newline fixes the check;
-extra lines, bodies and trailers remain rejected.
 
 ## Performance results stay qualified
 
@@ -60,13 +63,17 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
   all C, classifications, commands and failures. No ordinary runtime is timed.
 - Census finds five plain field slots in the service and twenty in HTTP; these
   are emitted sites, not executed counts or a speedup.
-- `measure-resource-field-holds.py` is prepared to reuse the saved service C at
-  GCC O1/O2: baseline totals, attributed holds, one actual added hold/release and
-  all eight service cases. Its raw-command auditor checks native binaries and
-  rejects changed summaries even with refreshed checksums. Native execution is
-  still pending; do not claim these controls passed.
-- After native service counts, add HTTP executed counts/cleanup before selecting
-  the production proof and freezing numerical acceptance.
+- `measure-resource-field-holds.py` passes GCC O1/O2 on both native hosts using
+  saved service C: baseline totals, attributed holds, one actual added hold/release
+  and all eight cases. Its raw auditor verifies native binaries and rejects changed
+  summaries even with refreshed checksums. No compiler rebuild or timing was needed.
+- Plain fields cause only 1.35–1.70% of successful retains in large service cases.
+  Child decrements are not all removable work. A standalone field-only optimization
+  is not selected; secondary reuse benefits remain unmeasured.
+- Next implementation selection needs HTTP executed counts and attribution of
+  callable-field holds/whole-frame setup. Arrow types do not reveal captures: a
+  later proof must establish actual constructor origin and captured values, reject
+  executed/nullary constructors and preserve branch/loop lifetime boundaries.
 - Scope is separately represented fields. Keep ordinary owners, opaque closures,
   variants and containers. Do not infer captures from arrow types or classify an
   ordinary cleanup record as an original resource-lifetime record.
@@ -82,7 +89,7 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | Both native field censuses pass; executed counter prepared | Executed service/HTTP counts, selected proof and complete measurements/delivery |
+| 8 | In progress | Both native static and service-execution censuses pass | PR delivery, HTTP/callable attribution, selected proof and measurements |
 
 ## Local checks and preservation
 
@@ -90,11 +97,11 @@ All checks use `python3 scripts/local-guard.py` serially. The census reader's
 four tests and the existing proof reader's two tests pass. Changed-workflow
 `actionlint` passes. No local compiler build, full suite or benchmark ran.
 The explicit census CLI check passes. After staging new docs, the roadmap check
-passes 471 doc link sets, 106 immutable preparation anchors and eight milestone
+passes 473 doc link sets, 106 immutable preparation anchors and eight milestone
 statuses. Real saved service C matches all five typed counter hooks; no compiler
-was run locally. The retained census reader reconstructs both reports. The
-executed-counter/auditor CLI checks and changed-workflow actionlint pass. Recheck
-newly tracked doc links before publication; native counter controls remain pending.
+was run locally. Retained readers reconstruct both static and executed reports.
+Counter/auditor CLI checks, changed-workflow actionlint and staged documentation
+checks pass. All native focused controls pass; final PR delivery gates remain.
 
 Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and the
 180-second guard deadline. Last free space: about 107 GiB. Preserve unrelated root

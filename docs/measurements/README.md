@@ -11,8 +11,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 Next: [measure unnecessary plain-data lifetime holds](resource-field-costs.md).
 [Both native censuses pass](resource-field-census-2026-11-10/README.md), with five
-plain service slots and twenty HTTP slots. Executed counts are next; this establishes
-no speedup and changes no production code.
+plain service slots and twenty HTTP slots. [Executed service counts](resource-field-holds-2026-11-10/README.md)
+show only 1.35–1.70% of successful retains in these fields. HTTP/callable attribution
+is next; no production optimization or speedup follows from these diagnostics.
 
 [Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
 now passes both native replays and independent raw-record audits. Identified

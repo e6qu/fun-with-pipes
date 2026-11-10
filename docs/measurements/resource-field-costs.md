@@ -1,6 +1,6 @@
 # Keep only necessary fields in resource-lifetime records
 
-**Both native compiler censuses pass; executed-count checks are next.**
+**Both native compiler and service-operation censuses pass.**
 No production optimization is implemented yet. Baseline: PR #276's verified
 compiler tree, merged as `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`.
 [Its original timing and RSS limits remain open](nested-resource-time-2026-11-10/README.md).
@@ -60,4 +60,12 @@ There is no new source syntax or runtime setting.
 
 [Initial census](resource-field-census-2026-11-10/README.md): both hosts identify
 five plain service slots and twenty HTTP slots, with unchanged emitted C. These
-site counts do not justify a speedup or finish the executed-operation step.
+site counts do not justify a speedup. [Executed service counts](resource-field-holds-2026-11-10/README.md)
+find only 1.35–1.70% of successful retains in these fields. Child decrements are
+not all removable operations; secondary reuse benefits are unmeasured.
+
+A standalone field-only change is not selected. Before freezing a production
+change, count HTTP execution and attribute callable-field holds and whole-frame
+setup in the same saved programs. A possible combined proof would need actual
+closure constructor origins/captures, not arrow input/output types. Keep nullary
+constructors, unknown captures and unproved branch/loop boundaries conservative.
