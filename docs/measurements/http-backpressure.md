@@ -1,6 +1,9 @@
 # Make the slow-reader test exercise a blocked write
 
-**Windows verification is pending.** The test must observe the real socket
+**Focused Windows verification passes on both architectures.** The
+[retained results](http-pressure-repair-2026-11-10/README.md) include original
+failures, actual send results and exact cleanup. Final combined delivery gates
+remain pending. The test must observe the real socket
 would-block branch, preserve other clients' progress and release all resources.
 Increasing a timeout or accepting a run without that branch is not a repair.
 
@@ -53,7 +56,7 @@ The test never injects a synthetic would-block result or skips a platform.
 Focused verification uses the production Rust O1 settings and native Windows
 toolchains: [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/42744070652)
 and [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/42744095817).
-Both must pass before the final combined repair goes through the full matrix.
+Both pass; the combined repair must now pass the full matrix.
 Retain original failures, send results, cleanup logs and exact source identities.
 
 See the [complete application/load contract](application-tooling.md) for the

@@ -1,0 +1,42 @@
+[
+  {
+    "arch": "arm",
+    "checkpoints": [
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "idleManagedBytes": 2096,
+    "finalManagedBytes": 0,
+    "socketsOpened": 72,
+    "socketsClosed": 72,
+    "rssBaselineKiB": 26988,
+    "rssMaxKiB": 27084,
+    "actualBlockedWrites": 7
+  },
+  {
+    "arch": "amd",
+    "checkpoints": [
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "idleManagedBytes": 2096,
+    "finalManagedBytes": 0,
+    "socketsOpened": 72,
+    "socketsClosed": 72,
+    "rssBaselineKiB": 26744,
+    "rssMaxKiB": 26916,
+    "actualBlockedWrites": 1012
+  }
+]

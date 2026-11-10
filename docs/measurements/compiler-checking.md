@@ -24,13 +24,16 @@ library-group time; validation is next. AMD64 used EPYC 9V45, so its smaller
 absolute times cannot be compared as a speedup against the earlier EPYC 7763.
 Each group is divided into five existing operations:
 
-- **Bodies:** infer expressions and unify each definition with its signature.
+- **Bodies:** infer each expression's type and check that it agrees with the
+  definition's declared signature. For example, `inc : I64 -> I64` requires
+  `inc = add 1` to accept and return `I64`.
 - **Deferred operations:** decide unresolved pipes and record-field operations
   after more types are known.
-- **Constraints:** solve trait requirements against signatures or the group's
-  inferred types.
+- **Constraints:** check required operations against signatures or inferred
+  types; for example, determine which implementation supplies an addition.
 - **Validation:** check sizes, integer literals, effects and resource captures.
-- **Generalization:** finish inferred signatures and check the entry value.
+- **Generalization:** finish inferred signatures for definitions without an
+  annotation and check that `main` is a value that can execute.
 
 Report group setup/cleanup separately. These spans observe existing code; they
 do not change trait selection or omit checks. The application report must account

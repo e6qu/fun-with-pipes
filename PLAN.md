@@ -92,8 +92,8 @@ now pass. PR #274 delivers these related tasks together:
    soaks. All 34 trials complete with zero failed requests and flat sampled
    server RSS. Separate probes verify allocation traffic, slow-client progress,
    cancellation and exact cleanup. Different CPU models remain separate.
-5. **Final delivery remains:** repair the [Windows backpressure diagnostic](docs/measurements/http-backpressure.md),
-   combine the compiler-checking attribution, then audit all nine production jobs,
+5. **Final delivery remains:** deliver the [verified Windows backpressure repair](docs/measurements/http-pressure-repair-2026-11-10/README.md)
+   and compiler-checking attribution together, then audit all nine production jobs,
    documentation and complete logs for the exact final PR head before merging.
 
 After delivery, use the new measurements to select the next substantial change:

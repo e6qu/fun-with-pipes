@@ -1,14 +1,15 @@
 # Current work
 
-**Next:** verify and repair HTTP backpressure on both Windows architectures,
-finish the compiler-checking attribution, then publish their combined changes in
-[PR #274](https://github.com/e6qu/fun-with-pipes/pull/274) for final native gates.
+**Next:** monitor and audit the final native gates for the combined repair and
+compiler-checking work in [PR #274](https://github.com/e6qu/fun-with-pipes/pull/274).
 Audit all failures before the push. Merge only after nine production jobs,
 documentation and the complete-log audit pass for that exact final commit.
 
 Worktree `.worktrees/application-milestone`, branch `application-tooling-costs`.
-The local branch combines the repair and `compiler-checking-costs` preparation;
-the published PR still points to `a0261f9ccaa4a87651fbcae11966afee68208d4d`.
+The branch combines the repair and `compiler-checking-costs` preparation. Its
+delivery candidate is retained by `roadmap/application-delivery-candidate-2026-11-10`.
+It supersedes the failed matrix at `a0261f9ccaa4a87651fbcae11966afee68208d4d`;
+the seven earlier passing jobs are not passing gates for this new combined source.
 Preserve unrelated root-worktree changes and the preparation worktree's local
 handoff. There is one active PR; no separate preparation PR.
 
@@ -20,7 +21,7 @@ handoff. There is one active PR; no separate preparation PR.
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
 | 4 | Verified | #273 ownership/peer comparisons and parser cleanup repair | Recorded measurement limits still apply |
-| 5 | In progress | Applications, compiler reports/growth, HTTP allocation/backpressure and timed sessions | Windows pressure repair and exact-head final delivery |
+| 5 | In progress | Applications, compiler reports/growth, HTTP load and verified Windows pressure repair | Exact-head final delivery |
 
 #273 merged as `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`; its
 [receipt](measurements/ownership-peer-final-gates-2026-11-09/README.md) retains
@@ -54,7 +55,11 @@ runtime deadlock or accept absence of backpressure as a successful test.
   Diagnostic sends are capped at 16 KiB; the unread Windows client requests and
   verifies a 256 KiB receive buffer. Same deadlines, exact bytes, real would-block
   branch, other-client progress and cleanup. Ordinary runtime writes are unchanged.
-  Focused ARM64 `42744070652` and AMD64 `42744095817` are pending.
+  Focused ARM64 `42744070652` and AMD64 `42744095817` both pass: 11 HTTP tests,
+  linting, real blocked writes in all six large-response cohorts, 72/72 sockets
+  closed, zero final managed bytes. Complete logs are clean; the
+  [receipt](measurements/http-pressure-repair-2026-11-10/README.md) retains originals
+  and repair evidence. RSS rises at most 96 KiB on ARM64 and 172 KiB on AMD64.
 - Subsequent local `e58842d01` fixes diagnostic error reporting: clone the log
   before panicking, so the mutex is released and cleanup can retain evidence.
   This does not change the candidate's success path. Final gates must test it.
