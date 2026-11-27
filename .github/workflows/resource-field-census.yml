@@ -84,7 +84,7 @@ jobs:
             resource-field-observations/
           if-no-files-found: error
   executed:
-    if: inputs.phase == 'execute'
+    if: inputs.phase == 'execute' || inputs.phase == 'frames'
     strategy:
       fail-fast: false
       matrix:
@@ -151,6 +151,7 @@ jobs:
           print('Verified source, archive size/hash and every member checksum')
           PY
       - name: Count actual holds and verify an actual extra hold and release
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
         run: >-
@@ -158,12 +159,14 @@ jobs:
           --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
           --cc gcc --output resource-field-holds
       - name: Reconstruct all raw executions and verify native images
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
         run: >-
           python3 scripts/audit-resource-field-holds.py --input resource-field-holds
           --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}'
       - name: Reject a changed summary even with refreshed checksums
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
           NATIVE_ARCH: ${{ matrix.arch }}
@@ -194,6 +197,14 @@ jobs:
           assert result.returncode != 0 and 'raw output disagrees with summary' in result.stderr
           print('Changed selected-hold summary rejected from raw execution output')
           PY
+      - name: Attribute complete frames and concrete callables in service and HTTP
+        if: inputs.phase == 'frames'
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/measure-resource-frames.py --input field-census
+          --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
+          --cc gcc --output resource-frames
       - name: Retain raw counts, C, binaries, controls and failures
         if: always()
         uses: actions/upload-artifact@v7
@@ -205,4 +216,5 @@ jobs:
             field-hold-altered-summary/report.json
             field-hold-altered-summary/manifest.json
             field-hold-altered-summary/audit.*
+            resource-frames/
           if-no-files-found: error

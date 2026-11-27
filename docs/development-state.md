@@ -1,17 +1,27 @@
 # Current work
 
-Updated 2026-11-27. **Next: finish final-head CI and the complete-log audit for
-the `finish-delivery-hygiene` follow-up, then squash merge.** PR #277 is merged;
-its nine production jobs, documentation and complete-log audit now pass.
-This follow-up records that delivery, completes the repository ignore rules and
-repairs two toolchain failures found by its first CI run. It changes no production
-ownership behavior or performance claim.
+Updated 2026-11-27. **Current delivery: attribute HTTP/callback/frame work, then
+select and validate a measured improvement in one substantial PR.**
+Follow [the ordered investigation](measurements/resource-field-costs.md).
+Branch `resource-frame-costs` starts from #278. The new `resource-frame-counts`
+focused suite extends the saved native census to complete original frames,
+typed fields and concrete closure function IDs/capture counts. It runs all eight
+service cases and fixed 64/256-request HTTP sessions at GCC O1/O2, retaining raw
+responses, shutdown, C, native binaries and commands. Baseline, attribution and
+an actual extra owner/release are separate builds. This preparation is not yet
+verified and selects no production optimization. Complete the raw auditor and
+controls, inspect both native results, then freeze the implementation contract.
+Local disk is now about 22 GiB free, below the unchanged 64 GiB floor; execution
+checks remain on GitHub runners. No local compiler or tests ran for this work.
+PR #278 is merged and fully verified. It completes #277's delivery record and
+repository ignore rules, and repairs current Rust/Windows toolchain failures.
+It changes no production ownership behavior or performance claim.
 
-The root checkout is now based on merge `03c742f38d4d4a3f89393d3f05455f9cede0838a`.
-After this follow-up, resume [the ordered investigation](measurements/resource-field-costs.md)
-with HTTP executed counts and callable-field/whole-frame attribution before
-selecting an optimization. Keep the final head unchanged unless a real failure
-requires repair.
+Local `main` is current at `5a9047178b88c801f37a279dfeca55b0e190bf07`.
+The previous branch `finish-delivery-hygiene` retains tested head
+`8cdff5dda27f1ae7a79be421fd5cfdb18fdb636b`; its tree equals the merge.
+This handoff carries the postmerge results into the next delivery without
+changing the accepted head. No delivery PR is open during measurement preparation.
 Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
 `roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
 run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
@@ -24,6 +34,24 @@ Executed counts at `b4b11d4a9f545b03a6af4b03f37612fb15650c9c`, retained by
 all 34 executions per host, unchanged totals and real extra-pair controls.
 
 ## Verified delivery
+
+[PR #278](https://github.com/e6qu/fun-with-pipes/pull/278) squash-merged as
+`5a9047178b88c801f37a279dfeca55b0e190bf07` after every final-head gate passed.
+Both it and tested head `8cdff5dda27f1ae7a79be421fd5cfdb18fdb636b` have tree
+`cc672edd509c28272f48cf19d9002f42a757413c`. The merge message is exactly one
+line, with no body or trailers.
+
+- [Production `46021862122`](https://github.com/e6qu/fun-with-pipes/actions/runs/46021862122): all nine jobs pass.
+- [Documentation `46021862175`](https://github.com/e6qu/fun-with-pipes/actions/runs/46021862175), job `140583233331`: pass.
+- [Complete-log audit `46037710967`](https://github.com/e6qu/fun-with-pipes/actions/runs/46037710967), job `140637239616`: all ten reports pass.
+  Both Linux hosts retain 257 target logs, each regular Mac 131, each ownership
+  Mac 126, and each Windows host 57 logs with all 155 started targets successful.
+- Audit artifact `15217982784`: 1,196,823 bytes; GitHub reports SHA-256
+  `5eb3080e558b5511df91576df17d5ad2f0f59a8e24a3ab6ab76c48edaceac2ff`.
+  Source, coverage and artifact identities were verified on the runner; no local
+  archive verification was performed.
+- Duplicate postmerge runs `46038247521` and `46038247409` were cancelled after
+  proving merge/tested-head tree equality. They are not passing-gate evidence.
 
 [PR #277](https://github.com/e6qu/fun-with-pipes/pull/277) merged as
 `03c742f38d4d4a3f89393d3f05455f9cede0838a`, with the same tree as tested head
@@ -116,7 +144,7 @@ Source files, fixtures and measurement reports remain eligible for tracking.
 sandbox first denied process sampling; with sampling permitted, the guard stopped
 because free disk is below 64 GiB (about 44 GiB observed). No limits were raised
 and no local build, test suite or benchmark ran. Validation belongs on runners.
-The follow-up's own final-head gates remain pending.
+The follow-up's final-head runner gates and complete-log audit now pass.
 
 Initial head `16fad7b80e6b08f029223b8d8ef6ee1284f9ec80`, production run
 `46020925329`, exposed Rust 1.100's `needless_range_loop` diagnostic in recording
@@ -125,7 +153,8 @@ scope selection and a Windows AMD64 compiler/header mismatch. The loop now uses
 had standalone Clang 20.1.8 and VS 2026 headers requiring Clang 22 or newer;
 setup now selects Visual Studio's bundled AMD64 Clang explicitly. Native ARM64
 keeps its image compiler. Both target-specific C and C++ variables are explicit.
-These repairs still require final-head runner verification.
+Both repairs pass the full final-head native matrix, including standalone
+compiler packaging and the interpreter/native semantic controls.
 
 The old untracked root `docs/measurements/compiler-abort.md` was preserved at
 `/private/tmp/fwp-finish-wip-2026-11-27/compiler-abort.original.md` before checkout;
@@ -148,6 +177,6 @@ Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and th
 180-second guard deadline. Preserve old worktrees,
 stash `451bbf713d451f2d62d80fd7676839404875846a` and backup
 `540b0682408d751afb6e439d58a3b887bdcba373`.
-Source-review notes remain at `/tmp/fwp-resource-cost-review-next.md`; the frozen
-ordinary service C is `/tmp/fwp-nested-current-source/nested-time-peers/original.c`.
+Earlier temporary source-review files are no longer present. The saved census
+archive and selected service/HTTP C are at `/private/tmp/fwp-frame-attribution`.
 Do not download full compiler/binary archives locally or raise transfer limits.

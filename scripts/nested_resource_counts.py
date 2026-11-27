@@ -8,7 +8,8 @@ COUNTERS = ('pushes', 'pops', 'unwinds', 'dupCalls', 'dropCalls', 'releaseCalls'
 MEMORY = ('initialLiveBytes', 'finalLiveBytes', 'peakChargedBytes')
 
 
-def instrument(source):
+def instrument_runtime(source):
+    """Add runtime counters without choosing an application's observation window."""
     source = replace_once(source, 'typedef uint64_t V;',
         'typedef uint64_t V;\nstatic uint64_t ' + ', '.join('observed_' + key for key in COUNTERS) + ';')
     for marker, count in (
@@ -29,6 +30,11 @@ def instrument(source):
          '\n    observed_requests++; observed_requestedBytes += n;'),
     ):
         source = replace_once(source, marker, marker + addition)
+    return source
+
+
+def instrument(source):
+    source = instrument_runtime(source)
     source = replace_once(source, '    size_t baseline = fwp_heap.live;',
         '    size_t baseline = fwp_heap.live;\n'
         '    fwp_cleanup *cleanup_baseline = fwp_cleanups;\n'
