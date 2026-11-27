@@ -11,6 +11,23 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Remaining resource-lifetime costs (PR #277)
+
+[PR #277](https://github.com/e6qu/fun-with-pipes/pull/277) delivers diagnostic
+compilers and retained native static/executed censuses without changing production
+ownership. Plain fields account for only 1.35–1.70% of successful retains in the
+large service cases. HTTP executed counts and callable-field/whole-frame work
+remain to be attributed before selecting a worthwhile optimization.
+
+[All nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/42837106816)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/42837106970)
+pass at `58038846d5e822d0b9f15a549a97bed12337dcc5`.
+The [complete-log audit](https://github.com/e6qu/fun-with-pipes/actions/runs/46020511395)
+completed after merge on November 27; all ten reports have no issues.
+The [static census](measurements/resource-field-census-2026-11-10/README.md) and
+[executed counts](measurements/resource-field-holds-2026-11-10/README.md) retain
+their source and measurement limits; this delivery makes no speedup claim.
+
 ## Nested resource-owner borrowing (PR #276)
 
 [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276) removes duplicate lifetime

@@ -1,17 +1,16 @@
 # Current work
 
-**Next: finish final-head CI and the complete-log audit for the `resource-field-costs` PR.**
-PR #276 is merged and fully verified. This branch delivers verified diagnostics
-and retained results;
-it does not change production ownership or claim a new speedup. Follow
-[the ordered investigation](measurements/resource-field-costs.md), then bundle
-any worthwhile proven improvement, controls and measurements in one normal PR.
+Updated 2026-11-27. **Next: finish final-head CI and the complete-log audit for
+the `finish-delivery-hygiene` follow-up, then squash merge.** PR #277 is merged;
+its nine production jobs, documentation and complete-log audit now pass.
+This follow-up records that delivery and completes the repository ignore rules.
+It changes no production ownership behavior or performance claim.
 
-Worktree `.worktrees/service-cpu-costs`, branch `resource-field-costs`, based on
-`b2bbd0389d227ea097ea1239d8d02ec6346f4be7`. Publication of all current work as a
-normal PR follows this report commit; require the nine production jobs, docs and complete-log audit
-on its exact head before squash merge. Keep the final head unchanged unless a
-real failure requires repair.
+The root checkout is now based on merge `03c742f38d4d4a3f89393d3f05455f9cede0838a`.
+After this follow-up, resume [the ordered investigation](measurements/resource-field-costs.md)
+with HTTP executed counts and callable-field/whole-frame attribution before
+selecting an optimization. Keep the final head unchanged unless a real failure
+requires repair.
 Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
 `roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
 run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
@@ -24,6 +23,19 @@ Executed counts at `b4b11d4a9f545b03a6af4b03f37612fb15650c9c`, retained by
 all 34 executions per host, unchanged totals and real extra-pair controls.
 
 ## Verified delivery
+
+[PR #277](https://github.com/e6qu/fun-with-pipes/pull/277) merged as
+`03c742f38d4d4a3f89393d3f05455f9cede0838a`, with the same tree as tested head
+`58038846d5e822d0b9f15a549a97bed12337dcc5`.
+
+- [Production `42837106816`](https://github.com/e6qu/fun-with-pipes/actions/runs/42837106816): all nine jobs pass.
+- [Documentation `42837106970`](https://github.com/e6qu/fun-with-pipes/actions/runs/42837106970), job `129902136348`: pass.
+- [Complete-log audit `46020511395`](https://github.com/e6qu/fun-with-pipes/actions/runs/46020511395), job `140578644274`: pass on 2026-11-27; all ten reports have no issues.
+- Audit artifact `15207263613`: 1,183,696 bytes; GitHub reports SHA-256
+  `2e34d5a0a4d18632d560239ed54f03ab76adf97b9445d7161f7d1f65267c5cf4`.
+  The runner verified source, target coverage and original artifact identities.
+  No local archive verification was performed.
+- Postmerge production `42854655896` and documentation `42854655812` also pass.
 
 [PR #276](https://github.com/e6qu/fun-with-pipes/pull/276) merged as
 `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`. Its tree equals tested head
@@ -89,9 +101,28 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | Both native static and service-execution censuses pass | PR delivery, HTTP/callable attribution, selected proof and measurements |
+| 8 | In progress | #277 static/service-execution censuses; all delivery gates and log audit | HTTP/callable attribution, selected proof and measurements |
 
-## Local checks and preservation
+## Current checkout and local limits
+
+The root checkout was 133 commits behind `origin/main`; it is now fast-forwarded
+and the cleanup is on `finish-delivery-hygiene`. Current main already ignored
+`__pycache__/`. The follow-up adds standalone `*.pyc`/`*.pyo` and `/.worktrees/`,
+so nested worktrees no longer depend on a private `.git/info/exclude` entry.
+Source files, fixtures and measurement reports remain eligible for tracking.
+
+`python3 scripts/local-guard.py git diff --check` did not run its child: the
+sandbox first denied process sampling; with sampling permitted, the guard stopped
+because free disk is below 64 GiB (about 44 GiB observed). No limits were raised
+and no local build, test suite or benchmark ran. Validation belongs on runners.
+The follow-up's own final-head gates remain pending.
+
+The old untracked root `docs/measurements/compiler-abort.md` was preserved at
+`/private/tmp/fwp-finish-wip-2026-11-27/compiler-abort.original.md` before checkout;
+main contains its later historical account. Other worktrees' handoff edits and
+all stashes were preserved. The original compiler abort remains unexplained.
+
+## Previous focused checks and preservation
 
 All checks use `python3 scripts/local-guard.py` serially. The census reader's
 four tests and the existing proof reader's two tests pass. Changed-workflow
@@ -101,11 +132,11 @@ passes 473 doc link sets, 106 immutable preparation anchors and eight milestone
 statuses. Real saved service C matches all five typed counter hooks; no compiler
 was run locally. Retained readers reconstruct both static and executed reports.
 Counter/auditor CLI checks, changed-workflow actionlint and staged documentation
-checks pass. All native focused controls pass; final PR delivery gates remain.
+checks pass. All native focused controls and #277's final delivery gates pass.
 
 Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and the
-180-second guard deadline. Last free space: about 107 GiB. Preserve unrelated root
-edits, old worktrees, stash `451bbf713d451f2d62d80fd7676839404875846a` and backup
+180-second guard deadline. Preserve old worktrees,
+stash `451bbf713d451f2d62d80fd7676839404875846a` and backup
 `540b0682408d751afb6e439d58a3b887bdcba373`.
 Source-review notes remain at `/tmp/fwp-resource-cost-review-next.md`; the frozen
 ordinary service C is `/tmp/fwp-nested-current-source/nested-time-peers/original.c`.
