@@ -83,7 +83,7 @@ def main():
             kept = 0
             for path in sorted(root.rglob('*')):
                 if not path.is_file() or path.suffix not in (
-                    '.json', '.jsonl', '.txt', '.resources', '.stdout', '.stderr', '.log', '.fwp'
+                    '.json', '.jsonl', '.txt', '.resources', '.stdout', '.stderr', '.log', '.fwp', '.su'
                 ):
                     continue
                 data = path.read_bytes()
@@ -92,7 +92,9 @@ def main():
                 retained.writestr(name, data)
                 index[name] = dict(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
                 kept += len(data)
-            assert 0 < kept < 64 * 1024 * 1024
+            # Page walks retain every raw mapping snapshot; other reports are smaller.
+            text_limit = 256 if args.kind == 'memory' else 64
+            assert 0 < kept < text_limit * 1024 * 1024
             shutil.rmtree(root)
             archive.unlink()
             print('Verified and exported', artifact['name'], kept, 'text bytes', flush=True)

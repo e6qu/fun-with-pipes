@@ -1,12 +1,76 @@
 # Constructed-value resource protection: verification and costs
 
-The new lifetime proof removes 15–21% of large-service cleanup registrations
-and 13.5–17% of successful retains. Ordinary runtime measurements and final
-delivery gates are still pending. Counts alone do not establish a speedup.
+**All 32 ordinary service timing comparisons pass; large cases take 5–16% less
+time. Four original process-RSS comparisons miss the 5% limit, so memory
+acceptance remains open.** The proof also removes 15–21% of large-service
+cleanup registrations and 13.5–17% of successful retains. All 64 repaired
+compiler-cost comparisons pass. Final delivery gates are still pending.
 
 The reference is #278, `5a9047178b88c801f37a279dfeca55b0e190bf07`.
 The [frozen contract](../resource-field-costs.md#correctness-and-measurement-acceptance)
 predates implementation and keeps its original thresholds.
+
+## Ordinary service time and resident memory
+
+Source `33149ad2fd888a66ff36b8eb7f2c5b61faccfccb`, tag
+`roadmap/resource-value-time-service-2026-11-27`,
+[run 46067853489](https://github.com/e6qu/fun-with-pipes/actions/runs/46067853489),
+compares complete service calls from #278 and the new proof. Each call constructs
+64 or 4,096 messages with 16-integer payloads, dispatches or cancels them,
+observes target expiration or a handled error, checks results and releases its
+owned data. Timed service work includes entry/result ownership and cleanup;
+process launch and output checking are outside that clock. Complete-process
+times are retained separately. Ordinary binaries contain no ownership observer.
+
+Two sessions per architecture use 16 balanced rounds, identical binary copies,
+50 ms C-only pilot selection, a 5 ms minimum and the frozen 2% copy limit.
+Native ARM Neoverse-N2 and AMD EPYC 7763 use GCC 13.3.0 O2, explicit `armv8-a`
+or `x86-64`, no LTO or floating-point contraction. Rust 1.99.1 builds both fwp
+compilers. Every large case meets 5% less time; every small case meets its 2%
+regression limit. Every timing control qualifies.
+
+| Host | Qualified comparisons | Less service time, 4,096 messages | Less time, 64 messages |
+|---|---:|---:|---:|
+| ARM64 | 16/16 | 5.15–9.24% | 6.40–10.29% |
+| AMD64 | 16/16 | 9.79–15.66% | 11.90–16.53% |
+
+Peak process RSS is measured separately with three executions per role/case,
+using the maximum of each role's readings. Four original comparisons miss:
+
+| Host/session | Case | Reference → candidate, KiB | Candidate/reference |
+|---|---|---:|---:|
+| ARM64 / 2 | 4,096 messages, cancellation | 2,824 → 3,072 | 1.08782 |
+| AMD64 / 1 | 64 messages, handled error | 2,232 → 2,400 | 1.07527 |
+| AMD64 / 2 | 64 messages, full delivery | 2,200 → 2,320 | 1.05455 |
+| AMD64 / 2 | 64 messages, expired target | 2,188 → 2,352 | 1.07495 |
+
+These are missed limits, not evidence that charged heap increased. Managed peak
+is unchanged in the separate count builds. The cause of the original RSS misses
+is unproved; a stopped-process page-walk diagnostic is pending. It uses the
+original binaries, image digest and libc. It cannot replace these original
+observations or establish an exact transient peak.
+
+## Contemporary peer comparison
+
+The same service outcomes, populations and payload sums are checked against
+handwritten C, Rust and Swift 6.4.2. These are whole-service comparisons. C uses
+explicit owners and pointer queues; Rust uses `Vec` payloads and `Rc`/`Weak`
+targets; Swift uses ARC targets, weak registrations and arrays. fwp uses its
+general callable/channel runtime and immutable values. Synchronization, queue
+representation and allocation work differ: the remaining gap is not all ARC.
+The peers use GCC O2, Rust `opt-level=2` with checked overflow/no LTO, and Swift
+`-O -whole-module-optimization`; exact compile/link commands are retained.
+
+All full-delivery, 4,096-message peer ratios qualify in both sessions:
+
+| Host | fwp / C time | fwp / Rust time | fwp / Swift time |
+|---|---:|---:|---:|
+| ARM64 | 15.67–15.73× | 13.48–13.50× | 4.00–4.06× |
+| AMD64 | 13.26–13.48× | 11.25–11.33× | 4.76–4.78× |
+
+The direct before/after comparison establishes the fwp improvement. Unpaired
+historical peer ratios do not establish that the gap to C shrank. Complete
+peer copy qualifications, RSS, code and unwind observations are retained.
 
 ## Original compiler costs and repair
 

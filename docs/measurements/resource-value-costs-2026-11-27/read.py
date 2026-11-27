@@ -24,6 +24,7 @@ SOURCES = {
     'counts': (46067857005, '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'),
     'compiler-repair': (46068984506, '06943ad60b13cf1c1953ae037cf3070228df4920'),
     'counts-repair': (46068988582, '06943ad60b13cf1c1953ae037cf3070228df4920'),
+    'runtime': (46067853489, '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'),
 }
 emissions = {}
 count_results = []
@@ -71,6 +72,14 @@ for name, (run, source) in SOURCES.items():
                 else:
                     raise AssertionError('altered compiler timing was accepted')
                 path.write_bytes(original)
+            elif name == 'runtime':
+                actual = runtime(artifact, source)
+                assert actual == reconstructed
+                assert len(actual['service']) == len(actual['peers']) == 16
+                assert all(row['summary']['service']['timingTargetMet'] for row in actual['service'])
+                misses = [row for row in actual['service'] if not row['rssTargetMet']]
+                assert len(misses) == (1 if artifact.name.endswith('aarch64') else 3)
+                print(artifact.name, '16 qualified service gains;', len(misses), 'original RSS misses')
             elif name.startswith('counts'):
                 assert counts(artifact, source) == reconstructed
                 count_results.append(reconstructed)

@@ -8,7 +8,7 @@ from compiler_scaling import resources
 from http_load import audit
 from nested_resource_counts import compare, decode
 from nested_resource_memory import MEMORY_ENVIRONMENTS, categories, fast_counters
-from nested_resource_timing import summarize
+from nested_resource_timing import order, summarize
 from parser_process_memory import mappings, summary, validate_mapping_control
 from resource_value_contract import VALUE_REFERENCE
 from weak_callback_timing import CASES, decode_output, summarize as peer_summary
@@ -20,8 +20,11 @@ def memory(root, source):
     assert report['observerSource'] == source and not report['failures']
     assert report['binarySource'] == '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'
     assert (report['image'], report['libcPackage']) == MEMORY_ENVIRONMENTS[report['binarySource']]
+    settings = report['settings']
+    assert (settings['rounds'], settings['interval_ms'], settings['deadline']) == (4, 50, 30)
     controls = json.loads((root / 'memory-audit-controls.json').read_text())
     assert controls == {'rejected': ['rss-summary', 'fast-counter', 'binary-hash']}
+    assert set(report['controls']) == {'ordinary', 'omit-touch', 'omit-unmap'}
     for variant, control in report['controls'].items():
         error = None
         try:
@@ -34,15 +37,26 @@ def memory(root, source):
     for key, rows in report['cases'].items():
         assert len(rows) == len(audited[key]) == 16
         population, mode = map(int, key.split('-'))
-        for row, expected in zip(rows, audited[key]):
+        for index, (row, expected) in enumerate(zip(rows, audited[key])):
+            round_number, position = divmod(index, 4)
+            assert (row['round'], row['label']) == (round_number, order(round_number)[position])
+            assert row['folder'] == f'{key}/{round_number}-{row["label"]}'
             part = folder / row['folder']
             recorded = json.loads((part / 'observation.json').read_text())
             assert recorded['failure'] is None and recorded['status'] == row['status'] == 0
             assert recorded['snapshots'] == row['snapshots'] and not row['stderr']
+            assert row['stdout'] == (part / 'stdout.txt').read_text()
+            assert row['stderr'] == (part / 'stderr.txt').read_text() == ''
+            assert recorded['command'] == row['command']
+            assert recorded['wait4PeakRssKiB'] == row['wait4PeakRssKiB']
             decode_output(row['stdout'], population, mode, int(row['command'][3]))
-            for snapshot in row['snapshots']:
+            assert 2 <= len(row['snapshots']) <= 600
+            for snapshot_index, snapshot in enumerate(row['snapshots']):
+                assert snapshot['index'] == snapshot_index
+                assert set(snapshot['files']) == {'smaps', 'status', 'statm'}
                 raw = {}
                 for name, file in snapshot['files'].items():
+                    assert file['file'] == f'{snapshot_index}-{name}.txt'
                     data = (part / file['file']).read_bytes()
                     assert hashlib.sha256(data).hexdigest() == file['sha256']
                     raw[name] = data.decode()
@@ -54,7 +68,14 @@ def memory(root, source):
             anonymous = max(s['metrics']['anonymousKiB'] for s in row['snapshots'])
             assert peak == row['observedResidentPeakKiB'] == expected['observedResidentPeakKiB']
             assert anonymous == row['observedAnonymousPeakKiB'] == expected['observedAnonymousPeakKiB']
-            assert (row['label'], row['round'], len(row['snapshots'])) == (expected['label'], expected['round'], expected['snapshots'])
+            actual = dict(label=row['label'], round=row['round'], wait4PeakRssKiB=row['wait4PeakRssKiB'],
+                observedResidentPeakKiB=peak, observedAnonymousPeakKiB=anonymous,
+                snapshots=len(row['snapshots']),
+                categoryResidentPeaksKiB={category: max(s['categories'][category]['residentKiB'] for s in row['snapshots'])
+                                         for category in ('heap', 'stack', 'executable', 'otherFiles', 'otherMappings')},
+                minimumFastMinusWalkKiB=min(s['fast']['VmRSSKiB'] - s['metrics']['residentKiB'] for s in row['snapshots']),
+                maximumFastMinusWalkKiB=max(s['fast']['VmRSSKiB'] - s['metrics']['residentKiB'] for s in row['snapshots']))
+            assert actual == expected
     return audited
 
 
