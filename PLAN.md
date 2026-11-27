@@ -88,11 +88,15 @@ and 24.3% of HTTP cleanup registrations, while plain HTTP fields contribute only
 The selected extension carries surviving owner provenance through new records,
 known partial captures and returned aliases. Its correctness, count, ordinary
 timing, memory and compiler-cost targets were frozen before implementation.
-Complete those checks and final delivery gates; keep original disposal timing
-and ordinary argument ownership. Implementation alone does not complete step 8.
+The [measured extension](docs/measurements/resource-value-costs-2026-11-27/README.md)
+passes all 32 service timing comparisons (5–16% less large-case time), all 64
+repaired compiler-cost comparisons and focused lifetime/count/HTTP checks.
+Four original process-RSS limits miss 5%; page walks do not explain those misses
+or replace their acceptance. Keep step 8 open and finish the full delivery matrix.
+Original disposal timing and ordinary argument ownership remain intact.
 
-The 4,096-message full-delivery service still takes 14.93–16.78 times C's time
-and 4.32–5.34 times Swift's. Different representations and synchronization matter;
+The contemporary 4,096-message full-delivery service takes 13.26–15.73 times C's
+time and 4.00–4.78 times Swift's. Different representations and synchronization matter;
 the entire gap is not an ARC cost. Preserve explicit profile limitations and do
 not repeat unchanged timings to obtain qualification. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.

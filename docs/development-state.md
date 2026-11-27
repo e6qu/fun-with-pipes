@@ -1,9 +1,15 @@
 # Current work
 
-Updated 2026-11-27. **Next: diagnose the four original service RSS misses,
-retain the runtime results, then deliver one substantial PR
-with all final-head gates.** Branch `resource-frame-costs` starts from verified
-#278. No delivery PR is open during preparation.
+Updated 2026-11-28. **Current delivery: one substantial PR from
+`resource-frame-costs`, with every final-head production, documentation and
+complete-log gate required before merge.** Preparation is complete and retained;
+the checks below are focused evidence, not a substitute for the final matrix.
+Branch starts from verified #278. Consult its PR for final delivery receipts.
+
+**Next roadmap action after delivery: establish a controlled way to explain
+the four original RSS misses.** The completed page-walk diagnostic cannot
+recover the original processes or establish exact transient peaks. Keep their
+5% acceptance limits open; do not rerun unchanged timings to qualify them.
 
 - [The frozen contract](measurements/resource-field-costs.md) predates production
   code: `a107435fe3b19963e3670a66e29fa211f82a35fa`, retained by
@@ -34,19 +40,24 @@ with all final-head gates.** Branch `resource-frame-costs` starts from verified
   comparisons qualify and meet their limits. Large cases take 5–16% less time.
   Four process-RSS ratios miss 5%: ARM64 session 2 cancellation; AMD64 session 1
   small error and session 2 small full-delivery/expiry. Keep these misses open.
-  The page-walk diagnostic is being prepared against the unchanged binaries,
-  exact original image digest and libc 2.39-0ubuntu8.12; it is not a timing rerun.
+  Page-walk run `46073285460` passes against unchanged binaries, the exact
+  original image and libc 2.39-0ubuntu8.12. All 256 executions and 4,805 snapshots
+  reconstruct, with exact agreement between fast RSS counters and page walks.
+  Later sampled peaks remain close; they do not explain the four original misses.
   Compiler-only repair measurements preserve exact emitted C, so these runtime
   observations also apply to the repaired compiler.
 - HTTP cleanup `46065944554` and load `46065948202` pass: 34 load trials,
   29,756,171 attempts, zero failures and successful shutdowns. All sampled
   within-trial RSS slopes are zero. This is capacity evidence, not HTTP speedup.
-- Retained frame reader and docs `46067000815` pass. Initial cost reader and docs
-  `46069448947` pass; its extension to the repair records is pending.
+- Retained frame reader and docs `46067000815` pass. Cost reader/docs
+  `46069448947` and repaired compiler/count reconstruction `46070965850` pass.
+  Final documentation also includes all ordinary runtime and raw page-walk records.
   Runner exports `46068360511`, `46068364228`, `46068367762`, `46069093836`
   verify original archive/source identities and reconstruct raw observations.
   Only small text evidence is downloaded locally; native images stay on runners.
   Repair exports `46070520960` and `46070235418` also pass raw reconstruction.
+  Runtime/stack export `46073885767` and memory export `46073880453` pass;
+  all original misses remain in the retained report.
 - Earlier failures are preserved: attribution `46062709945` needed scoped hooks
   and OpenSSL linkage; `46064688201` needed runner-generated formatting;
   `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and
@@ -54,7 +65,7 @@ with all final-head gates.** Branch `resource-frame-costs` starts from verified
   timing; the corrected service run collects that previously unmeasured work.
   Export jobs initially needed pagination for the many skipped numerical jobs.
 
-Local disk is about 22 GiB free. `python3 scripts/local-guard.py git diff --check`
+Local disk is about 24 GiB free. `python3 scripts/local-guard.py git diff --check`
 refused below the unchanged 64 GiB floor. No local compiler or tests ran and no
 limits were raised. #278 already delivered reviewed ignore rules. Local `main`
 is `5a9047178b88c801f37a279dfeca55b0e190bf07`; worktrees/stashes are preserved.
@@ -140,7 +151,7 @@ not inferred from arrow types. Keep ordinary owners and original disposal timing
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | #277 baseline; new HTTP/callable attribution and implemented value proof | Corrected semantic gates, ordinary measurements and final delivery |
+| 8 | In progress | HTTP/callable attribution; constructed-value proof; all timing/compiler targets; lifetime and HTTP checks | Four original RSS limits and final delivery gates |
 
 ## #278 checkout recovery and local limits
 

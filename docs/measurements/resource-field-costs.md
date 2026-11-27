@@ -1,8 +1,9 @@
 # Remove unnecessary resource-lifetime holds
 
-**Native compiler, service and HTTP attribution pass.** The selected value proof
-is implemented and meets the focused operation-count targets; ordinary timing
-and final delivery acceptance are pending. The original field investigation's
+**Native focused checks, service and HTTP attribution pass.** The selected proof
+meets every service timing and repaired compiler-cost limit; four original
+process-RSS limits remain open. [Results and diagnosis](resource-value-costs-2026-11-27/README.md)
+preserve those misses. Final delivery gates are separate. The original field investigation's
 baseline is PR #276's verified compiler tree,
 `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`; the selected extension uses #278 below.
 [Its original timing and RSS limits remain open](nested-resource-time-2026-11-10/README.md).

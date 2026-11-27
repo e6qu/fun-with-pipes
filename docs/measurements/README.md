@@ -18,8 +18,10 @@ now passes both hosts and selects a broader value proof. Original frames cause
 21.6% of service and 24.3% of HTTP cleanup registrations; plain HTTP fields cause
 only 0.09% of successful retains. The implemented extension meets its initial
 operation-count targets. [Native lifetime, count, compiler and HTTP evidence](resource-value-costs-2026-11-27/README.md)
-preserves the original compiler-cost misses and the selected repair; ordinary
-service timing and final delivery remain pending.
+preserves the original compiler-cost misses and the verified repair. All 32
+ordinary service time comparisons pass, with 5–16% less time in large cases.
+Four original RSS limits remain open after a separate page-walk diagnosis;
+final delivery requires the complete production matrix.
 
 [Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
 now passes both native replays and independent raw-record audits. Identified

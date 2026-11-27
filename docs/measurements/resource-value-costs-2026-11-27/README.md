@@ -46,9 +46,47 @@ using the maximum of each role's readings. Four original comparisons miss:
 
 These are missed limits, not evidence that charged heap increased. Managed peak
 is unchanged in the separate count builds. The cause of the original RSS misses
-is unproved; a stopped-process page-walk diagnostic is pending. It uses the
-original binaries, image digest and libc. It cannot replace these original
+is unproved. The completed diagnostic below cannot replace these original
 observations or establish an exact transient peak.
+
+Code and static stack observations provide separate context:
+
+| Host | Executable bytes, reference → candidate | `.text` bytes | Largest GCC function frame, bytes |
+|---|---:|---:|---:|
+| ARM64 | 153,720 → 152,816 | 69,500 → 65,532 | 3,632 → 2,784 |
+| AMD64 | 140,048 → 135,048 | 78,338 → 73,330 | 4,304 → 3,328 |
+
+The frame column is a per-function compiler report, not a whole-program dynamic
+stack bound. Saved `.su`, section and unwind records accompany the raw timings.
+
+### RSS diagnosis without a timing rerun
+
+[Run 46073285460](https://github.com/e6qu/fun-with-pipes/actions/runs/46073285460)
+uses the unchanged ordinary binaries, their identical copies, the original
+container digest and libc 2.39-0ubuntu8.12. It stops each process for a memory-map
+page walk every 50 ms, in four balanced rounds across all eight cases. Both
+hosts pass mapping/touch/unmap controls and reject altered RSS, counter and
+binary-hash reports. The original native images remain verified on the runner.
+The diagnostic uses Neoverse-N2 and Intel Xeon 6975P-C hosts with 4 KiB pages;
+the original AMD64 timing host was EPYC 7763. These are separate hosted jobs,
+not observations recovered from the original processes.
+
+All **256 executions and 4,805 snapshots** reconstruct from raw mappings.
+Fast resident counters and page-walk totals agree exactly in every snapshot.
+For the cases with original misses, observed resident peaks are:
+
+| Diagnostic case | Reference range, KiB | Candidate range, KiB |
+|---|---:|---:|
+| ARM64, 4,096 cancellation | 3,180 | 3,172–3,176 |
+| AMD64, 64 full delivery | 2,452–2,500 | 2,436–2,496 |
+| AMD64, 64 expired target | 2,424–2,476 | 2,440–2,480 |
+| AMD64, 64 handled error | 2,440–2,484 | 2,436–2,496 |
+
+These later samples do not identify why the original GNU-time high-water ratios
+missed. They do not capture every transient peak and are not replacement
+acceptance runs. Whole-child `wait4` memory also includes the observer's inherited
+pre-exec memory, so it is retained as a diagnostic rather than fwp-only RSS.
+The four original 5% limits stay open.
 
 ## Contemporary peer comparison
 
@@ -189,3 +227,6 @@ checks every retained member and reconstructs compiler/count results without
 native-image downloads. Metadata is losslessly gzip-compressed.
 Repair exports `46070520960` (compiler) and `46070235418` (counts) use the same
 raw reconstruction; original and repaired reports remain separate.
+Runtime export `46073885767` includes every original timing/RSS result and GCC
+stack report. Memory export `46073880453` reconstructs every saved raw snapshot;
+its small archive contains text observations, not the native executables.

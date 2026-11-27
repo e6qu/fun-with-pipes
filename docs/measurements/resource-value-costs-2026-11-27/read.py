@@ -10,7 +10,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[2] / 'scripts'))
 
-from resource_value_review import compiler, counts, runtime
+from resource_value_review import compiler, counts, memory, runtime
 
 
 def metadata(folder, name):
@@ -25,6 +25,7 @@ SOURCES = {
     'compiler-repair': (46068984506, '06943ad60b13cf1c1953ae037cf3070228df4920'),
     'counts-repair': (46068988582, '06943ad60b13cf1c1953ae037cf3070228df4920'),
     'runtime': (46067853489, '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'),
+    'memory': (46073285460, '4d701b9d06bb4c2c7b407ef211c2d2b74657e968'),
 }
 emissions = {}
 count_results = []
@@ -39,7 +40,8 @@ for name, (run, source) in SOURCES.items():
         root = Path(temporary)
         assert set(archive.namelist()) == set(files)
         assert len(archive.namelist()) == len(files)
-        assert sum(row['bytes'] for row in files.values()) < 128 * 1024 * 1024
+        text_limit = 512 if name == 'memory' else 128
+        assert sum(row['bytes'] for row in files.values()) < text_limit * 1024 * 1024
         for path, expected in files.items():
             assert (root / path).resolve().is_relative_to(root)
             data = archive.read(path)
@@ -72,6 +74,10 @@ for name, (run, source) in SOURCES.items():
                 else:
                     raise AssertionError('altered compiler timing was accepted')
                 path.write_bytes(original)
+            elif name == 'memory':
+                assert memory(artifact, source) == reconstructed
+                assert sum(len(rows) for rows in reconstructed.values()) == 128
+                print(artifact.name, '128 executions and every retained raw page walk reconstruct')
             elif name == 'runtime':
                 actual = runtime(artifact, source)
                 assert actual == reconstructed
