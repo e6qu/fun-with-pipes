@@ -164,9 +164,16 @@ def main():
                         source, selected = attribute(source, case['observations'], label == 'extra-pair')
                         assert application not in report['selected'] or report['selected'][application] == selected
                         report['selected'][application] = selected
-                        marker = '    return result;' if application == 'service' else '    /* Ownership observation point: before runtime teardown. */'
-                        assert source.count(marker) == 1
-                        source = source.replace(marker, '    resource_work_report();\n' + marker, 1)
+                        if application == 'service':
+                            signature = 'ServiceStats service_run(size_t population, int mode) {'
+                            prefix, bridge = source.split(signature)
+                            marker = '    return result;'
+                            assert bridge.count(marker) == 1
+                            source = prefix + signature + bridge.replace(marker, '    resource_work_report();\n' + marker, 1)
+                        else:
+                            marker = '    /* Ownership observation point: before runtime teardown. */'
+                            assert source.count(marker) == 1
+                            source = source.replace(marker, '    resource_work_report();\n' + marker, 1)
                     if application == 'service':
                         binary, built = build_native(args, folder, 'fwp', source, label, level, 'diagnostic',
                                                      False, clock, (fixtures / 'weak_callback_service_time.c').read_text(), run, env)
@@ -175,7 +182,8 @@ def main():
                         path.write_text(source)
                         binary = path.with_suffix('')
                         built = run([args.cc, '-std=gnu11', '-O' + str(level), '-fno-lto', '-ffp-contract=off',
-                                     '-march=' + args.c_arch, '-w', path, '-lm', '-lpthread', '-ldl', '-o', binary], (0, '', ''), env)
+                                     '-march=' + args.c_arch, '-w', path, '-lm', '-lpthread', '-ldl',
+                                     '-lssl', '-lcrypto', '-o', binary], (0, '', ''), env)
                     image = binary.read_bytes()
                     assert image[:6] == b'\x7fELF\x02\x01'
                     assert int.from_bytes(image[18:20], 'little') == {'aarch64': 183, 'x86_64': 62}[args.arch]
