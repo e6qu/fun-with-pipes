@@ -1,7 +1,7 @@
 # Current work
 
-Updated 2026-11-27. **Next: finish the compiler-cost repair and ordinary service
-measurements, retain their original outcomes, then deliver one substantial PR
+Updated 2026-11-27. **Next: finish ordinary service measurements,
+retain their original outcomes, then deliver one substantial PR
 with all final-head gates.** Branch `resource-frame-costs` starts from verified
 #278. No delivery PR is open during preparation.
 
@@ -25,8 +25,10 @@ with all final-head gates.** Branch `resource-frame-costs` starts from verified
   from `46065857276` reconstruct: 61/64 acceptance, two noisy AMD64 comparisons
   and a qualified 2.059% generic-512 increase against the frozen 2% limit.
   The repair classifies only queried locals, caching per local and type. New
-  compiler run `46068984506` must also prove unchanged C for four applications
-  and twelve growth inputs. Focused repair checks: `46068988582`. Both pending.
+  compiler run `46068984506` passes all 64 comparisons and proves unchanged C
+  for four applications and twelve growth inputs. Focused repair checks
+  `46068988582` pass on both native hosts; counts are identical to the first
+  implementation. Complete logs have no compiler diagnostics.
   Source-format `46068992809` passes with an empty patch.
 - Ordinary service/peer run `46067853489` continues on the original proof.
   Compiler-only repair measurements do not repeat those runtime observations;
@@ -34,10 +36,12 @@ with all final-head gates.** Branch `resource-frame-costs` starts from verified
 - HTTP cleanup `46065944554` and load `46065948202` pass: 34 load trials,
   29,756,171 attempts, zero failures and successful shutdowns. All sampled
   within-trial RSS slopes are zero. This is capacity evidence, not HTTP speedup.
-- Retained frame reader and docs `46067000815` pass. New cost reader is pending.
+- Retained frame reader and docs `46067000815` pass. Initial cost reader and docs
+  `46069448947` pass; its extension to the repair records is pending.
   Runner exports `46068360511`, `46068364228`, `46068367762`, `46069093836`
   verify original archive/source identities and reconstruct raw observations.
   Only small text evidence is downloaded locally; native images stay on runners.
+  Repair exports `46070520960` and `46070235418` also pass raw reconstruction.
 - Earlier failures are preserved: attribution `46062709945` needed scoped hooks
   and OpenSSL linkage; `46064688201` needed runner-generated formatting;
   `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and

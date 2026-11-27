@@ -314,8 +314,10 @@ The scan omits only proved inner parameter anchors. Ordinary argument owners,
 binding anchors, interpreter metadata and evaluation order remain unchanged.
 Scoped rollback separates branches. Unknown/saturated factories, updated records,
 opaque constructors, repeated local IDs and loop/tail-call rebinding prevent
-selection. Two expression traversals check freshness and propagate protection;
-plain-data classification is cached per local type within the scan.
+selection. Two expression traversals check freshness and propagate protection.
+Plain-data classification runs only when the scan asks about a local. It caches
+per-local answers and per-type results within that scan, avoiding unused types
+and repeated type hashing at later uses of the same local.
 [The lifetime example](ownership.md#keeping-a-resource-alive-through-nested-calls)
 and [current measurement contract](measurements/resource-field-costs.md) distinguish
 implementation, focused verification and final performance/delivery acceptance.

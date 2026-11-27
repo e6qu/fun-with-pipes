@@ -24,9 +24,16 @@ acceptance passes 61 of 64 comparisons:
 The first two are inconclusive; the third is an actual missed acceptance limit.
 The initial implementation classified every local type before scanning its uses.
 The repair classifies types on demand and caches both per-local answers and
-per-type results. Its new measurements remain pending. Exact emitted C must
-match the original candidate on all four applications and twelve growth inputs
-before reusing the separately measured runtime results.
+per-type results. [Repair run 46068984506](https://github.com/e6qu/fun-with-pipes/actions/runs/46068984506)
+passes **all 64 comparisons** in two sessions on both architectures at
+`06943ad60b13cf1c1953ae037cf3070228df4920`. Every copy control qualifies and
+every 2% time/5% RSS limit passes. Exact emitted C matches the original candidate
+on all four applications and twelve growth inputs, allowing the separately
+measured runtime results to be reused. The original three misses remain above;
+the new sessions measure an actual implementation change.
+Across those 64 comparisons, candidate/reference emit-C time ranges from
+0.98978 to 1.01872; peak-RSS ratios range from 0.99497 to 1.00214. These bounds
+describe the recorded applications and growth inputs, not every compilation.
 
 Each compiler sample is a fresh process emitting C at O2; it includes GNU time
 startup, excludes C compilation and application execution, and uses one allowed
@@ -34,6 +41,10 @@ logical CPU. Two sessions use eight rounds and an untimed warmup, reference and
 candidate copies, a 2% copy limit, 2% time limit and 5% process high-water RSS
 limit. Hardware, GCC/Rust versions, commands, resource files and all original
 samples are retained in `compiler/reports.zip`.
+Both sets use ARM Neoverse-N2 and AMD64 Intel Xeon 6975P-C, GCC 13.3.0 and
+Rust 1.99.1. They run in separate hosted-runner jobs. Each ratio compares its
+candidate with #278 on the same host in that session; the difference between
+the two candidate reports is not itself a paired speed comparison.
 
 The source run failed before any service timing because its preparation tag
 was rejected. Compiler measurements were independent and completed. The fixed
@@ -77,6 +88,9 @@ native semantic targets. Added cases cover returned records, both branch arms,
 newly returned files and strong callbacks observed through weak channels.
 Raw and optimized interpretation agree with native O1/O2; dynamic/static heap
 and physical-free/reuse checks retain their existing coverage.
+The repaired compiler repeats and passes this full focused scope in
+[run 46068988582](https://github.com/e6qu/fun-with-pipes/actions/runs/46068988582).
+Its operation counts are identical to the original candidate on both hosts.
 
 Each host reconstructs 32 native cases and eight real extra-cleanup/missing-free
 controls, then rejects six altered reports. All 16 count comparisons agree across
@@ -84,6 +98,17 @@ architectures. Every large mode passes 10% fewer registrations and 5% fewer
 successful retains; charged peak is unchanged, each call fully releases storage,
 and allocation requests fall by 2,048–4,096 per call. These runs include counts,
 not ordinary timings.
+
+The queued service constructs 4,096 messages with 16-integer payloads per call.
+The following O2 reductions compare the original #278 compiler with constructed-
+value protection; ARM64 and AMD64 counts agree exactly.
+
+| Service outcome | Fewer cleanup registrations | Fewer successful retains | Fewer allocation requests |
+|---|---:|---:|---:|
+| Full delivery | 16.22% | 14.09% | 4,096 |
+| Cancel every fourth message | 17.36% | 14.71% | 4,096 |
+| Expired target | 21.24% | 16.95% | 4,096 |
+| Handled error halfway through delivery | 15.38% | 13.52% | 2,048 |
 
 ## Retained evidence
 
@@ -98,3 +123,5 @@ Exports `46068367762` (load) and `46069093836` (counts) additionally re-audit
 every HTTP attempt and the complete native count archives. [The reader](read.py)
 checks every retained member and reconstructs compiler/count results without
 native-image downloads. Metadata is losslessly gzip-compressed.
+Repair exports `46070520960` (compiler) and `46070235418` (counts) use the same
+raw reconstruction; original and repaired reports remain separate.

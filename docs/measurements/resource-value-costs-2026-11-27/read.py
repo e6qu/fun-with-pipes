@@ -17,15 +17,23 @@ def metadata(folder, name):
     return json.loads(gzip.decompress((folder / (name + '.json.gz')).read_bytes()))
 
 
-for name in ('compiler', 'http-checks', 'http-load', 'counts'):
+SOURCES = {
+    'compiler': (46065857276, 'cee08dcbd422831d5fa6a1f56963aaedfd09d1fd'),
+    'http-checks': (46065944554, 'cee08dcbd422831d5fa6a1f56963aaedfd09d1fd'),
+    'http-load': (46065948202, 'cee08dcbd422831d5fa6a1f56963aaedfd09d1fd'),
+    'counts': (46067857005, '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'),
+    'compiler-repair': (46068984506, '06943ad60b13cf1c1953ae037cf3070228df4920'),
+    'counts-repair': (46068988582, '06943ad60b13cf1c1953ae037cf3070228df4920'),
+}
+emissions = {}
+count_results = []
+for name, (run, source) in SOURCES.items():
     folder = ROOT / name
     state = metadata(folder, 'run')
     files = metadata(folder, 'files')
     jobs = metadata(folder, 'jobs')
-    source = state['head_sha']
     assert state['status'] == 'completed'
-    assert source == ('33149ad2fd888a66ff36b8eb7f2c5b61faccfccb' if name == 'counts'
-                      else 'cee08dcbd422831d5fa6a1f56963aaedfd09d1fd')
+    assert (state['id'], state['head_sha']) == (run, source)
     with tempfile.TemporaryDirectory() as temporary, zipfile.ZipFile(folder / 'reports.zip') as archive:
         root = Path(temporary)
         assert set(archive.namelist()) == set(files)
@@ -39,10 +47,14 @@ for name in ('compiler', 'http-checks', 'http-load', 'counts'):
         archive.extractall(root)
         for artifact in sorted(root.iterdir()):
             reconstructed = json.loads((artifact / 'reconstructed.json').read_text())
-            if name == 'compiler':
+            if name.startswith('compiler'):
                 actual = compiler(artifact, source)
                 assert actual == reconstructed
                 unmet = [row for row in actual if not row['acceptance']]
+                assert len(unmet) == (3 if name == 'compiler' and artifact.name.endswith('x86_64') else 0)
+                observed = json.loads((artifact / 'nested-analysis-observations/report.json').read_text())
+                assert not observed['failures'] and len(observed['cases']) == 16
+                emissions[name, artifact.name] = {key: case['cSha256'] for key, case in observed['cases'].items()}
                 print(artifact.name, 'compiler comparisons', len(actual), 'unmet', len(unmet))
                 for row in unmet:
                     print(row['case'], row['session'], row['candidateRatio'], row['timingQualified'], row['peakRssRatio'])
@@ -59,8 +71,9 @@ for name in ('compiler', 'http-checks', 'http-load', 'counts'):
                 else:
                     raise AssertionError('altered compiler timing was accepted')
                 path.write_bytes(original)
-            elif name == 'counts':
+            elif name.startswith('counts'):
                 assert counts(artifact, source) == reconstructed
+                count_results.append(reconstructed)
                 print(artifact.name, 'count comparisons', len(reconstructed))
             else:
                 original = json.loads((artifact / 'http-load/summary.json').read_text())
@@ -71,4 +84,8 @@ for name in ('compiler', 'http-checks', 'http-load', 'counts'):
     for job in jobs['jobs']:
         if job['conclusion'] != 'skipped':
             assert gzip.decompress((folder / f'job-{job["id"]}.log.gz').read_bytes())
-print('All retained archive members, original compiler observations and HTTP summary exports agree')
+for arch in ('aarch64', 'x86_64'):
+    artifact = 'nested-resource-time-' + arch
+    assert emissions['compiler', artifact] == emissions['compiler-repair', artifact]
+assert len(count_results) == 4 and all(row == count_results[0] for row in count_results)
+print('All retained records agree; the repair preserves counts and emitted C and passes all 64 compiler comparisons')

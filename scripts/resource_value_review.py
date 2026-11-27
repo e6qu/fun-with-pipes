@@ -1,7 +1,6 @@
 """Reconstruct compiler costs and HTTP load records without rerunning measurements."""
 import hashlib
 import json
-from pathlib import Path
 
 from compiler_build_comparison import comparison
 from compiler_scaling import resources
