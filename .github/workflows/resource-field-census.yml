@@ -108,6 +108,8 @@ jobs:
           gcc --version
           python3 scripts/test-resource-field-census.py
           python3 scripts/test-nested-resource-counts.py
+          python3 scripts/test-resource-frames.py
+          git diff --check
       - name: Verify and extract the saved compiler census
         env:
           GH_TOKEN: ${{ github.token }}
@@ -205,6 +207,14 @@ jobs:
           python3 scripts/measure-resource-frames.py --input field-census
           --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
           --cc gcc --output resource-frames
+      - name: Reconstruct frame work and reject altered service and HTTP summaries
+        if: inputs.phase == 'frames'
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+          NATIVE_ARCH: ${{ matrix.arch }}
+        run: |
+          python3 scripts/audit-resource-frames.py --input resource-frames --source "$COMPILER_SOURCE" --arch "$NATIVE_ARCH"
+          python3 scripts/check-resource-frame-audit.py --input resource-frames --output resource-frame-controls --source "$COMPILER_SOURCE" --arch "$NATIVE_ARCH"
       - name: Retain raw counts, C, binaries, controls and failures
         if: always()
         uses: actions/upload-artifact@v7
@@ -217,4 +227,5 @@ jobs:
             field-hold-altered-summary/manifest.json
             field-hold-altered-summary/audit.*
             resource-frames/
+            resource-frame-controls/
           if-no-files-found: error
