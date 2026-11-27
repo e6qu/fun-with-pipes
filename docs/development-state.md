@@ -8,9 +8,14 @@ focused suite extends the saved native census to complete original frames,
 typed fields and concrete closure function IDs/capture counts. It runs all eight
 service cases and fixed 64/256-request HTTP sessions at GCC O1/O2, retaining raw
 responses, shutdown, C, native binaries and commands. Baseline, attribution and
-an actual extra owner/release are separate builds. This preparation is not yet
-verified and selects no production optimization. Complete the raw auditor and
-controls, inspect both native results, then freeze the implementation contract.
+an actual extra owner/release are separate builds. Run `46063375647` passes both
+native hosts, including 44 raw executions, 12 native images and altered-summary
+controls per host. ARM64/AMD64 agree on the service and HTTP counts. The contract
+now selects provenance through records, known partial captures and returned
+aliases; its numeric targets are frozen before implementation in the linked
+investigation. Next: implement the bounded proof and its lifetime controls,
+then measure it against #278. The earlier preparation run `46062709945` failed
+on a report-hook scope assertion and missing HTTP TLS linkage; both are fixed.
 Local disk is now about 22 GiB free, below the unchanged 64 GiB floor; execution
 checks remain on GitHub runners. No local compiler or tests ran for this work.
 PR #278 is merged and fully verified. It completes #277's delivery record and
