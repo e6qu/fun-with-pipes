@@ -1,7 +1,7 @@
 # Current work
 
-Updated 2026-11-27. **Next: finish ordinary service measurements,
-retain their original outcomes, then deliver one substantial PR
+Updated 2026-11-27. **Next: diagnose the four original service RSS misses,
+retain the runtime results, then deliver one substantial PR
 with all final-head gates.** Branch `resource-frame-costs` starts from verified
 #278. No delivery PR is open during preparation.
 
@@ -30,9 +30,14 @@ with all final-head gates.** Branch `resource-frame-costs` starts from verified
   `46068988582` pass on both native hosts; counts are identical to the first
   implementation. Complete logs have no compiler diagnostics.
   Source-format `46068992809` passes with an empty patch.
-- Ordinary service/peer run `46067853489` continues on the original proof.
-  Compiler-only repair measurements do not repeat those runtime observations;
-  reusing them requires exact emitted-C equivalence. No speedup is claimed yet.
+- Ordinary service/peer run `46067853489` passes both jobs: all 32 service time
+  comparisons qualify and meet their limits. Large cases take 5–16% less time.
+  Four process-RSS ratios miss 5%: ARM64 session 2 cancellation; AMD64 session 1
+  small error and session 2 small full-delivery/expiry. Keep these misses open.
+  The page-walk diagnostic is being prepared against the unchanged binaries,
+  exact original image digest and libc 2.39-0ubuntu8.12; it is not a timing rerun.
+  Compiler-only repair measurements preserve exact emitted C, so these runtime
+  observations also apply to the repaired compiler.
 - HTTP cleanup `46065944554` and load `46065948202` pass: 34 load trials,
   29,756,171 attempts, zero failures and successful shutdowns. All sampled
   within-trial RSS slopes are zero. This is capacity evidence, not HTTP speedup.

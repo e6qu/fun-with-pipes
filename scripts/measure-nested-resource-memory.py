@@ -9,7 +9,7 @@ import platform
 import subprocess
 import traceback
 
-from nested_resource_memory import observe
+from nested_resource_memory import MEMORY_ENVIRONMENTS, observe
 from nested_resource_timing import order
 from parser_process_memory import checkpoint_process, validate_mapping_control
 from weak_callback_timing import CASES, decode_output
@@ -34,15 +34,16 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert platform.machine() == args.arch and args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch]
     assert (args.rounds, args.interval_ms, args.deadline) == (4, 50, 30)
-    assert args.image == 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0'
+    image, expected_libc = MEMORY_ENVIRONMENTS[args.source]
+    assert args.image == image
     libc_package = subprocess.check_output(['dpkg-query', '-W', '-f=${Version}', 'libc6'], text=True)
-    assert libc_package == '2.39-0ubuntu8.9'
+    assert libc_package == expected_libc
     original = args.input.resolve()
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
     comparison = json.loads((original / 'nested-time-comparison/report.json').read_text())
     peers = json.loads((original / 'nested-time-peers/report.json').read_text())
-    assert comparison['source'] == peers['source'] == args.source == 'd80357c8c81d206c9d9934b141b5a5fafe97c430'
+    assert comparison['source'] == peers['source'] == args.source
     assert comparison['architecture'] == peers['architecture'] == args.arch
     assert not comparison['failures'] and not peers['failures']
     for directory in ('nested-time-comparison', 'nested-time-peers'):

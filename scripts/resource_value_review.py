@@ -1,14 +1,61 @@
 """Reconstruct compiler costs and HTTP load records without rerunning measurements."""
 import hashlib
 import json
+from pathlib import Path
 
 from compiler_build_comparison import comparison
 from compiler_scaling import resources
 from http_load import audit
 from nested_resource_counts import compare, decode
+from nested_resource_memory import MEMORY_ENVIRONMENTS, categories, fast_counters
 from nested_resource_timing import summarize
+from parser_process_memory import mappings, summary, validate_mapping_control
 from resource_value_contract import VALUE_REFERENCE
 from weak_callback_timing import CASES, decode_output, summarize as peer_summary
+
+
+def memory(root, source):
+    folder = root / 'nested-memory'
+    report = json.loads((folder / 'report.json').read_text())
+    assert report['observerSource'] == source and not report['failures']
+    assert report['binarySource'] == '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb'
+    assert (report['image'], report['libcPackage']) == MEMORY_ENVIRONMENTS[report['binarySource']]
+    controls = json.loads((root / 'memory-audit-controls.json').read_text())
+    assert controls == {'rejected': ['rss-summary', 'fast-counter', 'binary-hash']}
+    for variant, control in report['controls'].items():
+        error = None
+        try:
+            validate_mapping_control(control['result'], folder / ('control-' + variant))
+        except ValueError as problem:
+            error = str(problem)
+        assert error == control['expectedError'] == control['observedError']
+    audited = json.loads((root / 'memory-audit.json').read_text())
+    assert set(report['cases']) == set(audited) == {f'{n}-{m}' for n, m in CASES}
+    for key, rows in report['cases'].items():
+        assert len(rows) == len(audited[key]) == 16
+        population, mode = map(int, key.split('-'))
+        for row, expected in zip(rows, audited[key]):
+            part = folder / row['folder']
+            recorded = json.loads((part / 'observation.json').read_text())
+            assert recorded['failure'] is None and recorded['status'] == row['status'] == 0
+            assert recorded['snapshots'] == row['snapshots'] and not row['stderr']
+            decode_output(row['stdout'], population, mode, int(row['command'][3]))
+            for snapshot in row['snapshots']:
+                raw = {}
+                for name, file in snapshot['files'].items():
+                    data = (part / file['file']).read_bytes()
+                    assert hashlib.sha256(data).hexdigest() == file['sha256']
+                    raw[name] = data.decode()
+                parsed = mappings(raw['smaps'])
+                assert summary(parsed) == snapshot['metrics']
+                assert categories(parsed, Path(row['command'][0])) == snapshot['categories']
+                assert fast_counters(raw['status'], raw['statm'], report['pageBytes']) == snapshot['fast']
+            peak = max(s['metrics']['residentKiB'] for s in row['snapshots'])
+            anonymous = max(s['metrics']['anonymousKiB'] for s in row['snapshots'])
+            assert peak == row['observedResidentPeakKiB'] == expected['observedResidentPeakKiB']
+            assert anonymous == row['observedAnonymousPeakKiB'] == expected['observedAnonymousPeakKiB']
+            assert (row['label'], row['round'], len(row['snapshots'])) == (expected['label'], expected['round'], expected['snapshots'])
+    return audited
 
 
 def records(folder, source):

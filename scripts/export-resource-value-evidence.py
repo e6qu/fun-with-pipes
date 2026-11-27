@@ -10,14 +10,14 @@ import shutil
 import subprocess
 import zipfile
 
-from resource_value_review import compiler, counts, http, runtime
+from resource_value_review import compiler, counts, http, memory, runtime
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('run', 'source'):
         parser.add_argument('--' + name, required=True)
-    parser.add_argument('--kind', choices=('compiler', 'runtime', 'counts', 'http'), required=True)
+    parser.add_argument('--kind', choices=('compiler', 'runtime', 'counts', 'http', 'memory'), required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true'
@@ -42,7 +42,8 @@ def main():
     for name, value in (('run', state), ('artifacts', listing), ('jobs', jobs)):
         (args.output / (name + '.json')).write_text(json.dumps(value, indent=2) + '\n')
     prefix = {'compiler': 'nested-resource-time-', 'runtime': 'nested-resource-time-',
-              'counts': 'nested-resource-owners-', 'http': 'http-load-'}[args.kind]
+              'counts': 'nested-resource-owners-', 'http': 'http-load-',
+              'memory': 'nested-resource-memory-'}[args.kind]
     artifacts = [row for row in listing['artifacts'] if row['name'].startswith(prefix)]
     assert len(artifacts) in (2, 4), [row['name'] for row in listing['artifacts']]
     index = {}
@@ -76,7 +77,8 @@ def main():
                 command = None
             if command:
                 subprocess.run([*command, '--source', args.source, '--arch', arch], check=True)
-            review = {'compiler': compiler, 'http': http, 'counts': counts, 'runtime': runtime}[args.kind](root, args.source)
+            review = {'compiler': compiler, 'http': http, 'counts': counts,
+                      'runtime': runtime, 'memory': memory}[args.kind](root, args.source)
             (root / 'reconstructed.json').write_text(json.dumps(review, indent=2) + '\n')
             kept = 0
             for path in sorted(root.rglob('*')):
