@@ -16,6 +16,10 @@ on:
       weak_time_tag:
         description: Immutable weak-reference or callback-service timing source tag
         type: string
+      compiler_costs:
+        description: Collect compiler costs with nested or resource-value service timing
+        type: boolean
+        default: true
       buffer_time_tag:
         description: Immutable returned-buffer timing source tag
         type: string
@@ -95,6 +99,7 @@ jobs:
     with:
       source_tag: ${{ inputs.weak_time_tag }}
       reference_source: ${{ inputs.suite == 'resource-value-time' && '5a9047178b88c801f37a279dfeca55b0e190bf07' || '65719f7fc2277a5b97c5a790df941fea6c5eb4d7' }}
+      compiler_costs: ${{ inputs.compiler_costs }}
   nested_resource_owners:
     if: inputs.suite == 'nested-resource-owners' || inputs.suite == 'nested-resource-lifetime' || inputs.suite == 'resource-value-owners'
     uses: ./.github/workflows/nested-resource-owners.yml

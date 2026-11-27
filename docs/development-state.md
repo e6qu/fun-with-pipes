@@ -25,10 +25,17 @@ No delivery PR is open during measurement preparation.
   be captured by a branch closure. Those fixture spellings are corrected; a
   callback type diagnostic is also being checked after the name corrections.
   The production proof and its previously passing native/count controls are unchanged.
-- Ordinary service/peer/compiler measurements: `46065857276`, at immutable
-  `roadmap/resource-value-time-preparation-2026-11-27` (production proof unchanged
-  from the initial count run). HTTP cleanup controls: `46065944554`; sustained
-  load: `46065948202`. All are pending, not verified support.
+- Ordinary measurement preparation `46065857276`, at immutable
+  `roadmap/resource-value-time-preparation-2026-11-27`, collected both compiler
+  sessions but rejected the service tag before collecting any service timing.
+  The tag check now accepts the explicit resource-value preparation prefix.
+  Preserve the original compiler sessions, including unmet/noisy cases; the
+  corrected service run explicitly disables repeated compiler measurements.
+  HTTP cleanup controls `46065944554` pass; sustained load `46065948202` is pending.
+- Fixture run `46066997172` confirms the callback spelling must call the returned
+  function explicitly: a subsequent pipe composes functions instead. Corrected
+  spelling is pending native verification. Retained attribution reconstruction
+  passes in documentation run `46067000815`; its remaining checks are pending.
 - Small audited attribution export `46065853405` passes both hosts; review data
   is retained in `measurements/resource-frame-attribution-2026-11-27`. Full native
   archives stay on runners. Earlier preparation `46062709945` failed on report-hook scope and

@@ -8,6 +8,9 @@ on:
       reference_source:
         type: string
         required: true
+      compiler_costs:
+        type: boolean
+        required: true
 permissions:
   contents: read
 jobs:
@@ -127,7 +130,7 @@ jobs:
           python3 scripts/audit-nested-resource-time.py --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           python3 scripts/check-nested-resource-audits.py --kind time --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output nested-time-audit-controls
       - name: Ordinary compiler costs and diagnostic agreement
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.compiler_costs }}
         shell: bash
         run: |
           set -euo pipefail
