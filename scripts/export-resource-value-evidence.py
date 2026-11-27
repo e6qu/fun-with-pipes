@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import zipfile
 
-from resource_value_review import compiler, http
+from resource_value_review import compiler, counts, http, runtime
 
 
 def main():
@@ -76,9 +76,8 @@ def main():
                 command = None
             if command:
                 subprocess.run([*command, '--source', args.source, '--arch', arch], check=True)
-            if args.kind in ('compiler', 'http'):
-                review = compiler(root, args.source) if args.kind == 'compiler' else http(root, args.source)
-                (root / 'reconstructed.json').write_text(json.dumps(review, indent=2) + '\n')
+            review = {'compiler': compiler, 'http': http, 'counts': counts, 'runtime': runtime}[args.kind](root, args.source)
+            (root / 'reconstructed.json').write_text(json.dumps(review, indent=2) + '\n')
             kept = 0
             for path in sorted(root.rglob('*')):
                 if not path.is_file() or path.suffix not in (

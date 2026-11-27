@@ -1,0 +1,380 @@
+{
+  "id": 46065857276,
+  "name": "Numerical and ownership evidence",
+  "node_id": "WFR_kwLOU33zxM8AAAAKub0y_A",
+  "head_branch": "resource-frame-costs",
+  "head_sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+  "path": ".github/workflows/numerics.yml",
+  "display_title": "Numerical and ownership evidence",
+  "run_number": 1613,
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "failure",
+  "workflow_id": 382044869,
+  "check_suite_id": 124624161789,
+  "check_suite_node_id": "CS_kwDOU33zxM8AAAAdBC3L_Q",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/46065857276",
+  "pull_requests": [],
+  "created_at": "2026-11-27T20:46:06Z",
+  "updated_at": "2026-11-27T21:02:33Z",
+  "actor": {
+    "login": "e6qu",
+    "id": 2966430,
+    "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/e6qu",
+    "html_url": "https://github.com/e6qu",
+    "followers_url": "https://api.github.com/users/e6qu/followers",
+    "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+    "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+    "organizations_url": "https://api.github.com/users/e6qu/orgs",
+    "repos_url": "https://api.github.com/users/e6qu/repos",
+    "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/e6qu/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "run_attempt": 1,
+  "referenced_workflows": [
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/compiler-sampling.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/service-cpu.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/weak-callback-time.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/local-derivatives.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/numeric-worker-analysis.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/ownership-peers.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/nested-resource-memory.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/parser-native-allocator.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/structured-ad.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/numerical-regressions.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/http-load.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/parser-process-memory.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/parser-mapping-accounting.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/compiler-type-walks.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/borrowed-array-costs.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/weak-operation-time.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/parser-allocator-calibration.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/nested-resource-owners.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/tape-records.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/parser-heap-events.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/loop-array-diagnosis.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/returned-buffer-time.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/tape-measurements.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/local-derivative-audit.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/compiler-checking.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/nested-resource-time.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/compiler-scaling.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/resource-field-census.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/application-tooling.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/windows.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    },
+    {
+      "path": "e6qu/fun-with-pipes/.github/workflows/evidence-maintenance.yml@cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "sha": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+      "ref": "refs/heads/resource-frame-costs"
+    }
+  ],
+  "run_started_at": "2026-11-27T20:46:06Z",
+  "triggering_actor": {
+    "login": "e6qu",
+    "id": 2966430,
+    "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/e6qu",
+    "html_url": "https://github.com/e6qu",
+    "followers_url": "https://api.github.com/users/e6qu/followers",
+    "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+    "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+    "organizations_url": "https://api.github.com/users/e6qu/orgs",
+    "repos_url": "https://api.github.com/users/e6qu/repos",
+    "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/e6qu/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "jobs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276/jobs",
+  "logs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276/logs",
+  "check_suite_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-suites/124624161789",
+  "artifacts_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276/artifacts",
+  "cancel_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276/cancel",
+  "rerun_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/46065857276/rerun",
+  "previous_attempt_url": null,
+  "workflow_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/workflows/382044869",
+  "head_commit": {
+    "id": "cee08dcbd422831d5fa6a1f56963aaedfd09d1fd",
+    "tree_id": "4bb98af1b1d82ee86a418b4affafdef270906d7b",
+    "message": "Export audited frame evidence without copying native binaries locally",
+    "timestamp": "2026-11-27T20:45:58Z",
+    "author": {
+      "name": "Adrian M\u00e2rza",
+      "email": "adi11235 at gmail.com"
+    },
+    "committer": {
+      "name": "Adrian M\u00e2rza",
+      "email": "adi11235 at gmail.com"
+    }
+  },
+  "repository": {
+    "id": 1400763332,
+    "node_id": "R_kgDOU33zxA",
+    "name": "fun-with-pipes",
+    "full_name": "e6qu/fun-with-pipes",
+    "private": false,
+    "owner": {
+      "login": "e6qu",
+      "id": 2966430,
+      "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/e6qu",
+      "html_url": "https://github.com/e6qu",
+      "followers_url": "https://api.github.com/users/e6qu/followers",
+      "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+      "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+      "organizations_url": "https://api.github.com/users/e6qu/orgs",
+      "repos_url": "https://api.github.com/users/e6qu/repos",
+      "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/e6qu/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/e6qu/fun-with-pipes",
+    "description": null,
+    "fork": false,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes",
+    "forks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/forks",
+    "keys_url": "https://api.github.com/repos/e6qu/fun-with-pipes/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/e6qu/fun-with-pipes/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/e6qu/fun-with-pipes/teams",
+    "hooks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/hooks",
+    "issue_events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/events",
+    "assignees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/e6qu/fun-with-pipes/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/tags",
+    "blobs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/e6qu/fun-with-pipes/languages",
+    "stargazers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/stargazers",
+    "contributors_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contributors",
+    "subscribers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscribers",
+    "subscription_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscription",
+    "commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/e6qu/fun-with-pipes/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/e6qu/fun-with-pipes/merges",
+    "archive_url": "https://api.github.com/repos/e6qu/fun-with-pipes/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/e6qu/fun-with-pipes/downloads",
+    "issues_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/e6qu/fun-with-pipes/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/e6qu/fun-with-pipes/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/e6qu/fun-with-pipes/labels{/name}",
+    "releases_url": "https://api.github.com/repos/e6qu/fun-with-pipes/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/deployments"
+  },
+  "head_repository": {
+    "id": 1400763332,
+    "node_id": "R_kgDOU33zxA",
+    "name": "fun-with-pipes",
+    "full_name": "e6qu/fun-with-pipes",
+    "private": false,
+    "owner": {
+      "login": "e6qu",
+      "id": 2966430,
+      "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/e6qu",
+      "html_url": "https://github.com/e6qu",
+      "followers_url": "https://api.github.com/users/e6qu/followers",
+      "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+      "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+      "organizations_url": "https://api.github.com/users/e6qu/orgs",
+      "repos_url": "https://api.github.com/users/e6qu/repos",
+      "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/e6qu/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/e6qu/fun-with-pipes",
+    "description": null,
+    "fork": false,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes",
+    "forks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/forks",
+    "keys_url": "https://api.github.com/repos/e6qu/fun-with-pipes/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/e6qu/fun-with-pipes/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/e6qu/fun-with-pipes/teams",
+    "hooks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/hooks",
+    "issue_events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/events",
+    "assignees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/e6qu/fun-with-pipes/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/tags",
+    "blobs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/e6qu/fun-with-pipes/languages",
+    "stargazers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/stargazers",
+    "contributors_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contributors",
+    "subscribers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscribers",
+    "subscription_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscription",
+    "commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/e6qu/fun-with-pipes/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/e6qu/fun-with-pipes/merges",
+    "archive_url": "https://api.github.com/repos/e6qu/fun-with-pipes/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/e6qu/fun-with-pipes/downloads",
+    "issues_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/e6qu/fun-with-pipes/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/e6qu/fun-with-pipes/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/e6qu/fun-with-pipes/labels{/name}",
+    "releases_url": "https://api.github.com/repos/e6qu/fun-with-pipes/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/deployments"
+  }
+}

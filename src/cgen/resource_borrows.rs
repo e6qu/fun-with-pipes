@@ -18,7 +18,10 @@ struct LocalState {
 
 struct Scan<'a> {
     locals: Vec<LocalState>,
-    plain: Vec<bool>,
+    local_types: &'a [MT],
+    shapes: &'a Shapes,
+    plain: Vec<Option<bool>>,
+    plain_types: HashMap<&'a MT, bool>,
     funcs: &'a [Func],
     depth: usize,
     undo: Vec<(Local, LocalState)>,
@@ -38,8 +41,20 @@ impl Scan<'_> {
         }
     }
 
-    fn protected(&self, local: Local) -> Protection {
-        if self.plain[local as usize] {
+    fn protected(&mut self, local: Local) -> Protection {
+        let index = local as usize;
+        let plain = match self.plain[index] {
+            Some(plain) => plain,
+            None => {
+                let ty = &self.local_types[index];
+                let plain = *self.plain_types.entry(ty).or_insert_with(|| {
+                    crate::tailrec::plain_data(self.shapes, ty, &mut HashSet::new())
+                });
+                self.plain[index] = Some(plain);
+                plain
+            }
+        };
+        if plain {
             Some(0)
         } else {
             self.locals[local as usize].protection
@@ -238,18 +253,12 @@ pub(super) fn parameters(
     if !fresh_bindings(root, &mut (0..arity).collect()) {
         return HashMap::new();
     }
-    let mut types = HashMap::new();
-    let plain = locals
-        .iter()
-        .map(|ty| {
-            *types
-                .entry(ty)
-                .or_insert_with(|| crate::tailrec::plain_data(shapes, ty, &mut HashSet::new()))
-        })
-        .collect();
     let mut scan = Scan {
         locals: vec![LocalState::default(); locals.len()],
-        plain,
+        local_types: locals,
+        shapes,
+        plain: vec![None; locals.len()],
+        plain_types: HashMap::new(),
         funcs,
         depth: 0,
         undo: Vec::new(),

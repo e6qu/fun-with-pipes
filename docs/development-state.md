@@ -36,6 +36,15 @@ No delivery PR is open during measurement preparation.
   function explicitly: a subsequent pipe composes functions instead. Corrected
   spelling is pending native verification. Retained attribution reconstruction
   passes in documentation run `46067000815`; its remaining checks are pending.
+- Original compiler reconstruction passes in export `46068360511`: acceptance
+  is 61/64, with two noisy AMD64 comparisons and a qualified 2.059% generic-512
+  increase against the frozen 2% limit. Retain all original observations in
+  [the cost report](measurements/resource-value-costs-2026-11-27/README.md).
+  The compiler repair classifies only queried locals, caching per local and type;
+  new compiler measurements and exact-C equivalence are pending. Runtime run
+  `46067853489` continues on the original implementation. Corrected fixture run
+  `46067857005` type-checks the callback and is running native semantic/count gates.
+  HTTP load `46065948202` and documentation `46067000815` now pass completely.
 - Small audited attribution export `46065853405` passes both hosts; review data
   is retained in `measurements/resource-frame-attribution-2026-11-27`. Full native
   archives stay on runners. Earlier preparation `46062709945` failed on report-hook scope and
