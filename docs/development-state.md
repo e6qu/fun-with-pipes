@@ -62,7 +62,8 @@ recover the original processes or establish exact transient peaks. Keep their
 - Initial PR documentation `46074605235` exposed missing mapping-control
   `.smaps` files in the text export. The exporter now includes them and checks
   reconstruction after filtering, before publishing the archive. Its corrected
-  export and final PR gates are pending; original native observations are unchanged.
+  export `46075009391` passes, including reconstruction of the filtered archive.
+  Final PR gates remain pending; original native observations are unchanged.
 - Earlier failures are preserved: attribution `46062709945` needed scoped hooks
   and OpenSSL linkage; `46064688201` needed runner-generated formatting;
   `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and

@@ -228,5 +228,6 @@ native-image downloads. Metadata is losslessly gzip-compressed.
 Repair exports `46070520960` (compiler) and `46070235418` (counts) use the same
 raw reconstruction; original and repaired reports remain separate.
 Runtime export `46073885767` includes every original timing/RSS result and GCC
-stack report. Memory export `46073880453` reconstructs every saved raw snapshot;
+stack report. Corrected memory export `46075009391` reconstructs every saved raw snapshot,
+including mapping controls, after filtering the retained archive;
 its small archive contains text observations, not the native executables.
