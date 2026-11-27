@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
 import zipfile
 
 from resource_value_review import compiler, counts, http, memory, runtime
@@ -83,7 +84,7 @@ def main():
             kept = 0
             for path in sorted(root.rglob('*')):
                 if not path.is_file() or path.suffix not in (
-                    '.json', '.jsonl', '.txt', '.resources', '.stdout', '.stderr', '.log', '.fwp', '.su'
+                    '.json', '.jsonl', '.txt', '.resources', '.stdout', '.stderr', '.log', '.fwp', '.su', '.smaps'
                 ):
                     continue
                 data = path.read_bytes()
@@ -98,6 +99,21 @@ def main():
             shutil.rmtree(root)
             archive.unlink()
             print('Verified and exported', artifact['name'], kept, 'text bytes', flush=True)
+    # Audit the exported view too: a successful native audit cannot detect a
+    # later omission of text files required by the retained reader.
+    with tempfile.TemporaryDirectory() as temporary, zipfile.ZipFile(args.output / 'reports.zip') as archive:
+        retained_root = Path(temporary)
+        archive.extractall(retained_root)
+        for artifact in artifacts:
+            root = retained_root / artifact['name']
+            reconstructed = json.loads((root / 'reconstructed.json').read_text())
+            if args.kind == 'http':
+                actual = json.loads((root / 'http-load/summary.json').read_text())
+            else:
+                actual = {'compiler': compiler, 'counts': counts, 'runtime': runtime,
+                          'memory': memory}[args.kind](root, args.source)
+            assert actual == reconstructed
+        print('Every exported text archive reconstructs without native images', flush=True)
     for job in jobs['jobs']:
         if job['conclusion'] == 'skipped':
             continue

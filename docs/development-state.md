@@ -4,9 +4,10 @@ Updated 2026-11-28. **Current delivery: one substantial PR from
 `resource-frame-costs`, with every final-head production, documentation and
 complete-log gate required before merge.** Preparation is complete and retained;
 the checks below are focused evidence, not a substitute for the final matrix.
-Branch starts from verified #278. Consult its PR for final delivery receipts.
+Branch starts from verified #278. [PR #279](https://github.com/e6qu/fun-with-pipes/pull/279)
+contains final delivery receipts.
 
-**Next roadmap action after delivery: establish a controlled way to explain
+**Next: after delivery, establish a controlled way to explain
 the four original RSS misses.** The completed page-walk diagnostic cannot
 recover the original processes or establish exact transient peaks. Keep their
 5% acceptance limits open; do not rerun unchanged timings to qualify them.
@@ -58,6 +59,10 @@ recover the original processes or establish exact transient peaks. Keep their
   Repair exports `46070520960` and `46070235418` also pass raw reconstruction.
   Runtime/stack export `46073885767` and memory export `46073880453` pass;
   all original misses remain in the retained report.
+- Initial PR documentation `46074605235` exposed missing mapping-control
+  `.smaps` files in the text export. The exporter now includes them and checks
+  reconstruction after filtering, before publishing the archive. Its corrected
+  export and final PR gates are pending; original native observations are unchanged.
 - Earlier failures are preserved: attribution `46062709945` needed scoped hooks
   and OpenSSL linkage; `46064688201` needed runner-generated formatting;
   `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and
