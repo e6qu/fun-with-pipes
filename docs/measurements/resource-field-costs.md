@@ -1,8 +1,10 @@
-# Keep only necessary fields in resource-lifetime records
+# Remove unnecessary resource-lifetime holds
 
-**Both native compiler and service-operation censuses pass.**
-No production optimization is implemented yet. Baseline: PR #276's verified
-compiler tree, merged as `b2bbd0389d227ea097ea1239d8d02ec6346f4be7`.
+**Native compiler, service and HTTP attribution pass.** The selected value proof
+is implemented and meets the focused operation-count targets; ordinary timing
+and final delivery acceptance are pending. The original field investigation's
+baseline is PR #276's verified compiler tree,
+`b2bbd0389d227ea097ea1239d8d02ec6346f4be7`; the selected extension uses #278 below.
 [Its original timing and RSS limits remain open](nested-resource-time-2026-11-10/README.md).
 
 ## The extra work to measure
@@ -43,8 +45,10 @@ This source observation does not establish how often it runs or a speedup.
    fields removes enough work to pursue. Freeze ordinary time, memory and compiler
    cost targets before changing production code. If this cost is negligible,
    select another measured cost; do not ship an unmeasured micro-optimization.
-4. **Prove lifetimes and measure the result.** Select only separately represented
-   fields. Keep unknown closures and opaque containers. Preserve ordinary owners,
+4. **Prove lifetimes and measure the result.** Field-only selections require
+   separately represented fields; value selections require surviving enclosing
+   owners and actual constructor/capture evidence. Keep unknown closures and
+   opaque containers. Preserve ordinary owners,
    returned aliases, first-trap order, weak expiry, cancellation and failure cleanup.
    Test values with no spare owner, stack aggregates, branches, escaping fields,
    initialization failures and reuse. Empty runtime frames must still restore

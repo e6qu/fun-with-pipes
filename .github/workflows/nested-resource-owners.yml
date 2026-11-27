@@ -65,6 +65,18 @@ jobs:
         run: |
           cargo test --locked --lib cgen::resource_borrows::tests -- --nocapture
           cargo test --locked --lib resource::tests -- --nocapture
+      - name: Check new weak-lifetime fixture before the native group
+        if: ${{ !cancelled() && inputs.scope == 'values' }}
+        run: |
+          cargo build --locked --offline --bin fwp
+          target/debug/fwp check tests/fixtures/weak_channels.fwp > resource-value-fixture.log 2>&1
+      - name: Publish early fixture diagnostics
+        if: ${{ always() && inputs.scope == 'values' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: resource-value-fixture-${{ matrix.runner }}
+          path: resource-value-fixture.log
+          if-no-files-found: error
       - name: Verify actual service cleanup, weak expiration and caller lifetimes
         if: ${{ !cancelled() && inputs.scope != 'lifetime' }}
         run: >-

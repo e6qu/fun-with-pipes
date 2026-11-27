@@ -71,14 +71,14 @@ OwnerBox = { owner: Channel[I64], label: I64 }
 box-owner : Channel[I64] -> OwnerBox
 box-owner = fn owner -> { owner = owner, label = 7 }
 through-box : OwnerBox -> OwnerBox
-through-box = fn box -> let nested = { value = box } in nested.value
+through-box = fn box -> let nested = { value = box } in nested | .value
 choose-box : Bool -> OwnerBox -> OwnerBox
 choose-box = fn flag -> fn box -> flag | match
-    True -> { owner = box.owner, label = 1 }
-    False -> { owner = box.owner, label = 2 }
+    True -> { owner = box | .owner, label = 1 }
+    False -> { owner = box | .owner, label = 2 }
 observe-box : OwnerBox -> Bool ! {Async}
 observe-box = fn box ->
-    let weak = channel.downgrade box.owner
+    let weak = box | .owner | channel.downgrade
     in let discarded = ignore box
     in channel.upgrade weak | option.is-some
 escaped-box : () -> WeakChannel[I64] ! {Async}

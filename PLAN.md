@@ -75,16 +75,21 @@ retain one noisy runtime comparison, one noisy compiler comparison and four ARM6
 RSS misses. The separate memory diagnostic does not explain or replace those misses.
 All 34 HTTP load trials pass; they are capacity evidence, not an HTTP speedup.
 
-**Next: count unnecessary plain-data holds in mixed resource-lifetime records.**
+**Current delivery: preserve enclosing resource protection through constructed values.**
 The [investigation](docs/measurements/resource-field-costs.md) first matches exact
 compiler contexts to unchanged generated C, then counts executed holds in the
 queued service and HTTP endpoint. [Both native static censuses pass](docs/measurements/resource-field-census-2026-11-10/README.md),
 identifying five service slots and twenty HTTP slots. [Executed service counts](docs/measurements/resource-field-holds-2026-11-10/README.md)
-attribute only 1.35–1.70% of successful retains to those plain fields. Measure HTTP
-and callable-field/whole-frame work before selecting a field-only change; capture
-origins require their own bounded proof. Select a bounded field proof only after those
-counts show worthwhile work; freeze ordinary measurement targets before changing
-production code. Keep original disposal timing and ordinary argument ownership.
+attribute only 1.35–1.70% of successful retains to those plain fields. The new
+[native HTTP/callable/frame attribution](docs/measurements/resource-field-costs.md#selected-extension-carry-enclosing-lifetime-protection-through-values)
+passes on both architectures: whole original frames account for 21.6% of service
+and 24.3% of HTTP cleanup registrations, while plain HTTP fields contribute only
+0.09% of successful retains. A field-only optimization remains rejected.
+The selected extension carries surviving owner provenance through new records,
+known partial captures and returned aliases. Its correctness, count, ordinary
+timing, memory and compiler-cost targets were frozen before implementation.
+Complete those checks and final delivery gates; keep original disposal timing
+and ordinary argument ownership. Implementation alone does not complete step 8.
 
 The 4,096-message full-delivery service still takes 14.93–16.78 times C's time
 and 4.32–5.34 times Swift's. Different representations and synchronization matter;

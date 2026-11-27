@@ -1,32 +1,42 @@
 # Current work
 
-Updated 2026-11-27. **Current delivery: attribute HTTP/callback/frame work, then
-select and validate a measured improvement in one substantial PR.**
-Follow [the ordered investigation](measurements/resource-field-costs.md).
-Branch `resource-frame-costs` starts from #278. The new `resource-frame-counts`
-focused suite extends the saved native census to complete original frames,
-typed fields and concrete closure function IDs/capture counts. It runs all eight
-service cases and fixed 64/256-request HTTP sessions at GCC O1/O2, retaining raw
-responses, shutdown, C, native binaries and commands. Baseline, attribution and
-an actual extra owner/release are separate builds. Run `46063375647` passes both
-native hosts, including 44 raw executions, 12 native images and altered-summary
-controls per host. ARM64/AMD64 agree on the service and HTTP counts. The contract
-now selects provenance through records, known partial captures and returned
-aliases; its numeric targets are frozen before implementation in the linked
-investigation. Next: implement the bounded proof and its lifetime controls,
-then measure it against #278. The first implementation tracks the oldest active
-protecting frame through returned records, branch joins and known unsaturated
-captures; it rejects values whose only owner ends at the expression boundary.
-It retains the two-pass freshness/scope scan and caches local type classification.
-This implementation is not yet verified. `resource-value-owners` runs the proof,
-lifetime/service controls and real counts against #278, requiring its ordinary
-service/HTTP C to match the frozen census. The earlier preparation run `46062709945` failed
-on a report-hook scope assertion and missing HTTP TLS linkage; both are fixed.
-Local disk is now about 22 GiB free, below the unchanged 64 GiB floor; execution
-checks remain on GitHub runners. No local compiler or tests ran for this work.
-PR #278 is merged and fully verified. It completes #277's delivery record and
-repository ignore rules, and repairs current Rust/Windows toolchain failures.
-It changes no production ownership behavior or performance claim.
+Updated 2026-11-27. **Next: complete the focused lifetime and ordinary performance
+checks, retain their evidence, then open one substantial PR and finish every gate.**
+Branch `resource-frame-costs` starts from verified #278. Follow the
+[frozen value-protection contract](measurements/resource-field-costs.md).
+No delivery PR is open during measurement preparation.
+
+- Native attribution `46063375647` passes both hosts: 44 executions, 12 native
+  binaries and altered-summary controls each. ARM64/AMD64 service/HTTP counts
+  agree. Source `041db8772962f0e15ff44d70b56f1142fc8aa103` is retained by
+  `roadmap/resource-frame-attribution-preparation-2026-11-27`.
+- Contract `a107435fe3b19963e3670a66e29fa211f82a35fa` is retained by
+  `roadmap/resource-value-contract-2026-11-27`; it predates implementation.
+- The implemented proof carries the oldest enclosing lifetime owner through
+  new records, known partial captures and returned values. It rejects protection
+  from ended scopes, unknown factories, unsafe joins and rebound locals.
+- Initial implementation run `46064688201` passes proof, semantic and raw-count
+  checks, but fails formatting on both hosts. The runner-generated patch from
+  `46064969889` is applied. Count targets pass: large cases remove 15–21% of
+  cleanup registrations, 13.5–17% of successful retains and 2,048–4,096 allocation
+  requests, with unchanged charged peak and complete release. This is not timing.
+- Corrected run `46065431503` passes formatting/Clippy, but added fixture cases
+  fail before execution: local member access must use pipes, and a File cannot
+  be captured by a branch closure. Those fixture spellings are corrected; a
+  callback type diagnostic is also being checked after the name corrections.
+  The production proof and its previously passing native/count controls are unchanged.
+- Ordinary service/peer/compiler measurements: `46065857276`, at immutable
+  `roadmap/resource-value-time-preparation-2026-11-27` (production proof unchanged
+  from the initial count run). HTTP cleanup controls: `46065944554`; sustained
+  load: `46065948202`. All are pending, not verified support.
+- Small audited attribution export `46065853405` passes both hosts; review data
+  is retained in `measurements/resource-frame-attribution-2026-11-27`. Full native
+  archives stay on runners. Earlier preparation `46062709945` failed on report-hook scope and
+  missing HTTP TLS linkage; corrected attribution and raw audit pass.
+
+Local disk is about 22 GiB free. `python3 scripts/local-guard.py git diff --check`
+refused below the unchanged 64 GiB floor. No local compiler or tests ran; no
+limits were raised. PR #278 already delivered the reviewed ignore rules.
 
 Local `main` is current at `5a9047178b88c801f37a279dfeca55b0e190bf07`.
 The previous branch `finish-delivery-hygiene` retains tested head
@@ -104,31 +114,15 @@ It does not establish the cause of the original RSS misses or replace their limi
 pass: 26,228,542 attempts, no failures, successful shutdowns and flat sampled RSS.
 This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 
-## Prepared census and remaining work
+## Selection and implementation scope
 
-- `resource_field_census.py` reports exact original-frame contexts, concrete types
-  and the current resource classification in a separate diagnostic compiler.
-- `inspect-nested-resource-analysis.py` now requires `--kind nested-borrows` or
-  `--kind plain-fields`; the existing timing workflow supplies its mode explicitly.
-  The new mode compares exact emitted C on 17 inputs, including the exported service.
-- `resource-field-census.yml` builds both compilers on native runners and retains
-  all C, classifications, commands and failures. No ordinary runtime is timed.
-- Census finds five plain field slots in the service and twenty in HTTP; these
-  are emitted sites, not executed counts or a speedup.
-- `measure-resource-field-holds.py` passes GCC O1/O2 on both native hosts using
-  saved service C: baseline totals, attributed holds, one actual added hold/release
-  and all eight cases. Its raw auditor verifies native binaries and rejects changed
-  summaries even with refreshed checksums. No compiler rebuild or timing was needed.
-- Plain fields cause only 1.35–1.70% of successful retains in large service cases.
-  Child decrements are not all removable work. A standalone field-only optimization
-  is not selected; secondary reuse benefits remain unmeasured.
-- Next implementation selection needs HTTP executed counts and attribution of
-  callable-field holds/whole-frame setup. Arrow types do not reveal captures: a
-  later proof must establish actual constructor origin and captured values, reject
-  executed/nullary constructors and preserve branch/loop lifetime boundaries.
-- Scope is separately represented fields. Keep ordinary owners, opaque closures,
-  variants and containers. Do not infer captures from arrow types or classify an
-  ordinary cleanup record as an original resource-lifetime record.
+The earlier [static census](measurements/resource-field-census-2026-11-10/README.md)
+and [plain-field service counts](measurements/resource-field-holds-2026-11-10/README.md)
+remain unchanged evidence. Whole-frame service registrations are 21.6% of all
+registrations; HTTP has 24.3%. Plain HTTP fields cause only 0.09% of successful
+retains. The selected proof extends enclosing ownership; a standalone plain-field
+optimization is rejected. Actual callable constructors/captures are inspected,
+not inferred from arrow types. Keep ordinary owners and original disposal timing.
 
 ## Roadmap status
 
@@ -141,7 +135,7 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | #277 static/service-execution censuses; all delivery gates and log audit | HTTP/callable attribution, selected proof and measurements |
+| 8 | In progress | #277 baseline; new HTTP/callable attribution and implemented value proof | Corrected semantic gates, ordinary measurements and final delivery |
 
 ## Current checkout and local limits
 

@@ -302,13 +302,23 @@ decision, including region and numeric-array workers. Dropping both would free a
 caller's surviving alias ([regression and verification](measurements/parser-entry-cleanup-2026-11-09/README.md)).
 
 Original resource frames have a separate native proof in
-`src/cgen/resource_borrows.rs`. It follows initialized enclosing owners through
-aliases and immutable projections, then omits a nested parameter's duplicate
-lifetime hold. Scoped rollback separates branches; repeated local IDs and
-loop/tail-call rebinding prevent selection. It does not change ordinary argument
-contracts or interpreter metadata. [The lifetime example](ownership.md#keeping-a-resource-alive-through-nested-calls)
-and [measurement contract](measurements/nested-resource-owners.md) distinguish
-passing focused checks from still-open performance and final delivery requirements.
+`src/cgen/resource_borrows.rs`. It records the oldest active original frame that
+protects all observable resources in a value. Exact aliases, immutable projections,
+new records and known unsaturated functions can preserve that protection. A partial
+function is checked through its actual supplied captures, never through its arrow
+type. Returned values carry only protection from frames that survive the return;
+branch results must all have surviving protection. A newly initialized binding
+may establish an owner, but an empty future slot cannot.
+
+The scan omits only proved inner parameter anchors. Ordinary argument owners,
+binding anchors, interpreter metadata and evaluation order remain unchanged.
+Scoped rollback separates branches. Unknown/saturated factories, updated records,
+opaque constructors, repeated local IDs and loop/tail-call rebinding prevent
+selection. Two expression traversals check freshness and propagate protection;
+plain-data classification is cached per local type within the scan.
+[The lifetime example](ownership.md#keeping-a-resource-alive-through-nested-calls)
+and [current measurement contract](measurements/resource-field-costs.md) distinguish
+implementation, focused verification and final performance/delivery acceptance.
 
 The [gradient-storage group](measurements/gradient-call-storage.md) adds a
 private direct entry for known `ad.scope` callbacks returning arrays. It keeps

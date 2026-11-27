@@ -252,21 +252,21 @@ main = "PATH" | file.open | pack | through | .nested.file
         ),
         (
             "branch-record-true",
-            r#"choose : Bool -> File -> {file: File}
-choose = fn flag -> fn file -> flag | match
-    True -> {file = file}
-    False -> {file = file}
-main = "PATH" | file.open | choose True | .file
+            r#"choose : (Bool, File) -> {file: File}
+choose = match
+    (True, _) -> make {file = id}
+    (False, _) -> make {file = id}
+main = "PATH" | file.open | curry id True | choose | .file
     | file.read-all | second file.close | .0 | echo
 "#,
         ),
         (
             "branch-record-false",
-            r#"choose : Bool -> File -> {file: File}
-choose = fn flag -> fn file -> flag | match
-    True -> {file = file}
-    False -> {file = file}
-main = "PATH" | file.open | choose False | .file
+            r#"choose : (Bool, File) -> {file: File}
+choose = match
+    (True, _) -> make {file = id}
+    (False, _) -> make {file = id}
+main = "PATH" | file.open | curry id False | choose | .file
     | file.read-all | second file.close | .0 | echo
 "#,
         ),
