@@ -48,6 +48,43 @@ allocation traffic and a broken-counter control, slow-client write pressure,
 socket cancellation and the real load driver's failure controls. This is
 correctness evidence, not a comparison of HTTP speed.
 
+[Load run 46065948202](https://github.com/e6qu/fun-with-pipes/actions/runs/46065948202)
+passes all 34 trials: **29,756,171 attempts, zero failures**, successful shutdowns.
+Two sessions per architecture exercise 1/8/32/64 persistent loopback connections
+with two 30-second trials each; session 1 adds a five-minute 32-connection soak.
+Every trial uses five seconds of warmup, one outstanding request per connection,
+and checks the complete `GET /items/42` reply. GCC 13.3.0 O2, no LTO/contraction,
+explicit architecture and distinct allowed server/generator CPUs are retained.
+Exclusive physical-core placement is not established. No speed comparison with
+the reference compiler or other languages is made.
+
+| Five-minute soak | Correct replies/s | p99 response latency | Peak sampled server RSS |
+|---|---:|---:|---:|
+| ARM Neoverse-N2 | 20,425 | 2.336 ms | 10.75 MiB |
+| AMD64 Intel Xeon Platinum 8573C | 18,111 | 2.501 ms | 12.25 MiB |
+
+The second AMD64 session uses AMD EPYC 7763; both ARM sessions use Neoverse-N2.
+RSS is sampled process residency, not managed allocation traffic or a bound on
+transient peaks between samples. Complete per-trial samples and CPU use remain
+in `http-load/reports.zip`.
+
+## Lifetime and count controls
+
+[Run 46067857005](https://github.com/e6qu/fun-with-pipes/actions/runs/46067857005)
+passes both native hosts at `33149ad2fd888a66ff36b8eb7f2c5b61faccfccb`.
+Eleven proof tests and seven original-lifetime tests pass, along with the eight
+native semantic targets. Added cases cover returned records, both branch arms,
+newly returned files and strong callbacks observed through weak channels.
+Raw and optimized interpretation agree with native O1/O2; dynamic/static heap
+and physical-free/reuse checks retain their existing coverage.
+
+Each host reconstructs 32 native cases and eight real extra-cleanup/missing-free
+controls, then rejects six altered reports. All 16 count comparisons agree across
+architectures. Every large mode passes 10% fewer registrations and 5% fewer
+successful retains; charged peak is unchanged, each call fully releases storage,
+and allocation requests fall by 2,048–4,096 per call. These runs include counts,
+not ordinary timings.
+
 ## Retained evidence
 
 Runner exports `46068360511` (compiler) and `46068364228` (HTTP checks) verify
@@ -57,3 +94,7 @@ files; HTTP attempt summaries reconstruct from every compressed native attempt.
 Full compiler/native-image/HTTP-attempt archives remain in GitHub artifacts.
 Small text archives, original run/job/artifact metadata and complete job logs
 are retained here. Failed preparation and noisy/missed limits remain visible.
+Exports `46068367762` (load) and `46069093836` (counts) additionally re-audit
+every HTTP attempt and the complete native count archives. [The reader](read.py)
+checks every retained member and reconstructs compiler/count results without
+native-image downloads. Metadata is losslessly gzip-compressed.

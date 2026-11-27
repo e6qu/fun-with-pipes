@@ -1,74 +1,54 @@
 # Current work
 
-Updated 2026-11-27. **Next: complete the focused lifetime and ordinary performance
-checks, retain their evidence, then open one substantial PR and finish every gate.**
-Branch `resource-frame-costs` starts from verified #278. Follow the
-[frozen value-protection contract](measurements/resource-field-costs.md).
-No delivery PR is open during measurement preparation.
+Updated 2026-11-27. **Next: finish the compiler-cost repair and ordinary service
+measurements, retain their original outcomes, then deliver one substantial PR
+with all final-head gates.** Branch `resource-frame-costs` starts from verified
+#278. No delivery PR is open during preparation.
 
-- Native attribution `46063375647` passes both hosts: 44 executions, 12 native
-  binaries and altered-summary controls each. ARM64/AMD64 service/HTTP counts
-  agree. Source `041db8772962f0e15ff44d70b56f1142fc8aa103` is retained by
-  `roadmap/resource-frame-attribution-preparation-2026-11-27`.
-- Contract `a107435fe3b19963e3670a66e29fa211f82a35fa` is retained by
-  `roadmap/resource-value-contract-2026-11-27`; it predates implementation.
-- The implemented proof carries the oldest enclosing lifetime owner through
-  new records, known partial captures and returned values. It rejects protection
-  from ended scopes, unknown factories, unsafe joins and rebound locals.
-- Initial implementation run `46064688201` passes proof, semantic and raw-count
-  checks, but fails formatting on both hosts. The runner-generated patch from
-  `46064969889` is applied. Count targets pass: large cases remove 15–21% of
-  cleanup registrations, 13.5–17% of successful retains and 2,048–4,096 allocation
-  requests, with unchanged charged peak and complete release. This is not timing.
-- Corrected run `46065431503` passes formatting/Clippy, but added fixture cases
-  fail before execution: local member access must use pipes, and a File cannot
-  be captured by a branch closure. Those fixture spellings are corrected; a
-  callback type diagnostic is also being checked after the name corrections.
-  The production proof and its previously passing native/count controls are unchanged.
-- Ordinary measurement preparation `46065857276`, at immutable
-  `roadmap/resource-value-time-preparation-2026-11-27`, collected both compiler
-  sessions but rejected the service tag before collecting any service timing.
-  The tag check now accepts the explicit resource-value preparation prefix.
-  Preserve the original compiler sessions, including unmet/noisy cases; the
-  corrected service run explicitly disables repeated compiler measurements.
-  HTTP cleanup controls `46065944554` pass; sustained load `46065948202` is pending.
-- Fixture run `46066997172` confirms the callback spelling must call the returned
-  function explicitly: a subsequent pipe composes functions instead. Corrected
-  spelling is pending native verification. Retained attribution reconstruction
-  passes in documentation run `46067000815`; its remaining checks are pending.
-- Original compiler reconstruction passes in export `46068360511`: acceptance
-  is 61/64, with two noisy AMD64 comparisons and a qualified 2.059% generic-512
-  increase against the frozen 2% limit. Retain all original observations in
-  [the cost report](measurements/resource-value-costs-2026-11-27/README.md).
-  The compiler repair classifies only queried locals, caching per local and type;
-  new compiler measurements and exact-C equivalence are pending. Runtime run
-  `46067853489` continues on the original implementation. Corrected fixture run
-  `46067857005` type-checks the callback and is running native semantic/count gates.
-  HTTP load `46065948202` and documentation `46067000815` now pass completely.
-- Small audited attribution export `46065853405` passes both hosts; review data
-  is retained in `measurements/resource-frame-attribution-2026-11-27`. Full native
-  archives stay on runners. Earlier preparation `46062709945` failed on report-hook scope and
-  missing HTTP TLS linkage; corrected attribution and raw audit pass.
+- [The frozen contract](measurements/resource-field-costs.md) predates production
+  code: `a107435fe3b19963e3670a66e29fa211f82a35fa`, retained by
+  `roadmap/resource-value-contract-2026-11-27`.
+- [Native attribution](measurements/resource-frame-attribution-2026-11-27/README.md)
+  passes both hosts in `46063375647`: 44 executions and 12 native images each,
+  real extra-owner and altered-summary controls. Source `041db8772962f0e15ff44d70b56f1142fc8aa103`
+  is retained by `roadmap/resource-frame-attribution-preparation-2026-11-27`.
+- The proof carries surviving ownership through records, known partial captures,
+  returned values and branch joins. Saturated/unknown factories, ended scopes,
+  unsafe joins and rebound locals remain conservative. Ordinary owners and
+  original binding anchors remain intact.
+- Focused `46067857005` passes both native hosts at `33149ad2fd888a66ff36b8eb7f2c5b61faccfccb`:
+  all 11 proof tests, seven resource tests, eight semantic targets, 32 count cases,
+  eight real faults and six altered reports per host. Large cases remove 15–21%
+  of registrations, 13.5–17% of successful retains and 2,048–4,096 allocation
+  requests; charged peak is unchanged and all storage releases. These are counts.
+- [Original compiler costs](measurements/resource-value-costs-2026-11-27/README.md)
+  from `46065857276` reconstruct: 61/64 acceptance, two noisy AMD64 comparisons
+  and a qualified 2.059% generic-512 increase against the frozen 2% limit.
+  The repair classifies only queried locals, caching per local and type. New
+  compiler run `46068984506` must also prove unchanged C for four applications
+  and twelve growth inputs. Focused repair checks: `46068988582`. Both pending.
+  Source-format `46068992809` passes with an empty patch.
+- Ordinary service/peer run `46067853489` continues on the original proof.
+  Compiler-only repair measurements do not repeat those runtime observations;
+  reusing them requires exact emitted-C equivalence. No speedup is claimed yet.
+- HTTP cleanup `46065944554` and load `46065948202` pass: 34 load trials,
+  29,756,171 attempts, zero failures and successful shutdowns. All sampled
+  within-trial RSS slopes are zero. This is capacity evidence, not HTTP speedup.
+- Retained frame reader and docs `46067000815` pass. New cost reader is pending.
+  Runner exports `46068360511`, `46068364228`, `46068367762`, `46069093836`
+  verify original archive/source identities and reconstruct raw observations.
+  Only small text evidence is downloaded locally; native images stay on runners.
+- Earlier failures are preserved: attribution `46062709945` needed scoped hooks
+  and OpenSSL linkage; `46064688201` needed runner-generated formatting;
+  `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and
+  verified. `46065857276` rejected a preparation-tag prefix before service
+  timing; the corrected service run collects that previously unmeasured work.
+  Export jobs initially needed pagination for the many skipped numerical jobs.
 
 Local disk is about 22 GiB free. `python3 scripts/local-guard.py git diff --check`
-refused below the unchanged 64 GiB floor. No local compiler or tests ran; no
-limits were raised. PR #278 already delivered the reviewed ignore rules.
-
-Local `main` is current at `5a9047178b88c801f37a279dfeca55b0e190bf07`.
-The previous branch `finish-delivery-hygiene` retains tested head
-`8cdff5dda27f1ae7a79be421fd5cfdb18fdb636b`; its tree equals the merge.
-This handoff carries the postmerge results into the next delivery without
-changing the accepted head. No delivery PR is open during measurement preparation.
-Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
-`roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
-run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
-Both complete logs are clean. [Retained census](measurements/resource-field-census-2026-11-10/README.md)
-reconstructs all 17 inputs on both hosts; each C hash and classification agrees.
-Executed counts at `b4b11d4a9f545b03a6af4b03f37612fb15650c9c`, retained by
-`roadmap/resource-field-holds-preparation-2026-11-10`, also pass both jobs in run
-`42833961349`: ARM64 `129891087787`, AMD64 `129891088346`. Complete logs are clean.
-[Both reports](measurements/resource-field-holds-2026-11-10/README.md) reconstruct
-all 34 executions per host, unchanged totals and real extra-pair controls.
+refused below the unchanged 64 GiB floor. No local compiler or tests ran and no
+limits were raised. #278 already delivered reviewed ignore rules. Local `main`
+is `5a9047178b88c801f37a279dfeca55b0e190bf07`; worktrees/stashes are preserved.
 
 ## Verified delivery
 
@@ -153,10 +133,10 @@ not inferred from arrow types. Keep ordinary owners and original disposal timing
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
 | 8 | In progress | #277 baseline; new HTTP/callable attribution and implemented value proof | Corrected semantic gates, ordinary measurements and final delivery |
 
-## Current checkout and local limits
+## #278 checkout recovery and local limits
 
-The root checkout was 133 commits behind `origin/main`; it is now fast-forwarded
-and the cleanup is on `finish-delivery-hygiene`. Current main already ignored
+The root checkout was 133 commits behind `origin/main`; #278 fast-forwarded it
+and completed recovery on `finish-delivery-hygiene`. That main already ignored
 `__pycache__/`. The follow-up adds standalone `*.pyc`/`*.pyo` and `/.worktrees/`,
 so nested worktrees no longer depend on a private `.git/info/exclude` entry.
 Source files, fixtures and measurement reports remain eligible for tracking.

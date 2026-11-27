@@ -113,7 +113,7 @@ def compiler(root, source):
             for sample in case['samples']:
                 prefix = folder / name / f'round-{sample["round"]}-{sample["role"]}'
                 raw = commands[len(observed)]
-                assert {key: sample[key] for key in raw} == raw
+                assert {key: sample[key] for key in raw} == raw, 'compiler sample differs from raw command'
                 assert raw['status'] == 0 and not raw['timedOut']
                 measured = resources(prefix.with_suffix('.resources').read_text())
                 assert all(sample[key] == value for key, value in measured.items())
