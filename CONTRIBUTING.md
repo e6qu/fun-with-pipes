@@ -27,7 +27,9 @@ You need:
   to the output of `brew --prefix openssl@3` for native TLS builds and the
   interpreter. CI uses Apple Clang on Apple Silicon and Intel.
 - On Windows: the native setup in `scripts/setup-windows.ps1` selects SDK-aware
-  Clang for the Rust MSVC build and LLVM-MinGW for generated programs. This
+  Clang for the Rust MSVC build and LLVM-MinGW for generated programs. AMD64 uses
+  Visual Studio's bundled Clang to match its C++ headers; ARM64 uses the image's
+  native Clang. Both target-specific `CC` and `CXX` select that MSVC compiler. This
   runner script uses GitHub CLI and `GH_TOKEN` to fetch a pinned release asset,
   checks its SHA-256 digest and stops if setup fails. Workflow steps supply the
   token; native tests require successful toolchain setup.

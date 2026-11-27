@@ -3,8 +3,9 @@
 Updated 2026-11-27. **Next: finish final-head CI and the complete-log audit for
 the `finish-delivery-hygiene` follow-up, then squash merge.** PR #277 is merged;
 its nine production jobs, documentation and complete-log audit now pass.
-This follow-up records that delivery and completes the repository ignore rules.
-It changes no production ownership behavior or performance claim.
+This follow-up records that delivery, completes the repository ignore rules and
+repairs two toolchain failures found by its first CI run. It changes no production
+ownership behavior or performance claim.
 
 The root checkout is now based on merge `03c742f38d4d4a3f89393d3f05455f9cede0838a`.
 After this follow-up, resume [the ordered investigation](measurements/resource-field-costs.md)
@@ -116,6 +117,15 @@ sandbox first denied process sampling; with sampling permitted, the guard stoppe
 because free disk is below 64 GiB (about 44 GiB observed). No limits were raised
 and no local build, test suite or benchmark ran. Validation belongs on runners.
 The follow-up's own final-head gates remain pending.
+
+Initial head `16fad7b80e6b08f029223b8d8ef6ee1284f9ec80`, production run
+`46020925329`, exposed Rust 1.100's `needless_range_loop` diagnostic in recording
+scope selection and a Windows AMD64 compiler/header mismatch. The loop now uses
+`enumerate()` with the same function IDs and traversal order. The Windows runner
+had standalone Clang 20.1.8 and VS 2026 headers requiring Clang 22 or newer;
+setup now selects Visual Studio's bundled AMD64 Clang explicitly. Native ARM64
+keeps its image compiler. Both target-specific C and C++ variables are explicit.
+These repairs still require final-head runner verification.
 
 The old untracked root `docs/measurements/compiler-abort.md` was preserved at
 `/private/tmp/fwp-finish-wip-2026-11-27/compiler-abort.original.md` before checkout;

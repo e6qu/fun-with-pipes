@@ -2,24 +2,32 @@
 # https://github.com/mstorsjo/llvm-mingw/releases/tag/20261006
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-# The Rust MSVC target needs the SDK/UCRT headers and native TLS ABI. Keep its
-# C compiler explicit and separate from the MinGW generated-program toolchain.
-$rustCompiler = (Get-Command clang.exe -ErrorAction Stop).Source
-$rustTarget = (& rustc -vV | Select-String '^host: ').ToString().Substring(6)
-Add-Content $env:GITHUB_ENV "CC_$($rustTarget.Replace('-', '_'))=$rustCompiler"
-& $rustCompiler --version
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 switch ($env:RUNNER_ARCH) {
     'ARM64' {
         $architecture = 'aarch64'
         $digest = '9a835d5179c9f3a5a783c11a7f14062a249b4765dd11add64a66786864e82ab2'
+        $rustCompiler = (Get-Command clang.exe -ErrorAction Stop).Source
     }
     'X64' {
         $architecture = 'x86_64'
         $digest = '317492c456aa27ee607a5919f1d2d38dcdc1112516a24d0bf4b00d078f52d17a'
+        # The standalone Clang 20 on this image cannot use the VS 2026 STL.
+        # Select the compiler bundled with Visual Studio and its headers.
+        $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+        $visualStudio = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        if (-not $visualStudio) { throw 'Visual Studio with C++ Clang tools is required' }
+        $rustCompiler = (Get-Item -LiteralPath (Join-Path $visualStudio 'VC/Tools/Llvm/x64/bin/clang.exe') -ErrorAction Stop).FullName
     }
     default { throw "Unsupported runner architecture: $env:RUNNER_ARCH" }
 }
+# The Rust MSVC target needs the SDK/UCRT headers and native TLS ABI. Keep its
+# C/C++ compiler explicit and separate from the MinGW generated-program toolchain.
+$rustTarget = (& rustc -vV | Select-String '^host: ').ToString().Substring(6)
+Add-Content $env:GITHUB_ENV "CC_$($rustTarget.Replace('-', '_'))=$rustCompiler"
+Add-Content $env:GITHUB_ENV "CXX_$($rustTarget.Replace('-', '_'))=$rustCompiler"
+& $rustCompiler --version
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $package = "llvm-mingw-20261006-ucrt-$architecture"
 $archive = Join-Path $env:RUNNER_TEMP "$package.zip"
 # Use authenticated release-asset requests, not GitHub's web download endpoint.
