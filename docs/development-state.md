@@ -63,7 +63,11 @@ recover the original processes or establish exact transient peaks. Keep their
   `.smaps` files in the text export. The exporter now includes them and checks
   reconstruction after filtering, before publishing the archive. Its corrected
   export `46075009391` passes, including reconstruction of the filtered archive.
-  Final PR gates remain pending; original native observations are unchanged.
+  Full documentation `46075387053` passes on the repair branch, including both
+  retained 128-execution memory archives. Final PR gates remain pending;
+  original native observations are unchanged. Superseded production
+  `46074605382` had no reported failures before replacement; its cancellation
+  is not acceptance evidence.
 - Earlier failures are preserved: attribution `46062709945` needed scoped hooks
   and OpenSSL linkage; `46064688201` needed runner-generated formatting;
   `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and
