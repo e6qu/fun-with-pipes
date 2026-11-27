@@ -16,7 +16,7 @@ class Analysis(unittest.TestCase):
         for name in ('FRESH', 'BODY', 'ALIAS'):
             self.assertEqual(observed.count(f'OBSERVED_{name}.set(OBSERVED_{name}.get() + 1);'), 1)
             self.assertEqual(observed.count(f'OBSERVED_{name}.set(0);'), 1)
-        self.assertIn('observed_report(locals, 0, true);', observed)
+        self.assertIn('observed_report(locals.len(), 0, true);', observed)
         with self.assertRaises(AssertionError):
             instrument(observed)
         with self.assertRaises(AssertionError):

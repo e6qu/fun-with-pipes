@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from nested_resource_counts import compare, decode, instrument
+from resource_value_contract import REFERENCES, VALUE_REFERENCE
 from weak_callback_service import CASES, replace_once
 from weak_callback_source import boundary
 from weak_callback_timing import decode_output
@@ -26,7 +27,7 @@ def main():
         assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == digest, name
     report = json.loads((folder / 'report.json').read_text())
     assert (report['source'], report['architecture']) == (args.source, args.arch)
-    assert report['referenceSource'] == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+    assert report['referenceSource'] in REFERENCES
     assert not report['failures']
     assert set(report['compilers']) == {'reference', 'candidate'}
     commands = [json.loads(line) for line in (folder / 'commands.jsonl').read_text().splitlines()]
@@ -56,7 +57,7 @@ def main():
             selection = report['selection'][f'{role}-{app}']
             assert selection['sha256'] == manifest[name]
             assert selection['anchors'] == original.count('protected by enclosing frame')
-            assert (selection['anchors'] > 0) if role == 'candidate' else (selection['anchors'] == 0)
+            assert (selection['anchors'] > 0) if role == 'candidate' or report['referenceSource'] == VALUE_REFERENCE else (selection['anchors'] == 0)
         expected_source = instrument(boundary((folder / f'{role}-service.c').read_text()))
         for level in (1, 2):
             part = f'fwp-{role}-{level}-diagnostic'
@@ -93,7 +94,7 @@ def main():
         for population, mode in CASES:
             key = f'{population}-{mode}'
             comparisons[f'O{level}/{key}'] = compare(report['cases'][f'reference-O{level}'][key]['counts'],
-                                                    report['cases'][f'candidate-O{level}'][key]['counts'])
+                                                    report['cases'][f'candidate-O{level}'][key]['counts'], report['referenceSource'])
     assert report['comparisons'] == comparisons
     for index, row in enumerate(commands):
         assert row['index'] == index

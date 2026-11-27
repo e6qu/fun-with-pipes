@@ -19,20 +19,21 @@ fn observed_report(locals: usize, selected: usize, rejected: bool) {
         locals, selected, rejected, OBSERVED_FRESH.get(), OBSERVED_BODY.get(), OBSERVED_ALIAS.get());
 }
 '''
-    source = replace_once(source, 'use crate::ir::{Expr, Local, Pat};',
-                          'use crate::ir::{Expr, Local, Pat};\n' + declarations)
+    source = replace_once(source, 'use crate::ir::{Expr, Func, Local, MT, Pat, Shapes};',
+                          'use crate::ir::{Expr, Func, Local, MT, Pat, Shapes};\n' + declarations)
     for marker, counter in (
         ('fn fresh_bindings(expr: &Expr, seen: &mut HashSet<Local>) -> bool {', 'OBSERVED_FRESH'),
-        ('    fn visit(&mut self, expr: &Expr) {', 'OBSERVED_BODY'),
-        ('    fn covered(&self, value: &Expr) -> bool {', 'OBSERVED_ALIAS'),
+        ('    fn visit(&mut self, expr: &Expr) -> Protection {', 'OBSERVED_BODY'),
     ):
         source = replace_once(source, marker, marker + f'\n        {counter}.set({counter}.get() + 1);')
+    source = replace_once(source, 'Expr::Local(local) => self.protected(*local),',
+        'Expr::Local(local) => { OBSERVED_ALIAS.set(OBSERVED_ALIAS.get() + 1); self.protected(*local) },')
     marker = '    if !fresh_bindings(root, &mut (0..arity).collect()) {\n'
     source = replace_once(source, marker,
         ''.join(f'    {name}.set(0);\n' for name in RUST) + marker +
-        '        observed_report(locals, 0, true);\n')
+        '        observed_report(locals.len(), 0, true);\n')
     return replace_once(source, '    scan.selected\n}',
-        '    observed_report(locals, scan.selected.values().map(HashSet::len).sum(), false);\n    scan.selected\n}')
+        '    observed_report(locals.len(), scan.selected.values().map(HashSet::len).sum(), false);\n    scan.selected\n}')
 
 
 def decode(stderr):

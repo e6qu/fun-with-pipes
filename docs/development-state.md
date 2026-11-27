@@ -14,7 +14,13 @@ controls per host. ARM64/AMD64 agree on the service and HTTP counts. The contrac
 now selects provenance through records, known partial captures and returned
 aliases; its numeric targets are frozen before implementation in the linked
 investigation. Next: implement the bounded proof and its lifetime controls,
-then measure it against #278. The earlier preparation run `46062709945` failed
+then measure it against #278. The first implementation tracks the oldest active
+protecting frame through returned records, branch joins and known unsaturated
+captures; it rejects values whose only owner ends at the expression boundary.
+It retains the two-pass freshness/scope scan and caches local type classification.
+This implementation is not yet verified. `resource-value-owners` runs the proof,
+lifetime/service controls and real counts against #278, requiring its ordinary
+service/HTTP C to match the frozen census. The earlier preparation run `46062709945` failed
 on a report-hook scope assertion and missing HTTP TLS linkage; both are fixed.
 Local disk is now about 22 GiB free, below the unchanged 64 GiB floor; execution
 checks remain on GitHub runners. No local compiler or tests ran for this work.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Compare actual ownership/cleanup calls and charged service storage, without timing claims."""
 import argparse
+import gzip
 import hashlib
 import json
 import os
@@ -11,6 +12,7 @@ import traceback
 
 from nested_resource_counts import compare, decode, instrument
 from process_wait import run_capture
+from resource_value_contract import REFERENCES, VALUE_REFERENCE
 from weak_callback_service import CASES, replace_once
 from weak_callback_service_build import build_native
 from weak_callback_source import boundary
@@ -34,7 +36,7 @@ def main():
     assert platform.system() == 'Linux' and platform.machine() == args.arch
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch]
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source == os.environ['GITHUB_SHA']
-    assert args.reference_source == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+    assert args.reference_source in REFERENCES
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
     env = {key: value for key, value in os.environ.items()
@@ -89,7 +91,11 @@ def main():
                                path, '-o', generated], (0, '', ''), env)
                 original = generated.read_text()
                 selections = original.count('protected by enclosing frame')
-                assert (selections > 0) if role == 'candidate' else (selections == 0)
+                assert (selections > 0) if role == 'candidate' or args.reference_source == VALUE_REFERENCE else (selections == 0)
+                if role == 'reference' and args.reference_source == VALUE_REFERENCE:
+                    saved = json.loads(gzip.decompress((ROOT / 'docs/measurements/resource-field-census-2026-11-10/amd-report.json.gz').read_bytes()))
+                    name = 'exported-service' if application == 'service' else 'http'
+                    assert digest(generated) == saved['cases'][name]['cSha256'], 'reference no longer reproduces the frozen census C'
                 report['selection'][role + '-' + application] = dict(
                     command=emitted['index'], anchors=selections, sha256=digest(generated))
                 save()
@@ -148,7 +154,7 @@ def main():
             try:
                 reference = report['cases'][f'reference-O{level}'][key]['counts']
                 candidate = report['cases'][f'candidate-O{level}'][key]['counts']
-                result = compare(reference, candidate)
+                result = compare(reference, candidate, args.reference_source)
                 report['comparisons'][f'O{level}/{key}'] = result
                 print('RESULT', level, key, json.dumps(result), flush=True)
             except Exception as error:

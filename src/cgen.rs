@@ -4578,8 +4578,10 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                 .get_or_insert_with(|| {
                     resource_borrows::parameters(
                         self.root,
-                        self.locals.len(),
+                        &self.locals,
                         self.g.prog.funcs[self.me].arity,
+                        &self.g.prog.funcs,
+                        &self.g.prog.shapes,
                     )
                 })
                 .get(&key)
