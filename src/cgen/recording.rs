@@ -220,11 +220,11 @@ pub(super) fn select(program: &Program, ticks: bool, scopes: bool) -> Vec<Mode> 
             .collect();
     }
     let mut pending = Vec::new();
-    for id in 0..program.funcs.len() {
+    for (id, function) in program.funcs.iter().enumerate() {
         if matches!(proof.function(id, &mut 4096, 0), Some(2..)) {
             pending.push(id);
         }
-        match &program.funcs[id].body {
+        match &function.body {
             Body::PackedRecordPairs { callback, .. } | Body::PackedRecordFold { callback } => {
                 pending.push(*callback);
             }
