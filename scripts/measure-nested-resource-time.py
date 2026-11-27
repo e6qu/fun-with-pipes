@@ -15,6 +15,7 @@ import traceback
 
 from nested_resource_timing import LABELS, order, summarize
 from process_wait import run_capture
+from resource_value_contract import REFERENCES, VALUE_REFERENCE
 from weak_callback_service_build import build_native
 from weak_callback_source import boundary
 from weak_callback_timing import CASES, COPY_LIMIT, MINIMUM_NS, PILOT_NS, ROUNDS, decode_output
@@ -43,7 +44,7 @@ def main():
     peer_report = json.loads((peers / 'report.json').read_text())
     for key in ('cc', 'c_arch', 'time', 'objdump', 'readelf'):
         assert peer_report['settings'][key] == getattr(args, key)
-    assert args.reference_source == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+    assert args.reference_source in REFERENCES
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
     env = {key: value for key, value in os.environ.items()
@@ -102,7 +103,7 @@ def main():
     source = folder / 'reference.c'
     compile_run([args.reference.resolve(), 'build', '--fn', 'service', '--memory', 'dynamic', '--emit-c', '-O2',
                  ROOT / 'tests/fixtures/weak_callback_service.fwp', '-o', source], (0, '', ''), env)
-    assert 'protected by enclosing frame' not in source.read_text()
+    assert ('protected by enclosing frame' in source.read_text()) == (args.reference_source == VALUE_REFERENCE)
     assert 'protected by enclosing frame' in (peers / 'original.c').read_text()
     clock = folder / 'clock.o'
     shutil.copyfile(peers / 'clock.o', clock)
@@ -150,7 +151,7 @@ def main():
                             case['samples'].append(observation | dict(round=round_number, position=position,
                                 ns=dict(service=phases['serviceNs'], process=row['elapsedNs'])))
                     save()
-                case['summary'] = summarize(case['samples'], population)
+                case['summary'] = summarize(case['samples'], population, args.reference_source)
                 for role in ('reference', 'candidate'):
                     case['memory'][role] = []
                     for sample in range(3):

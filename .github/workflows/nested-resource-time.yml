@@ -5,6 +5,9 @@ on:
       source_tag:
         type: string
         required: true
+      reference_source:
+        type: string
+        required: true
 permissions:
   contents: read
 jobs:
@@ -31,7 +34,7 @@ jobs:
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_RELEASE_DEBUG: 'false'
       FWP_LTO: '0'
-      REFERENCE_SOURCE: '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+      REFERENCE_SOURCE: ${{ inputs.reference_source }}
     steps:
       - name: Explicit native toolchains and measurement tools
         run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config time llvm

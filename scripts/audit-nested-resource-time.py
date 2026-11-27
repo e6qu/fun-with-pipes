@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 from nested_resource_timing import LABELS, order, summarize
+from resource_value_contract import REFERENCES, VALUE_REFERENCE
 from weak_callback_source import boundary
 from weak_callback_timing import CASES, COPY_LIMIT, MINIMUM_NS, PILOT_NS, ROUNDS, decode_output
 
@@ -35,13 +36,13 @@ def main():
     peer_report = json.loads((peers / 'report.json').read_text())
     assert report['peerManifestSha256'] == hashlib.sha256((peers / 'manifest.json').read_bytes()).hexdigest()
     assert (report['source'], report['architecture']) == (args.source, args.arch)
-    assert report['referenceSource'] == '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+    assert report['referenceSource'] in REFERENCES
     assert not report['failures'] and report['ccVersion'] == peer_report['versions']['cc']
     assert report['protocol'] == dict(labels=list(LABELS), rounds=ROUNDS, pilotNs=PILOT_NS,
                                       minimumNs=MINIMUM_NS, copyLimit=COPY_LIMIT)
     assert (folder / 'clock.o').read_bytes() == (peers / 'clock.o').read_bytes()
     reference_source = (folder / 'reference.c').read_text()
-    assert 'protected by enclosing frame' not in reference_source
+    assert ('protected by enclosing frame' in reference_source) == (report['referenceSource'] == VALUE_REFERENCE)
     assert 'protected by enclosing frame' in (peers / 'original.c').read_text()
     assert (folder / 'fwp-reference-2-plain/factory.c').read_text() == boundary(reference_source)
     assert (folder / 'fwp-reference-2-plain/caller.c').read_bytes() == (peers / 'fixtures/weak_callback_service_time.c').read_bytes()
@@ -83,7 +84,7 @@ def main():
             for row in case['samples']:
                 phases = observation(row['command'], row['label'], population, mode, batches, [])
                 assert row['ns'] == dict(service=phases['serviceNs'], process=commands[row['command']]['elapsedNs'])
-            assert case['summary'] == summarize(case['samples'], population)
+            assert case['summary'] == summarize(case['samples'], population, report['referenceSource'])
             assert set(case['memory']) == {'reference', 'candidate'}
             for role, rows in case['memory'].items():
                 assert len(rows) == 3

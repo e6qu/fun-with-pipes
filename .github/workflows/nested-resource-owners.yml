@@ -46,9 +46,20 @@ jobs:
           CHECK_SCOPE: ${{ inputs.scope }}
         run: test "$CHECK_SCOPE" = all || test "$CHECK_SCOPE" = lifetime || test "$CHECK_SCOPE" = values
       - name: Check formatting and all changed Rust callers
+        shell: bash
         run: |
-          cargo fmt --all -- --check
-          cargo clippy --locked --lib --test channel_queue_ownership --test resource_frames -- -D warnings
+          set -o pipefail
+          cargo fmt --all -- --check 2>&1 | tee resource-proof-format.log
+          cargo clippy --locked --lib --test channel_queue_ownership --test resource_frames -- -D warnings 2>&1 | tee resource-proof-lint.log
+      - name: Publish early compiler diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resource-proof-checks-${{ matrix.runner }}
+          path: |
+            resource-proof-format.log
+            resource-proof-lint.log
+          if-no-files-found: error
       - name: Prove nested lifetime selection and rejection boundaries
         if: ${{ !cancelled() && inputs.scope != 'lifetime' }}
         run: |

@@ -6,6 +6,7 @@ from pathlib import Path
 import unittest
 
 from nested_resource_counts import compare, decode, instrument
+from resource_value_contract import VALUE_REFERENCE
 from weak_callback_source import boundary
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -40,6 +41,13 @@ class Counts(unittest.TestCase):
         for field in ('requests', 'requestedBytes', 'peakChargedBytes'):
             with self.subTest(field=field), self.assertRaises(AssertionError):
                 compare(row, candidate | {field: row[field] + 1})
+        extension = row | dict(pushes=89, pops=79, retains=66)
+        self.assertFalse(compare(row, extension)['cleanupTargetMet'])
+        measured = compare(row, extension, VALUE_REFERENCE)
+        self.assertTrue(measured['cleanupTargetMet'] and measured['retainTargetMet'])
+        self.assertFalse(compare(row, extension | dict(retains=67), VALUE_REFERENCE)['retainTargetMet'])
+        with self.assertRaises(AssertionError):
+            compare(row, extension, 'unknown-reference')
 
 
 if __name__ == '__main__':

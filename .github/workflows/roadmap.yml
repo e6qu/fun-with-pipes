@@ -53,6 +53,10 @@ jobs:
           python3 scripts/test-service-cpu-collect.py
           python3 scripts/test-nested-resource-memory.py
           python3 scripts/test-resource-field-census.py
+          python3 scripts/test-resource-frames.py
+          python3 scripts/test-nested-resource-counts.py
+          python3 scripts/test-nested-resource-analysis.py
+          python3 scripts/test-nested-resource-timing.py
           python3 scripts/test-compiler-build-comparison.py
       - name: Retained scalar Swift closure allocation reports
         run: |

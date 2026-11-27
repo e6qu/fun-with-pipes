@@ -3,7 +3,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::ir::{Expr, Func, Local, MT, Pat, Shapes};
+use crate::ir::{Expr, Func, Local, Pat, Shapes, MT};
 
 // The oldest active original frame that protects every observable resource in
 // this value. Depth zero means no observable resource; None means unknown.
@@ -155,7 +155,8 @@ impl Scan<'_> {
                 }
                 // Only an actual unsaturated constructor owns precisely these
                 // captures. A saturated or nullary factory may return anything.
-                if matches!(&**function, Expr::Func(id) if args.len() < self.funcs[*id].arity as usize) {
+                if matches!(&**function, Expr::Func(id) if args.len() < self.funcs[*id].arity as usize)
+                {
                     joined
                 } else {
                     None
@@ -280,16 +281,11 @@ mod tests {
     }
 
     fn selected(body: &Expr) -> Vec<Local> {
-        let mut result: Vec<_> = parameters(
-            body,
-            &vec![MT::con("unknown"); 16],
-            2,
-            &[],
-            &Shapes::new(),
-        )
-        .into_values()
-        .flatten()
-        .collect();
+        let mut result: Vec<_> =
+            parameters(body, &vec![MT::con("unknown"); 16], 2, &[], &Shapes::new())
+                .into_values()
+                .flatten()
+                .collect();
         result.sort_unstable();
         result
     }
@@ -378,7 +374,11 @@ mod tests {
             let body = region(
                 &[0],
                 &[],
-                bind(2, Expr::Apply(Box::new(function), args), region(&[2], &[], unit())),
+                bind(
+                    2,
+                    Expr::Apply(Box::new(function), args),
+                    region(&[2], &[], unit()),
+                ),
             );
             let proof = parameters(&body, &locals, 2, &funcs, &Shapes::new());
             assert_eq!(proof.values().any(|locals| locals.contains(&2)), expected);

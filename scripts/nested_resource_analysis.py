@@ -19,8 +19,8 @@ fn observed_report(locals: usize, selected: usize, rejected: bool) {
         locals, selected, rejected, OBSERVED_FRESH.get(), OBSERVED_BODY.get(), OBSERVED_ALIAS.get());
 }
 '''
-    source = replace_once(source, 'use crate::ir::{Expr, Func, Local, MT, Pat, Shapes};',
-                          'use crate::ir::{Expr, Func, Local, MT, Pat, Shapes};\n' + declarations)
+    source = replace_once(source, 'use crate::ir::{Expr, Func, Local, Pat, Shapes, MT};',
+                          'use crate::ir::{Expr, Func, Local, Pat, Shapes, MT};\n' + declarations)
     for marker, counter in (
         ('fn fresh_bindings(expr: &Expr, seen: &mut HashSet<Local>) -> bool {', 'OBSERVED_FRESH'),
         ('    fn visit(&mut self, expr: &Expr) -> Protection {', 'OBSERVED_BODY'),
