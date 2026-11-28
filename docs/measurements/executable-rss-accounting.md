@@ -91,4 +91,8 @@ The corrected protocol above tracks the worker and checks that it has finished
 before the terminal snapshot. It preserves the same binaries, cases, round
 counts and ordinary controls. This is a necessary observer repair, not selection
 based on a memory result. The original protocol is retained at
-`roadmap/exec-memory-contract-2026-11-28`; corrected observations await verification.
+`roadmap/exec-memory-contract-2026-11-28`. Corrected native runs `46160920337`
+and `46161057674` pass ten and eleven controls respectively on both architectures.
+The latter holds the terminal process stop until all worker exit notifications
+have been reaped, including when the leader's notification arrives first.
+Corrected service observations remain pending.

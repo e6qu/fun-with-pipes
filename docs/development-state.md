@@ -13,7 +13,10 @@ First service collection `46160536010` fails on both hosts at the first traced
 execution: the runtime creates a worker, invalidating the single-thread assumption.
 All tracees were reaped and no service batch completed. Thread-control run
 `46160642199` confirms the missing path. The repair tracks joined workers and
-requires their completion before the terminal snapshot; new verification is pending.
+requires their completion before the terminal snapshot. Corrected runs
+`46160920337` (ten controls) and `46161057674` (eleven, including process exit
+with a live worker) pass on both architectures. No completed service measurements
+have been repeated; the corrected full collection is next.
 The initial protocol is retained by `roadmap/exec-memory-contract-2026-11-28`.
 Preparation documentation `46160163804` passes.
 The original four 5% RSS misses remain open; this work

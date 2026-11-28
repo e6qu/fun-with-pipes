@@ -1,10 +1,8 @@
 """Reconstruct lifecycle observations from raw proc files and GNU-time output."""
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
-import signal
 
 from nested_resource_memory import categories, fast_counters
 from parser_process_memory import mappings, summary
@@ -22,9 +20,10 @@ def review(folder, expected_hashes, page_bytes):
         assert event['index'] == index and event['pid'] in row['known'], 'process identity mismatch'
         status = event['rawStatus']
         if event['kind'] == 'reaped':
-            assert os.WIFEXITED(status) and os.WEXITSTATUS(status) == event['status'] == 0
+            assert status == event['status'] == 0
             continue
-        assert os.WIFSTOPPED(status) and os.WSTOPSIG(status) == event['signal']
+        # Decode retained Linux wait statuses independently of the reader's OS.
+        assert status & 0xff == 0x7f and (status >> 8) & 0xff == event['signal']
         task_path = folder / event['taskFile']
         assert task_path.resolve().is_relative_to(folder.resolve())
         task = task_path.read_bytes()
@@ -37,7 +36,7 @@ def review(folder, expected_hashes, page_bytes):
         assert event['kind'] == {1: 'fork', 2: 'vfork', 3: 'clone', 4: 'exec', 6: 'exit-stop'}.get(
             kind, 'launcher-stop' if index == 0 else 'signal')
         if 'snapshot' not in event:
-            assert event['pid'] not in (root, target) or kind == 3 or (kind == 0 and event['signal'] != signal.SIGSTOP)
+            assert event['pid'] not in (root, target) or kind == 3 or (kind == 0 and event['signal'] != 19)
             continue
         snap = event['snapshot']
         assert index <= event['snapshotAfterEvent'] < len(row['events'])

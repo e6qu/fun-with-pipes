@@ -5,6 +5,7 @@ from pathlib import Path
 
 from compiler_build_comparison import comparison
 from compiler_scaling import resources
+from exec_memory_analysis import audit as executable_audit
 from http_load import audit
 from nested_resource_counts import compare, decode
 from nested_resource_memory import MEMORY_ENVIRONMENTS, categories, fast_counters
@@ -12,6 +13,16 @@ from nested_resource_timing import order, summarize
 from parser_process_memory import mappings, summary, validate_mapping_control
 from resource_value_contract import VALUE_REFERENCE
 from weak_callback_timing import CASES, decode_output, summarize as peer_summary
+
+
+def executables(root, source):
+    report = json.loads((root / 'report.json').read_text())
+    actual = executable_audit(root, source, report['architecture'])
+    assert actual == json.loads((root / 'analysis.json').read_text())
+    controls = json.loads((root / 'audit-controls.json').read_text())
+    assert set(controls) == {'raw-counter', 'pid', 'wait', 'gnu-time', 'binary'}
+    assert all(controls.values())
+    return actual
 
 
 def memory(root, source):

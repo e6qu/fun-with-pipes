@@ -65,8 +65,8 @@ jobs:
           --image swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016
       - name: Reconstruct raw observations and reject altered evidence
         run: |
-          python3 scripts/audit-exec-memory.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode audit --output exec-memory/analysis.json
-          python3 scripts/audit-exec-memory.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode controls --output exec-memory/audit-controls.json
+          python3 scripts/exec_memory_analysis.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode audit --output exec-memory/analysis.json
+          python3 scripts/exec_memory_analysis.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode controls --output exec-memory/audit-controls.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:

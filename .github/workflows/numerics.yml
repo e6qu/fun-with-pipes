@@ -58,7 +58,7 @@ on:
       evidence_kind:
         description: Resource-value evidence to retain
         type: choice
-        options: [compiler, runtime, counts, http, memory]
+        options: [compiler, runtime, counts, http, memory, exec-memory]
       costs_run:
         description: Hash-costs run to audit
         type: string
