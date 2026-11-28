@@ -1,0 +1,19 @@
+name: Executable memory accounting
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  controls:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Native lifecycle and memory accounting controls
+        run: |
+          gcc --version
+          python3 -W error::ResourceWarning scripts/test-exec-memory.py -v
