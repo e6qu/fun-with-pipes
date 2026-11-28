@@ -1,16 +1,43 @@
 # Current work
 
-Updated 2026-11-28. **Current delivery: one substantial PR from
-`resource-frame-costs`, with every final-head production, documentation and
-complete-log gate required before merge.** Preparation is complete and retained;
-the checks below are focused evidence, not a substitute for the final matrix.
-Branch starts from verified #278. [PR #279](https://github.com/e6qu/fun-with-pipes/pull/279)
-contains final delivery receipts.
+Updated 2026-11-28. **Current work: same-process executable memory accounting**
+on `rss-exec-accounting`, starting from verified #279. The
+[fixed diagnostic](measurements/executable-rss-accounting.md) observes GNU time's
+own child at fork, exec and exit and preserves ordinary untraced controls.
 
-**Next: after delivery, establish a controlled way to explain
-the four original RSS misses.** The completed page-walk diagnostic cannot
-recover the original processes or establish exact transient peaks. Keep their
-5% acceptance limits open; do not rerun unchanged timings to qualify them.
+**Next: complete one substantial PR with all final-head production,
+documentation and complete-log gates.** Native control run
+`46159844843` passes all seven actual lifecycle/failure tests on both hosts;
+raw-reconstruction run `46160161430` passes all nine tests on both hosts.
+First service collection `46160536010` fails on both hosts at the first traced
+execution: the runtime creates a worker, invalidating the single-thread assumption.
+All tracees were reaped and no service batch completed. Thread-control run
+`46160642199` confirms the missing path. The repair tracks worker threads and
+requires their completion before the terminal snapshot. Corrected runs
+`46160920337` (ten controls) and `46161057674` (eleven, including process exit
+with a live worker) pass on both architectures. Corrected collection
+`46161194256` passes at `afe192e806dbbac0a1cba1dfcbcd2641e16f1c47`, retained by
+`roadmap/exec-memory-workers-2026-11-28`: all 512 service executions and native
+controls complete. Every raw observation reconstructs and five altered-record
+controls fail as required on both hosts. No completed service batch was repeated.
+Export `46161831161` verifies the original artifacts and reconstructs the filtered
+text archive before publication. [Retained results](measurements/executable-rss-2026-11-28/README.md)
+show GNU time below terminal page residency in 254/256 traced executions, despite
+matching the exact child's wait4 receipt. Ordinary identical copies differ by
+over 5% in 42/128 pairs. Neither metric is substituted for the original four misses.
+The initial protocol is retained by `roadmap/exec-memory-contract-2026-11-28`.
+Preparation documentation `46160163804` passes.
+The original four 5% RSS misses remain open; this work
+does not repeat timing acceptance or recover the original processes.
+
+After this delivery, use these demonstrated accounting/observation limits to
+freeze a prospective memory protocol before another runtime optimization.
+Do not retroactively relax or declare the original limits satisfied.
+
+Local `python3 scripts/local-guard.py git diff --check` again refused below the
+64 GiB free-disk floor. No local builds/tests ran and no limits changed.
+
+## Completed #279 preparation
 
 - [The frozen contract](measurements/resource-field-costs.md) predates production
   code: `a107435fe3b19963e3670a66e29fa211f82a35fa`, retained by
@@ -64,7 +91,7 @@ recover the original processes or establish exact transient peaks. Keep their
   reconstruction after filtering, before publishing the archive. Its corrected
   export `46075009391` passes, including reconstruction of the filtered archive.
   Full documentation `46075387053` passes on the repair branch, including both
-  retained 128-execution memory archives. Final PR gates remain pending;
+  retained 128-execution memory archives. Final PR gates subsequently passed;
   original native observations are unchanged. Superseded production
   `46074605382` had no reported failures before replacement; its cancellation
   is not acceptance evidence.
@@ -78,9 +105,26 @@ recover the original processes or establish exact transient peaks. Keep their
 Local disk is about 24 GiB free. `python3 scripts/local-guard.py git diff --check`
 refused below the unchanged 64 GiB floor. No local compiler or tests ran and no
 limits were raised. #278 already delivered reviewed ignore rules. Local `main`
-is `5a9047178b88c801f37a279dfeca55b0e190bf07`; worktrees/stashes are preserved.
+is `30fe4c7806f5ef54eda09d02f02047c9e3ed5a2d`; worktrees/stashes are preserved.
 
 ## Verified delivery
+
+[PR #279](https://github.com/e6qu/fun-with-pipes/pull/279) squash-merged as
+`30fe4c7806f5ef54eda09d02f02047c9e3ed5a2d`. It and tested head
+`c2384e254940a2cbaf3d50031f63f12d716aac1c` have tree
+`890bf19aae1e8972143cadcecafca4d887def38c`. The merge message is one line,
+without body or trailers.
+
+- [Production `46076028758`](https://github.com/e6qu/fun-with-pipes/actions/runs/46076028758): all nine jobs pass.
+- [Documentation `46076028837`](https://github.com/e6qu/fun-with-pipes/actions/runs/46076028837), job `140763838520`: pass.
+- [Complete-log audit `46086008068`](https://github.com/e6qu/fun-with-pipes/actions/runs/46086008068), job `140795617116`: all ten reports pass.
+  Linux retains 257 target logs per host, regular macOS 131 and ownership macOS
+  126. Each Windows host retains 57 logs covering all 155 successful started targets.
+- Audit artifact `15239042326`: 1,199,711 bytes, GitHub SHA-256
+  `212df2394168379c3f2ce05f4619d84978ef3d3bba3b5529840d7dd4120e15dc`.
+  Original source/artifact identities were verified on the runner.
+- Duplicate postmerge `46086206304` and `46086206160` were cancelled after tree
+  equality was established; those cancellations are not passing-gate evidence.
 
 [PR #278](https://github.com/e6qu/fun-with-pipes/pull/278) squash-merged as
 `5a9047178b88c801f37a279dfeca55b0e190bf07` after every final-head gate passed.
@@ -161,7 +205,7 @@ not inferred from arrow types. Keep ordinary owners and original disposal timing
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | HTTP/callable attribution; constructed-value proof; all timing/compiler targets; lifetime and HTTP checks | Four original RSS limits and final delivery gates |
+| 8 | In progress | #279 constructed-value proof; all timing/compiler targets; lifetime/HTTP checks and final gates | Four original RSS limits; same-process accounting diagnosis |
 
 ## #278 checkout recovery and local limits
 

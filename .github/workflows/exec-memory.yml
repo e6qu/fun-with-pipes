@@ -1,0 +1,79 @@
+name: Executable memory accounting
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        type: choice
+        required: true
+        options: [controls, service]
+  workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  controls:
+    if: inputs.phase == 'controls'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Native lifecycle and memory accounting controls
+        run: |
+          gcc --version
+          python3 -W error::ResourceWarning scripts/test-exec-memory.py -v
+  service:
+    if: inputs.phase == 'service'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+          - runner: ubuntu-24.04
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016
+      # Trace only the observer's own GNU-time process and its child.
+      options: --cap-add=SYS_PTRACE
+    timeout-minutes: 30
+    steps:
+      - name: Install explicit tools without changing the original libc
+        run: apt-get update && apt-get install -y git gcc python3 gh time
+      - uses: actions/checkout@v7
+      - name: Verify native lifecycle controls in the original image
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(dpkg-query -W -f='${Version}' libc6)" = '2.39-0ubuntu8.12'
+          test "$(uname -m)" = '${{ matrix.arch }}'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -W error::ResourceWarning scripts/test-exec-memory.py -v
+      - name: Observe unchanged service binaries with ordinary controls
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 -W error::ResourceWarning scripts/measure-exec-memory.py
+          --output exec-memory --arch '${{ matrix.arch }}'
+          --image swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016
+      - name: Reconstruct raw observations and reject altered evidence
+        run: |
+          python3 scripts/exec_memory_analysis.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode audit --output exec-memory/analysis.json
+          python3 scripts/exec_memory_analysis.py --input exec-memory --source "$GITHUB_SHA" --arch '${{ matrix.arch }}' --mode controls --output exec-memory/audit-controls.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: exec-memory-${{ matrix.arch }}
+          path: |
+            exec-memory/*.json
+            exec-memory/control-*/
+            exec-memory/64-*/
+            exec-memory/4096-*/
+          if-no-files-found: error

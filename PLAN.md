@@ -75,7 +75,7 @@ retain one noisy runtime comparison, one noisy compiler comparison and four ARM6
 RSS misses. The separate memory diagnostic does not explain or replace those misses.
 All 34 HTTP load trials pass; they are capacity evidence, not an HTTP speedup.
 
-**Current delivery: preserve enclosing resource protection through constructed values.**
+**Delivered in #279: preserve enclosing resource protection through constructed values.**
 The [investigation](docs/measurements/resource-field-costs.md) first matches exact
 compiler contexts to unchanged generated C, then counts executed holds in the
 queued service and HTTP endpoint. [Both native static censuses pass](docs/measurements/resource-field-census-2026-11-10/README.md),
@@ -92,8 +92,19 @@ The [measured extension](docs/measurements/resource-value-costs-2026-11-27/READM
 passes all 32 service timing comparisons (5–16% less large-case time), all 64
 repaired compiler-cost comparisons and focused lifetime/count/HTTP checks.
 Four original process-RSS limits miss 5%; page walks do not explain those misses
-or replace their acceptance. Keep step 8 open and finish the full delivery matrix.
+or replace their acceptance. All final delivery gates pass; keep step 8 open.
 Original disposal timing and ordinary argument ownership remain intact.
+
+**Current work: [same-process executable RSS accounting](docs/measurements/executable-rss-accounting.md).**
+Compare GNU time's own child with its fork/exec/exit counters and mappings,
+with native transient/exec/failure controls and ordinary untraced executions.
+Preserve the original four misses; this diagnostic is not a timing rerun or
+a replacement memory acceptance result.
+The [completed diagnostic](docs/measurements/executable-rss-2026-11-28/README.md)
+reconstructs 512 service executions: GNU time is below actual terminal residency
+in 254/256 traced processes, and ordinary identical copies differ by over 5% in
+42/128 pairs. Finish delivery, then freeze a prospective qualified memory protocol
+without changing the historical acceptance outcomes.
 
 The contemporary 4,096-message full-delivery service takes 13.26–15.73 times C's
 time and 4.00–4.78 times Swift's. Different representations and synchronization matter;
