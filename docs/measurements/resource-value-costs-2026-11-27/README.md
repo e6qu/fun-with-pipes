@@ -4,7 +4,8 @@
 time. Four original process-RSS comparisons miss the 5% limit, so memory
 acceptance remains open.** The proof also removes 15–21% of large-service
 cleanup registrations and 13.5–17% of successful retains. All 64 repaired
-compiler-cost comparisons pass. Final delivery gates are still pending.
+compiler-cost comparisons pass. [PR #279](https://github.com/e6qu/fun-with-pipes/pull/279)
+passes all nine production jobs, documentation and the complete-log audit.
 
 The reference is #278, `5a9047178b88c801f37a279dfeca55b0e190bf07`.
 The [frozen contract](../resource-field-costs.md#correctness-and-measurement-acceptance)

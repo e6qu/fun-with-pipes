@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise actual tracees, transient pages, exec accounting and failure cleanup."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -9,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from exec_memory import observe
+from exec_memory_records import review, validate_transient
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -30,7 +32,7 @@ class ExecMemory(unittest.TestCase):
 
     def run_control(self, mode, *, timeout=5):
         folder = self.root / self.id().split('.')[-1]
-        rss = folder.with_suffix('.rss')
+        rss = folder / 'rss.txt'
         record = observe(self.launcher, ['/usr/bin/time', '-f', '%M', '-o', rss, self.control, mode],
                          dict(os.environ), folder, timeout)
         return record, int(rss.read_text()), folder
@@ -91,6 +93,37 @@ class ExecMemory(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'damaged snapshot'):
                 self.run_control('sleep')
         self.assert_reaped(self.root / self.id().split('.')[-1])
+
+    def test_raw_reconstruction_rejects_changed_counters_processes_and_usage(self):
+        row, _, folder = self.run_control('transient')
+        hashes = [hashlib.sha256(self.control.read_bytes()).hexdigest()]
+        result = review(folder, hashes, os.sysconf('SC_PAGE_SIZE'))
+        validate_transient(result)
+        path = folder / 'observation.json'
+        original = path.read_bytes()
+        for mutation, expected in (('counter', 'counter mismatch'), ('pid', 'process identity mismatch'),
+                                   ('usage', 'GNU time and child wait4 disagree')):
+            changed = json.loads(original)
+            if mutation == 'counter':
+                changed['events'][0]['snapshot']['fast']['VmHWMKiB'] += 4
+            elif mutation == 'pid':
+                changed['events'][0]['pid'] = row['target']
+            else:
+                next(event for event in changed['events'] if event['pid'] == row['target']
+                     and event['kind'] == 'reaped')['wait4PeakRssKiB'] += 4
+            path.write_text(json.dumps(changed))
+            with self.assertRaisesRegex(AssertionError, expected):
+                review(folder, hashes, os.sysconf('SC_PAGE_SIZE'))
+        path.write_bytes(original)
+        (folder / 'rss.txt').write_text(str(result['gnuTimePeakKiB'] + 4))
+        with self.assertRaisesRegex(AssertionError, 'GNU time and child wait4 disagree'):
+            review(folder, hashes, os.sysconf('SC_PAGE_SIZE'))
+
+    def test_missing_touch_is_rejected_by_peak_control(self):
+        _, _, folder = self.run_control('untouched')
+        row = review(folder, [hashlib.sha256(self.control.read_bytes()).hexdigest()], os.sysconf('SC_PAGE_SIZE'))
+        with self.assertRaisesRegex(AssertionError, 'touch-control-missing'):
+            validate_transient(row)
 
 
 if __name__ == '__main__':

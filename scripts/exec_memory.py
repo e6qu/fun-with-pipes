@@ -44,8 +44,10 @@ def snapshot(pid, folder, index):
     assert re.search(r'^State:\s+t\b', raw['status'], re.M), 'tracee is not stopped'
     assert re.search(r'^Threads:\s+1$', raw['status'], re.M), 'requires a single-threaded tracee'
     executable = os.readlink(f'/proc/{pid}/exe')
+    with Path(f'/proc/{pid}/exe').open('rb') as stream:
+        executable_hash = hashlib.file_digest(stream, 'sha256').hexdigest()
     rows = mappings(raw['smaps'])
-    return dict(files=files, executable=executable, metrics=summary(rows),
+    return dict(files=files, executable=executable, executableSha256=executable_hash, metrics=summary(rows),
                 categories=categories(rows, Path(executable)),
                 fast=fast_counters(raw['status'], raw['statm'], os.sysconf('SC_PAGE_SIZE')))
 
