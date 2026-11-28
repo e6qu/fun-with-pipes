@@ -53,7 +53,7 @@ def snapshot(pid, folder, index):
 
 
 def observe(launcher, command, environment, folder, timeout=30):
-    """Trace GNU time, its one child and joined workers. Reject extra processes."""
+    """Trace GNU time, its one child and worker threads. Reject extra processes."""
     assert 0 < timeout <= 30
     folder.mkdir(parents=True, exist_ok=False)
     record = dict(command=list(map(str, command)), events=[], failure=None, cleanup=[])

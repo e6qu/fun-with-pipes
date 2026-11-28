@@ -100,6 +100,11 @@ Compare GNU time's own child with its fork/exec/exit counters and mappings,
 with native transient/exec/failure controls and ordinary untraced executions.
 Preserve the original four misses; this diagnostic is not a timing rerun or
 a replacement memory acceptance result.
+The [completed diagnostic](docs/measurements/executable-rss-2026-11-28/README.md)
+reconstructs 512 service executions: GNU time is below actual terminal residency
+in 254/256 traced processes, and ordinary identical copies differ by over 5% in
+42/128 pairs. Finish delivery, then freeze a prospective qualified memory protocol
+without changing the historical acceptance outcomes.
 
 The contemporary 4,096-message full-delivery service takes 13.26–15.73 times C's
 time and 4.00–4.78 times Swift's. Different representations and synchronization matter;
