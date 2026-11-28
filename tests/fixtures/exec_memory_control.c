@@ -16,9 +16,10 @@ static void *sleeper(void *argument) {
 int main(int argc, char **argv) {
     if (argc != 2) return 110;
     if (!strcmp(argv[1], "sleep")) { sleep(10); return 0; }
-    if (!strcmp(argv[1], "thread")) {
+    if (!strcmp(argv[1], "thread") || !strcmp(argv[1], "exit-with-worker")) {
         pthread_t worker;
         if (pthread_create(&worker, NULL, sleeper, NULL)) return 119;
+        if (!strcmp(argv[1], "exit-with-worker")) return 0;
         return pthread_join(worker, NULL) ? 120 : 0;
     }
     if (!strcmp(argv[1], "fork")) {

@@ -40,6 +40,7 @@ def review(folder, expected_hashes, page_bytes):
             assert event['pid'] not in (root, target) or kind == 3 or (kind == 0 and event['signal'] != signal.SIGSTOP)
             continue
         snap = event['snapshot']
+        assert index <= event['snapshotAfterEvent'] < len(row['events'])
         raw = {}
         for name, record in snap['files'].items():
             path = folder / record['file']
@@ -69,7 +70,8 @@ def review(folder, expected_hashes, page_bytes):
     for pid in threads:
         stopped = [event for event in row['events'] if event['pid'] == pid and event['kind'] == 'exit-stop']
         gone = [event for event in row['events'] if event['pid'] == pid and event['kind'] == 'reaped']
-        assert len(stopped) == len(gone) == 1 and gone[0]['index'] < final['index'], 'worker did not finish before process snapshot'
+        assert len(stopped) == len(gone) == 1 and gone[0]['index'] <= final['snapshotAfterEvent'], 'worker did not finish before process snapshot'
+    assert final['snapshotAfterEvent'] < reaped['index']
     assert final['snapshot']['executableSha256'] == expected_hashes[-1]
     before = [event['snapshot'] for event in target_events
               if event['index'] < execs[0]['index'] and 'snapshot' in event]

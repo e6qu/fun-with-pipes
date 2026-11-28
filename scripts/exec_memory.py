@@ -73,6 +73,7 @@ def observe(launcher, command, environment, folder, timeout=30):
             known.add(child.pid)
             configured = False
             forks = 0
+            terminal = None
             while live:
                 assert time.monotonic() < deadline, 'exec memory deadline'
                 assert len(record['events']) < 128, 'exec memory event limit'
@@ -90,6 +91,11 @@ def observe(launcher, command, environment, folder, timeout=30):
                     reaped.add(pid)
                     if pid == child.pid:
                         child.returncode = event['status']
+                    if terminal is not None and live <= {child.pid, record['target']}:
+                        terminal['snapshot'] = snapshot(record['target'], folder, terminal['index'])
+                        terminal['snapshotAfterEvent'] = event['index']
+                        trace(CONT, record['target'])
+                        terminal = None
                     continue
                 assert os.WIFSTOPPED(status), 'unknown wait state'
                 live.add(pid)
@@ -131,8 +137,15 @@ def observe(launcher, command, environment, folder, timeout=30):
                 if stop == signal.SIGSTOP and not kind:
                     assert pid not in initial_stops, 'unexpected repeated SIGSTOP'
                     initial_stops.add(pid)
+                # A worker's exit notification may arrive after the leader's.
+                # Hold the leader before teardown until every worker is reaped.
+                if kind == 6 and pid == record.get('target') and live - {child.pid, pid}:
+                    assert terminal is None
+                    terminal = event
+                    continue
                 if pid in (child.pid, record.get('target')) and kind != 3 and (kind or stop == signal.SIGSTOP):
                     event['snapshot'] = snapshot(pid, folder, event['index'])
+                    event['snapshotAfterEvent'] = event['index']
                 # Suppress only protocol stops. Ordinary signals keep their meaning.
                 trace(CONT, pid, 0 if kind or stop == signal.SIGSTOP else stop)
             assert forks == 1 and child.returncode == 0, 'launcher or timed process failed'

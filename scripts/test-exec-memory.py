@@ -89,6 +89,11 @@ class ExecMemory(unittest.TestCase):
         self.assertEqual(result['workerThreads'], 1)
         self.assertEqual(len(row['known']), 3)
 
+    def test_process_exit_waits_for_worker_exit_notifications(self):
+        _, _, folder = self.run_control('exit-with-worker')
+        result = review(folder, [hashlib.sha256(self.control.read_bytes()).hexdigest()], os.sysconf('SC_PAGE_SIZE'))
+        self.assertEqual(result['workerThreads'], 1)
+
     def test_signals_are_delivered_and_failure_is_rejected(self):
         with self.assertRaisesRegex(AssertionError, 'launcher or timed process failed'):
             self.run_control('signal')
