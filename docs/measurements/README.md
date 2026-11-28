@@ -9,7 +9,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
-Current selection: [carry enclosing lifetime protection through values](resource-field-costs.md).
+Current diagnosis: [same-process executable memory accounting](executable-rss-accounting.md).
+The preceding selection [carries enclosing lifetime protection through values](resource-field-costs.md).
 [Both native censuses pass](resource-field-census-2026-11-10/README.md), with five
 plain service slots and twenty HTTP slots. [Executed service counts](resource-field-holds-2026-11-10/README.md)
 show only 1.35–1.70% of successful retains in these fields.
@@ -21,7 +22,8 @@ operation-count targets. [Native lifetime, count, compiler and HTTP evidence](re
 preserves the original compiler-cost misses and the verified repair. All 32
 ordinary service time comparisons pass, with 5–16% less time in large cases.
 Four original RSS limits remain open after a separate page-walk diagnosis;
-final delivery requires the complete production matrix.
+all final delivery gates passed in #279. The new lifecycle diagnosis retains
+ordinary controls and original memory misses without repeating timing acceptance.
 
 [Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
 now passes both native replays and independent raw-record audits. Identified
