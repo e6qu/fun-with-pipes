@@ -53,7 +53,7 @@ def snapshot(pid, folder, index):
 
 
 def observe(launcher, command, environment, folder, timeout=30):
-    """Trace GNU time and its one child. Reject extra processes/threads explicitly."""
+    """Trace GNU time, its one child and joined workers. Reject extra processes."""
     assert 0 < timeout <= 30
     folder.mkdir(parents=True, exist_ok=False)
     record = dict(command=list(map(str, command)), events=[], failure=None, cleanup=[])
@@ -95,7 +95,15 @@ def observe(launcher, command, environment, folder, timeout=30):
                 live.add(pid)
                 stop = os.WSTOPSIG(status)
                 kind = status >> 16
-                event.update(kind=EVENTS.get(kind, 'signal'), signal=stop)
+                with Path(f'/proc/{pid}/status').open() as stream:
+                    task_status = stream.read(65537)
+                assert len(task_status) <= 65536
+                status_path = folder / f'{event["index"]}-task.txt'
+                status_path.write_text(task_status)
+                tgid, = re.findall(r'^Tgid:\s+(\d+)$', task_status, re.M)
+                event.update(kind=EVENTS.get(kind, 'signal'), signal=stop, tgid=int(tgid),
+                             taskFile=status_path.name, taskSha256=hashlib.sha256(task_status.encode()).hexdigest())
+                assert int(tgid) in (child.pid, record.get('target', pid)), 'unexpected process or thread'
                 if not configured:
                     assert pid == child.pid and stop == signal.SIGSTOP and kind == 0
                     trace(SETOPTIONS, pid, OPTIONS)
@@ -108,9 +116,12 @@ def observe(launcher, command, environment, folder, timeout=30):
                     known.add(new_pid.value)
                     if new_pid.value not in reaped:
                         live.add(new_pid.value)
-                    forks += 1
-                    assert forks == 1 and pid == child.pid and kind in (1, 2), 'unexpected process or thread'
-                    record['target'] = new_pid.value
+                    if kind == 3:
+                        assert int(tgid) == record.get('target'), 'unexpected process or thread'
+                    else:
+                        forks += 1
+                        assert forks == 1 and pid == child.pid, 'unexpected process or thread'
+                        record['target'] = new_pid.value
                 elif kind == 6:
                     exit_status = ctypes.c_ulong()
                     trace(GETEVENTMSG, pid, ctypes.byref(exit_status))
@@ -120,7 +131,7 @@ def observe(launcher, command, environment, folder, timeout=30):
                 if stop == signal.SIGSTOP and not kind:
                     assert pid not in initial_stops, 'unexpected repeated SIGSTOP'
                     initial_stops.add(pid)
-                if kind or stop == signal.SIGSTOP:
+                if pid in (child.pid, record.get('target')) and kind != 3 and (kind or stop == signal.SIGSTOP):
                     event['snapshot'] = snapshot(pid, folder, event['index'])
                 # Suppress only protocol stops. Ordinary signals keep their meaning.
                 trace(CONT, pid, 0 if kind or stop == signal.SIGSTOP else stop)

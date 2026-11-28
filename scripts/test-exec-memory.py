@@ -83,10 +83,11 @@ class ExecMemory(unittest.TestCase):
             self.run_control('fork')
         self.assert_reaped(self.root / self.id().split('.')[-1])
 
-    def test_extra_thread_is_rejected_and_reaped(self):
-        with self.assertRaisesRegex(AssertionError, 'unexpected process or thread'):
-            self.run_control('thread')
-        self.assert_reaped(self.root / self.id().split('.')[-1])
+    def test_joined_thread_is_tracked_and_reaped_before_terminal_snapshot(self):
+        row, _, folder = self.run_control('thread')
+        result = review(folder, [hashlib.sha256(self.control.read_bytes()).hexdigest()], os.sysconf('SC_PAGE_SIZE'))
+        self.assertEqual(result['workerThreads'], 1)
+        self.assertEqual(len(row['known']), 3)
 
     def test_signals_are_delivered_and_failure_is_rejected(self):
         with self.assertRaisesRegex(AssertionError, 'launcher or timed process failed'):

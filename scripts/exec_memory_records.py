@@ -14,22 +14,30 @@ def review(folder, expected_hashes, page_bytes):
     row = json.loads((folder / 'observation.json').read_text())
     assert row['failure'] is None and row['status'] == 0 and not row['cleanup']
     root, target = row['root'], row['target']
-    assert root != target and set(row['known']) == {root, target}, 'process identity mismatch'
-    forks = [event for event in row['events'] if event['kind'] in ('fork', 'vfork', 'clone')]
+    assert root != target and {root, target}.issubset(row['known']), 'process identity mismatch'
+    forks = [event for event in row['events'] if event['kind'] in ('fork', 'vfork')]
     assert len(forks) == 1 and forks[0]['pid'] == root and forks[0]['child'] == target
     assert forks[0]['kind'] in ('fork', 'vfork')
     for index, event in enumerate(row['events']):
-        assert event['index'] == index and event['pid'] in (root, target), 'process identity mismatch'
+        assert event['index'] == index and event['pid'] in row['known'], 'process identity mismatch'
         status = event['rawStatus']
         if event['kind'] == 'reaped':
             assert os.WIFEXITED(status) and os.WEXITSTATUS(status) == event['status'] == 0
             continue
         assert os.WIFSTOPPED(status) and os.WSTOPSIG(status) == event['signal']
+        task_path = folder / event['taskFile']
+        assert task_path.resolve().is_relative_to(folder.resolve())
+        task = task_path.read_bytes()
+        assert hashlib.sha256(task).hexdigest() == event['taskSha256']
+        assert re.search(r'^Pid:\s+' + str(event['pid']) + r'$', task.decode(), re.M), 'process identity mismatch'
+        assert re.search(r'^Tgid:\s+' + str(event['tgid']) + r'$', task.decode(), re.M), 'process identity mismatch'
+        assert event['tgid'] in (root, target), 'process identity mismatch'
+        assert event['pid'] == root or event['tgid'] == target
         kind = status >> 16
         assert event['kind'] == {1: 'fork', 2: 'vfork', 3: 'clone', 4: 'exec', 6: 'exit-stop'}.get(
             kind, 'launcher-stop' if index == 0 else 'signal')
         if 'snapshot' not in event:
-            assert kind == 0 and event['signal'] != signal.SIGSTOP
+            assert event['pid'] not in (root, target) or kind == 3 or (kind == 0 and event['signal'] != signal.SIGSTOP)
             continue
         snap = event['snapshot']
         raw = {}
@@ -55,6 +63,13 @@ def review(folder, expected_hashes, page_bytes):
     parent, = [event for event in row['events'] if event['pid'] == root and event['kind'] == 'reaped']
     assert final['exitStatus'] == reaped['rawStatus'] == 0
     assert final['index'] < reaped['index'] < parent['index']
+    threads = set(row['known']) - {root, target}
+    clones = [event for event in row['events'] if event['kind'] == 'clone']
+    assert {event['child'] for event in clones} == threads
+    for pid in threads:
+        stopped = [event for event in row['events'] if event['pid'] == pid and event['kind'] == 'exit-stop']
+        gone = [event for event in row['events'] if event['pid'] == pid and event['kind'] == 'reaped']
+        assert len(stopped) == len(gone) == 1 and gone[0]['index'] < final['index'], 'worker did not finish before process snapshot'
     assert final['snapshot']['executableSha256'] == expected_hashes[-1]
     before = [event['snapshot'] for event in target_events
               if event['index'] < execs[0]['index'] and 'snapshot' in event]
@@ -70,7 +85,7 @@ def review(folder, expected_hashes, page_bytes):
                 terminalResidentKiB=terminal['metrics']['residentKiB'],
                 lifetimeMinusTerminalHwmKiB=rss - terminal['fast']['VmHWMKiB'],
                 terminalFastMinusWalkKiB=terminal['fast']['VmRSSKiB'] - terminal['metrics']['residentKiB'],
-                execCount=len(execs), categories=terminal['categories'])
+                execCount=len(execs), workerThreads=len(threads), categories=terminal['categories'])
 
 
 def validate_transient(row):

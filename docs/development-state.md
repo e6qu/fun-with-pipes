@@ -9,10 +9,13 @@ own child at fork, exec and exit and preserves ordinary untraced controls.
 all fixed service observations on both architectures.** Native control run
 `46159844843` passes all seven actual lifecycle/failure tests on both hosts;
 raw-reconstruction run `46160161430` passes all nine tests on both hosts.
-Fixed service collection `46160536010` is running at `d14c9c0b` in the original
-pinned image. The protocol was frozen at `4baf1339`, retained by immutable tag
-`roadmap/exec-memory-contract-2026-11-28`. A tenth control explicitly checks
-unexpected thread creation; it awaits native verification.
+First service collection `46160536010` fails on both hosts at the first traced
+execution: the runtime creates a worker, invalidating the single-thread assumption.
+All tracees were reaped and no service batch completed. Thread-control run
+`46160642199` confirms the missing path. The repair tracks joined workers and
+requires their completion before the terminal snapshot; new verification is pending.
+The initial protocol is retained by `roadmap/exec-memory-contract-2026-11-28`.
+Preparation documentation `46160163804` passes.
 The original four 5% RSS misses remain open; this work
 does not repeat timing acceptance or recover the original processes.
 

@@ -9,7 +9,7 @@
 
 static void *sleeper(void *argument) {
     (void)argument;
-    sleep(10);
+    usleep(20000);
     return NULL;
 }
 
