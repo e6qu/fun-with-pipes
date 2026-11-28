@@ -67,6 +67,8 @@ jobs:
         run: python3 docs/measurements/resource-frame-attribution-2026-11-27/read.py
       - name: Retained resource value compiler and application evidence
         run: python3 docs/measurements/resource-value-costs-2026-11-27/read.py
+      - name: Retained same-process executable memory evidence
+        run: python3 docs/measurements/executable-rss-2026-11-28/read.py
       - name: Retained structured callback timing and storage reports
         run: python3 scripts/check-structured-callback-report.py --directory docs/measurements/structured-array-callbacks-2026-11-08
       - name: Exact-source production log audit controls

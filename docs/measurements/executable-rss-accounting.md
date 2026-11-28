@@ -95,4 +95,8 @@ based on a memory result. The original protocol is retained at
 and `46161057674` pass ten and eleven controls respectively on both architectures.
 The latter holds the terminal process stop until all worker exit notifications
 have been reaped, including when the leader's notification arrives first.
-Corrected service observations remain pending.
+Corrected service run `46161194256` passes both hosts: all 512 executions,
+lifecycle snapshots and native/altered-record controls reconstruct.
+[Results](executable-rss-2026-11-28/README.md) show GNU time below actual terminal
+page residency in 254 of 256 traced executions and substantial ordinary-copy
+variation. The original missed acceptance limits remain separate and open.

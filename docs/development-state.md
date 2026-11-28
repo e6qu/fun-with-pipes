@@ -5,8 +5,8 @@ on `rss-exec-accounting`, starting from verified #279. The
 [fixed diagnostic](measurements/executable-rss-accounting.md) observes GNU time's
 own child at fork, exec and exit and preserves ordinary untraced controls.
 
-**Next: verify native lifecycle/failure controls, then collect and reconstruct
-all fixed service observations on both architectures.** Native control run
+**Next: complete one substantial PR with all final-head production,
+documentation and complete-log gates.** Native control run
 `46159844843` passes all seven actual lifecycle/failure tests on both hosts;
 raw-reconstruction run `46160161430` passes all nine tests on both hosts.
 First service collection `46160536010` fails on both hosts at the first traced
@@ -15,12 +15,24 @@ All tracees were reaped and no service batch completed. Thread-control run
 `46160642199` confirms the missing path. The repair tracks joined workers and
 requires their completion before the terminal snapshot. Corrected runs
 `46160920337` (ten controls) and `46161057674` (eleven, including process exit
-with a live worker) pass on both architectures. No completed service measurements
-have been repeated; the corrected full collection is next.
+with a live worker) pass on both architectures. Corrected collection
+`46161194256` passes at `afe192e806dbbac0a1cba1dfcbcd2641e16f1c47`, retained by
+`roadmap/exec-memory-workers-2026-11-28`: all 512 service executions and native
+controls complete. Every raw observation reconstructs and five altered-record
+controls fail as required on both hosts. No completed service batch was repeated.
+Export `46161831161` verifies the original artifacts and reconstructs the filtered
+text archive before publication. [Retained results](measurements/executable-rss-2026-11-28/README.md)
+show GNU time below terminal page residency in 254/256 traced executions, despite
+matching the exact child's wait4 receipt. Ordinary identical copies differ by
+over 5% in 42/128 pairs. Neither metric is substituted for the original four misses.
 The initial protocol is retained by `roadmap/exec-memory-contract-2026-11-28`.
 Preparation documentation `46160163804` passes.
 The original four 5% RSS misses remain open; this work
 does not repeat timing acceptance or recover the original processes.
+
+After this delivery, use these demonstrated accounting/observation limits to
+freeze a prospective memory protocol before another runtime optimization.
+Do not retroactively relax or declare the original limits satisfied.
 
 Local `python3 scripts/local-guard.py git diff --check` again refused below the
 64 GiB free-disk floor. No local builds/tests ran and no limits changed.

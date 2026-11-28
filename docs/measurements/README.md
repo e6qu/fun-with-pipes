@@ -10,6 +10,10 @@ identities. Do not edit observations to make an old experiment describe new code
 ## Current diagnosis
 
 Current diagnosis: [same-process executable memory accounting](executable-rss-accounting.md).
+[All 512 executions reconstruct](executable-rss-2026-11-28/README.md): GNU time
+reports less than actual terminal residency in 254/256 traced processes, while
+42/128 ordinary identical-copy pairs differ by over 5%. Preserve the original
+misses and distinguish counter limitations from compiler memory regressions.
 The preceding selection [carries enclosing lifetime protection through values](resource-field-costs.md).
 [Both native censuses pass](resource-field-census-2026-11-10/README.md), with five
 plain service slots and twenty HTTP slots. [Executed service counts](resource-field-holds-2026-11-10/README.md)
