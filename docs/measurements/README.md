@@ -9,11 +9,19 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
-Next: [measure unnecessary plain-data lifetime holds](resource-field-costs.md).
+Current selection: [carry enclosing lifetime protection through values](resource-field-costs.md).
 [Both native censuses pass](resource-field-census-2026-11-10/README.md), with five
 plain service slots and twenty HTTP slots. [Executed service counts](resource-field-holds-2026-11-10/README.md)
-show only 1.35–1.70% of successful retains in these fields. HTTP/callable attribution
-is next; no production optimization or speedup follows from these diagnostics.
+show only 1.35–1.70% of successful retains in these fields.
+[Executed HTTP/callable/frame attribution](resource-frame-attribution-2026-11-27/README.md)
+now passes both hosts and selects a broader value proof. Original frames cause
+21.6% of service and 24.3% of HTTP cleanup registrations; plain HTTP fields cause
+only 0.09% of successful retains. The implemented extension meets its initial
+operation-count targets. [Native lifetime, count, compiler and HTTP evidence](resource-value-costs-2026-11-27/README.md)
+preserves the original compiler-cost misses and the verified repair. All 32
+ordinary service time comparisons pass, with 5–16% less time in large cases.
+Four original RSS limits remain open after a separate page-walk diagnosis;
+final delivery requires the complete production matrix.
 
 [Queued-service CPU attribution](service-cpu-attribution-2026-11-10/README.md)
 now passes both native replays and independent raw-record audits. Identified

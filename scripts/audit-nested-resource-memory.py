@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from nested_resource_memory import categories, fast_counters
+from nested_resource_memory import MEMORY_ENVIRONMENTS, categories, fast_counters
 from nested_resource_timing import order
 from parser_process_memory import mappings, summary, validate_mapping_control
 from weak_callback_timing import CASES, decode_output
@@ -21,11 +21,11 @@ def audit(folder, source, arch):
         assert hashlib.sha256(path.read_bytes()).hexdigest() == value
     report = json.loads((folder / 'report.json').read_text())
     assert report['observerSource'] == source and report['architecture'] == arch
-    assert report['binarySource'] == 'd80357c8c81d206c9d9934b141b5a5fafe97c430' and not report['failures']
+    image, libc = MEMORY_ENVIRONMENTS[report['binarySource']]
+    assert not report['failures']
     identity = json.loads((folder / 'identity.json').read_text())
     assert identity == {key: value for key, value in report.items() if key not in ('controls', 'cases', 'failures')}
-    assert identity['image'] == 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0'
-    assert identity['libcPackage'] == '2.39-0ubuntu8.9'
+    assert identity['image'] == image and identity['libcPackage'] == libc
     assert identity['wait4Scope'] == 'Whole child lifetime, including pre-exec memory inherited from the observer; not fwp-only RSS.'
     settings = report['settings']
     assert (settings['rounds'], settings['interval_ms'], settings['deadline']) == (4, 50, 30)

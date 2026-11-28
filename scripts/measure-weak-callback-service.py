@@ -39,7 +39,7 @@ def collect(args):
     assert args.source == os.environ['GITHUB_SHA']
     for revision in ('HEAD', args.tag):
         assert subprocess.check_output(['git', 'rev-parse', revision], cwd=ROOT, text=True).strip() == args.source
-    assert args.tag.startswith('roadmap/weak-callback-time-')
+    assert args.tag.startswith(('roadmap/weak-callback-time-', 'roadmap/resource-value-time-'))
     assert args.target == args.arch + '-unknown-linux-gnu'
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch]
     assert args.rust_cpu == {'aarch64': 'generic', 'x86_64': 'x86-64'}[args.arch]

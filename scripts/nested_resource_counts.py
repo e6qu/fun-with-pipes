@@ -1,6 +1,7 @@
 """Observe actual service ownership calls in separate, untimed native builds."""
 import json
 
+from resource_value_contract import NESTED_REFERENCE, REFERENCES, VALUE_REFERENCE
 from weak_callback_service import replace_once, unique_fields
 
 COUNTERS = ('pushes', 'pops', 'unwinds', 'dupCalls', 'dropCalls', 'releaseCalls',
@@ -8,7 +9,8 @@ COUNTERS = ('pushes', 'pops', 'unwinds', 'dupCalls', 'dropCalls', 'releaseCalls'
 MEMORY = ('initialLiveBytes', 'finalLiveBytes', 'peakChargedBytes')
 
 
-def instrument(source):
+def instrument_runtime(source):
+    """Add runtime counters without choosing an application's observation window."""
     source = replace_once(source, 'typedef uint64_t V;',
         'typedef uint64_t V;\nstatic uint64_t ' + ', '.join('observed_' + key for key in COUNTERS) + ';')
     for marker, count in (
@@ -29,6 +31,11 @@ def instrument(source):
          '\n    observed_requests++; observed_requestedBytes += n;'),
     ):
         source = replace_once(source, marker, marker + addition)
+    return source
+
+
+def instrument(source):
+    source = instrument_runtime(source)
     source = replace_once(source, '    size_t baseline = fwp_heap.live;',
         '    size_t baseline = fwp_heap.live;\n'
         '    fwp_cleanup *cleanup_baseline = fwp_cleanups;\n'
@@ -55,9 +62,13 @@ def decode(text):
     return row
 
 
-def compare(reference, candidate):
+def compare(reference, candidate, source=NESTED_REFERENCE):
+    assert source in REFERENCES
     for key in ('requests', 'requestedBytes', 'peakChargedBytes'):
         assert candidate[key] <= reference[key], (key, reference, candidate)
-    return dict(cleanupReduction=1 - candidate['pushes'] / reference['pushes'],
-                cleanupTargetMet=candidate['pushes'] <= reference['pushes'] * .8,
+    result = dict(cleanupReduction=1 - candidate['pushes'] / reference['pushes'],
+                cleanupTargetMet=candidate['pushes'] <= reference['pushes'] * (.9 if source == VALUE_REFERENCE else .8),
                 delta={key: candidate[key] - reference[key] for key in (*COUNTERS, *MEMORY)})
+    if source == VALUE_REFERENCE:
+        result['retainTargetMet'] = candidate['retains'] <= reference['retains'] * .95
+    return result

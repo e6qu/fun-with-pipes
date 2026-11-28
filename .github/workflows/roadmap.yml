@@ -53,11 +53,19 @@ jobs:
           python3 scripts/test-service-cpu-collect.py
           python3 scripts/test-nested-resource-memory.py
           python3 scripts/test-resource-field-census.py
+          python3 scripts/test-resource-frames.py
+          python3 scripts/test-nested-resource-counts.py
+          python3 scripts/test-nested-resource-analysis.py
+          python3 scripts/test-nested-resource-timing.py
           python3 scripts/test-compiler-build-comparison.py
       - name: Retained scalar Swift closure allocation reports
         run: |
           python3 scripts/test-swift-closure-records.py
           python3 scripts/check-swift-closure-report.py --directory docs/measurements/swift-scalar-closures-2026-11-09
+      - name: Retained resource frame attribution
+        run: python3 docs/measurements/resource-frame-attribution-2026-11-27/read.py
+      - name: Retained resource value compiler and application evidence
+        run: python3 docs/measurements/resource-value-costs-2026-11-27/read.py
       - name: Retained structured callback timing and storage reports
         run: python3 scripts/check-structured-callback-report.py --directory docs/measurements/structured-array-callbacks-2026-11-08
       - name: Exact-source production log audit controls

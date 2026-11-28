@@ -84,7 +84,7 @@ jobs:
             resource-field-observations/
           if-no-files-found: error
   executed:
-    if: inputs.phase == 'execute'
+    if: inputs.phase == 'execute' || inputs.phase == 'frames' || inputs.phase == 'review'
     strategy:
       fail-fast: false
       matrix:
@@ -108,12 +108,16 @@ jobs:
           gcc --version
           python3 scripts/test-resource-field-census.py
           python3 scripts/test-nested-resource-counts.py
+          python3 scripts/test-resource-frames.py
+          git diff --check
       - name: Verify and extract the saved compiler census
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           COMPILER_SOURCE: ${{ inputs.source_revision }}
           CENSUS_RUNNER: ${{ matrix.runner }}
+          CENSUS_ARCH: ${{ matrix.arch }}
+          EVIDENCE_PHASE: ${{ inputs.phase }}
         run: |
           python3 - <<'PY'
           import hashlib
@@ -130,7 +134,9 @@ jobs:
           assert state['head_sha'] == os.environ['COMPILER_SOURCE']
           listing = json.loads(subprocess.check_output(['gh', 'api', f'{repository}/actions/runs/{run}/artifacts?per_page=100']))
           assert listing['total_count'] == len(listing['artifacts'])
-          artifact, = [row for row in listing['artifacts'] if row['name'] == 'resource-field-census-' + os.environ['CENSUS_RUNNER']]
+          name = ('resource-field-holds-' + os.environ['CENSUS_ARCH'] if os.environ['EVIDENCE_PHASE'] == 'review'
+                  else 'resource-field-census-' + os.environ['CENSUS_RUNNER'])
+          artifact, = [row for row in listing['artifacts'] if row['name'] == name]
           assert not artifact['expired'] and artifact['workflow_run']['id'] == int(run)
           assert artifact['workflow_run']['head_sha'] == os.environ['COMPILER_SOURCE']
           assert artifact['size_in_bytes'] < 64 * 1024 * 1024
@@ -151,6 +157,7 @@ jobs:
           print('Verified source, archive size/hash and every member checksum')
           PY
       - name: Count actual holds and verify an actual extra hold and release
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
         run: >-
@@ -158,12 +165,14 @@ jobs:
           --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
           --cc gcc --output resource-field-holds
       - name: Reconstruct all raw executions and verify native images
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
         run: >-
           python3 scripts/audit-resource-field-holds.py --input resource-field-holds
           --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}'
       - name: Reject a changed summary even with refreshed checksums
+        if: inputs.phase == 'execute'
         env:
           COMPILER_SOURCE: ${{ inputs.source_revision }}
           NATIVE_ARCH: ${{ matrix.arch }}
@@ -194,8 +203,24 @@ jobs:
           assert result.returncode != 0 and 'raw output disagrees with summary' in result.stderr
           print('Changed selected-hold summary rejected from raw execution output')
           PY
+      - name: Attribute complete frames and concrete callables in service and HTTP
+        if: inputs.phase == 'frames'
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/measure-resource-frames.py --input field-census
+          --source "$COMPILER_SOURCE" --arch '${{ matrix.arch }}' --c-arch '${{ matrix.c_arch }}'
+          --cc gcc --output resource-frames
+      - name: Reconstruct frame work and reject altered service and HTTP summaries
+        if: inputs.phase == 'frames'
+        env:
+          COMPILER_SOURCE: ${{ inputs.source_revision }}
+          NATIVE_ARCH: ${{ matrix.arch }}
+        run: |
+          python3 scripts/audit-resource-frames.py --input resource-frames --source "$COMPILER_SOURCE" --arch "$NATIVE_ARCH"
+          python3 scripts/check-resource-frame-audit.py --input resource-frames --output resource-frame-controls --source "$COMPILER_SOURCE" --arch "$NATIVE_ARCH"
       - name: Retain raw counts, C, binaries, controls and failures
-        if: always()
+        if: ${{ always() && inputs.phase != 'review' }}
         uses: actions/upload-artifact@v7
         with:
           name: resource-field-holds-${{ matrix.arch }}
@@ -205,4 +230,23 @@ jobs:
             field-hold-altered-summary/report.json
             field-hold-altered-summary/manifest.json
             field-hold-altered-summary/audit.*
+            resource-frames/
+            resource-frame-controls/
+          if-no-files-found: error
+      - name: Audit saved native images and export small review records
+        if: inputs.phase == 'review'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          TOOL_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/export-resource-frames.py --input field-census
+          --output resource-frame-review --run "$EVIDENCE_RUN" --source "$TOOL_SOURCE"
+          --arch '${{ matrix.arch }}'
+      - name: Retain review records without duplicate native binaries
+        if: ${{ always() && inputs.phase == 'review' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: resource-frame-review-${{ matrix.arch }}
+          path: resource-frame-review/
           if-no-files-found: error

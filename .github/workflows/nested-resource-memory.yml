@@ -24,10 +24,11 @@ jobs:
             arch: x86_64
             c_arch: x86-64
     runs-on: ${{ matrix.runner }}
-    container: swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0
+    container: ${{ inputs.source_revision == '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb' && 'swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016' || 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0' }}
     timeout-minutes: 30
     env:
-      MEMORY_IMAGE: swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0
+      MEMORY_IMAGE: ${{ inputs.source_revision == '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb' && 'swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016' || 'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0' }}
+      MEMORY_LIBC: ${{ inputs.source_revision == '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb' && '2.39-0ubuntu8.12' || '2.39-0ubuntu8.9' }}
     steps:
       - name: Install explicit observation tools in the original image
         run: apt-get update && apt-get install -y git gcc python3 gh
@@ -35,7 +36,7 @@ jobs:
       - name: Native identity and memory-reader controls
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          test "$(dpkg-query -W -f='${Version}' libc6)" = "2.39-0ubuntu8.9"
+          test "$(dpkg-query -W -f='${Version}' libc6)" = "$MEMORY_LIBC"
           test "$(uname -m)" = "${{ matrix.arch }}"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           gcc --version

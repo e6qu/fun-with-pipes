@@ -5,6 +5,15 @@ on:
       source_tag:
         type: string
         required: true
+      reference_source:
+        type: string
+        required: true
+      compiler_costs:
+        type: boolean
+        required: true
+      service_costs:
+        type: boolean
+        required: true
 permissions:
   contents: read
 jobs:
@@ -31,7 +40,7 @@ jobs:
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_RELEASE_DEBUG: 'false'
       FWP_LTO: '0'
-      REFERENCE_SOURCE: '65719f7fc2277a5b97c5a790df941fea6c5eb4d7'
+      REFERENCE_SOURCE: ${{ inputs.reference_source }}
     steps:
       - name: Explicit native toolchains and measurement tools
         run: apt-get update && apt-get install -y git gcc g++ python3 binutils curl libssl-dev pkg-config time llvm
@@ -93,13 +102,18 @@ jobs:
           python3 scripts/inspect-nested-resource-analysis.py --kind nested-borrows measure \
             --compiler ../nested-analysis-target/release/fwp --ordinary target/release/fwp \
             --output nested-analysis-observations
+      - name: Preserve previously measured application code after compiler-cost repair
+        if: ${{ !cancelled() && inputs.reference_source == '5a9047178b88c801f37a279dfeca55b0e190bf07' }}
+        run: python3 scripts/check-resource-value-emission.py --input nested-analysis-observations --arch '${{ matrix.arch }}'
       - name: Verify real timing callers and wrong-result, release and clock controls
+        if: inputs.service_costs
         run: >-
           python3 scripts/check-weak-callback-timing.py --cc gcc --ar ar --rustc rustc --swiftc swiftc
           --compiler target/release/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
           --target "${{ matrix.arch }}-unknown-linux-gnu" --output nested-time-checks
       - name: Contemporary C, Rust and Swift peers in two balanced sessions
+        if: inputs.service_costs
         env:
           SOURCE_TAG: ${{ inputs.source_tag }}
         run: >-
@@ -110,21 +124,24 @@ jobs:
           --target "${{ matrix.arch }}-unknown-linux-gnu" --time /usr/bin/time
           --objdump llvm-objdump --readelf readelf --output nested-time-peers
       - name: Verify peer evidence and reject altered observations
+        if: inputs.service_costs
         run: |
           python3 scripts/measure-weak-callback-service.py audit --input nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           python3 scripts/check-weak-callback-timing-audit.py --input nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output nested-time-peer-audit-controls
       - name: Ordinary reference versus candidate using the same audited C pilots
+        if: inputs.service_costs
         run: >-
           python3 scripts/measure-nested-resource-time.py --reference nested-time-reference/fwp
           --reference-source "$REFERENCE_SOURCE" --peers nested-time-peers
           --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --cc gcc --c-arch "${{ matrix.c_arch }}"
           --time /usr/bin/time --objdump llvm-objdump --readelf readelf --output nested-time-comparison
       - name: Reconstruct all reference and candidate observations
+        if: inputs.service_costs
         run: |
           python3 scripts/audit-nested-resource-time.py --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           python3 scripts/check-nested-resource-audits.py --kind time --input nested-time-comparison --peers nested-time-peers --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --output nested-time-audit-controls
       - name: Ordinary compiler costs and diagnostic agreement
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.compiler_costs }}
         shell: bash
         run: |
           set -euo pipefail

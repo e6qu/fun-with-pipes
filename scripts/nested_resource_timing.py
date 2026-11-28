@@ -1,6 +1,7 @@
 """Frozen four-way service timing order, copy controls and runtime acceptance."""
 import statistics
 
+from resource_value_contract import NESTED_REFERENCE, runtime_limit
 from weak_callback_timing import COPY_LIMIT, MINIMUM_NS, ROUNDS
 
 LABELS = ('reference', 'reference-copy', 'candidate', 'candidate-copy')
@@ -11,7 +12,7 @@ def order(round_number):
     return [LABELS[(index + round_number) % 4] for index in (0, 1, 3, 2)]
 
 
-def summarize(samples, population):
+def summarize(samples, population, reference=NESTED_REFERENCE):
     assert population in (64, 4096) and len(samples) == ROUNDS * 4
     values = {duration: {label: [] for label in LABELS} for duration in ('service', 'process')}
     for index, row in enumerate(samples):
@@ -33,5 +34,5 @@ def summarize(samples, population):
         ratio = medians['candidate'] / medians['reference'] if medians['reference'] else None
         result[duration] = dict(medianNs=medians, copyRatios=copies, qualified=qualified,
                                 candidateOverReference=ratio,
-                                timingTargetMet=qualified and ratio <= (.90 if population == 4096 else 1.02))
+                                timingTargetMet=qualified and ratio <= runtime_limit(reference, population))
     return result

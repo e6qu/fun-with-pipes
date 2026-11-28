@@ -1,0 +1,43 @@
+name: Retain resource value evidence without native image downloads
+on:
+  workflow_call:
+    inputs:
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+      kind:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify original archives and export text evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+          EVIDENCE_KIND: ${{ inputs.kind }}
+        run: >-
+          python3 scripts/export-resource-value-evidence.py
+          --run "$EVIDENCE_RUN" --source "$EVIDENCE_SOURCE"
+          --kind "$EVIDENCE_KIND" --output resource-value-review
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: resource-value-review-${{ inputs.kind }}-${{ inputs.evidence_run }}
+          path: |
+            resource-value-review/*.json
+            resource-value-review/reports.zip
+            resource-value-review/*.log.gz
+          if-no-files-found: error

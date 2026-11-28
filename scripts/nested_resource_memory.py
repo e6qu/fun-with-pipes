@@ -10,6 +10,15 @@ import time
 
 from parser_process_memory import mappings, summary
 
+MEMORY_ENVIRONMENTS = {
+    'd80357c8c81d206c9d9934b141b5a5fafe97c430': (
+        'swift@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0',
+        '2.39-0ubuntu8.9'),
+    '33149ad2fd888a66ff36b8eb7f2c5b61faccfccb': (
+        'swift@sha256:97b9d09f1e922ee794067ea8eec4874083c97d2d5027a6a409e398d82ebca016',
+        '2.39-0ubuntu8.12'),
+}
+
 
 def fast_counters(status, statm, page_bytes):
     result = {}

@@ -111,15 +111,23 @@ outer frame owns file ───────────────────�
     inner call uses that protection ─── return
 ```
 
-The native compiler can prove this relationship through an exact local alias or
-an immutable field. It waits until a binding is initialized and keeps branch
-proofs separate. A factory result, an ended scope or a reassigned local does not
-establish protection. Loop/tail-call rebinding is outside this proof.
+The native compiler follows exact aliases and immutable fields. It also carries
+protection through a new record when all its resources already have enclosing
+owners, and through a known partial function's actual captures. For example,
+putting the protected file into a new record does not require another lifetime
+hold merely because that record is passed through a helper.
+
+Returning the record carries that proof only while its enclosing owner remains
+active. If the helper creates the only protecting owner, that protection ends
+when the helper returns and cannot justify a later borrow. All branch results
+must satisfy this rule. The compiler waits for initialization; unknown or
+saturated factories, reassigned locals and loop/tail-call rebinding remain outside
+the proof. See the [extension's contract and verification state](measurements/resource-field-costs.md).
 
 Only the duplicate frame hold is removed. Ordinary arguments, returned owners,
 failure cleanup and the point at which a file closes or weak target expires retain
 their existing rules. The interpreter keeps its original scope metadata.
-[Native Linux counts/cleanup](measurements/nested-resource-counts-2026-11-10/README.md)
+The original alias/projection proof's [native Linux counts/cleanup](measurements/nested-resource-counts-2026-11-10/README.md)
 and the [omitted-owner control](measurements/nested-resource-lifetime-2026-11-10/README.md)
 pass. [Ordinary timing](measurements/nested-resource-time-2026-11-10/README.md)
 shows 16–21% gains in qualified cases. Noisy comparisons, four process-RSS misses

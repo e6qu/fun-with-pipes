@@ -3,21 +3,32 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::ir::{Expr, Local, Pat};
+use crate::ir::{Expr, Func, Local, Pat, Shapes, MT};
+
+// The oldest active original frame that protects every observable resource in
+// this value. Depth zero means no observable resource; None means unknown.
+// A result can leave a region only when its protecting frame survives that exit.
+type Protection = Option<usize>;
 
 #[derive(Clone, Copy, Default)]
 struct LocalState {
-    protected: bool,
-    binding: bool,
+    protection: Protection,
+    binding: Protection,
 }
 
-struct Scan {
+struct Scan<'a> {
     locals: Vec<LocalState>,
+    local_types: &'a [MT],
+    shapes: &'a Shapes,
+    plain: Vec<Option<bool>>,
+    plain_types: HashMap<&'a MT, bool>,
+    funcs: &'a [Func],
+    depth: usize,
     undo: Vec<(Local, LocalState)>,
     selected: HashMap<*const Expr, HashSet<Local>>,
 }
 
-impl Scan {
+impl Scan<'_> {
     fn set(&mut self, local: Local, state: LocalState) {
         self.undo.push((local, self.locals[local as usize]));
         self.locals[local as usize] = state;
@@ -30,93 +41,111 @@ impl Scan {
         }
     }
 
-    // These expressions expose the same immutable value or one of its owned
-    // fields. Calls, factories, updated records and mutable channel contents do
-    // not establish this relation. Ordinary Dup/Drop never remove frame owners.
-    fn covered(&self, value: &Expr) -> bool {
-        match value {
-            Expr::Local(local) => self.locals[*local as usize].protected,
-            Expr::Field(base, _)
-            | Expr::Trace(_, base)
-            | Expr::Dup(_, base)
-            | Expr::Drop(_, base) => self.covered(base),
-            _ => false,
+    fn protected(&mut self, local: Local) -> Protection {
+        let index = local as usize;
+        let plain = match self.plain[index] {
+            Some(plain) => plain,
+            None => {
+                let ty = &self.local_types[index];
+                let plain = *self.plain_types.entry(ty).or_insert_with(|| {
+                    crate::tailrec::plain_data(self.shapes, ty, &mut HashSet::new())
+                });
+                self.plain[index] = Some(plain);
+                plain
+            }
+        };
+        if plain {
+            Some(0)
+        } else {
+            self.locals[local as usize].protection
         }
     }
 
-    fn bind(&mut self, local: Local, covered: bool) {
+    fn bind(&mut self, local: Local, protection: Protection) {
         let binding = self.locals[local as usize].binding;
+        // Prefer an older protecting owner when both exist. The new original
+        // binding is still retained normally, but need not hide that ancestor.
+        let protection = protection.into_iter().chain(binding).min();
         self.set(
             local,
             LocalState {
-                protected: binding || covered,
+                protection,
                 binding,
             },
         );
     }
 
-    fn pattern(&mut self, pattern: &Pat, covered: bool) {
+    fn pattern(&mut self, pattern: &Pat, protection: Protection) {
         match pattern {
-            Pat::Bind(local) => self.bind(*local, covered),
+            Pat::Bind(local) => self.bind(*local, protection),
             Pat::Record(fields) | Pat::Construct(_, fields) => {
                 for field in fields {
-                    self.pattern(field, covered);
+                    self.pattern(field, protection);
                 }
             }
             Pat::Wild | Pat::Lit(_) => {}
         }
     }
 
-    fn visit(&mut self, expr: &Expr) {
+    fn visit(&mut self, expr: &Expr) -> Protection {
         let mark = self.undo.len();
-        match expr {
+        let result = match expr {
             Expr::ResourceRegion {
                 parameters,
                 bindings,
                 body,
             } => {
-                // Test against enclosing frames before registering this frame.
+                let parent = self.depth;
+                self.depth += 1;
                 let inherited: HashSet<_> = parameters
                     .iter()
                     .copied()
-                    .filter(|local| self.locals[*local as usize].protected)
+                    .filter(|local| self.protected(*local).is_some())
                     .collect();
                 if !inherited.is_empty() {
                     self.selected.insert(expr, inherited);
                 }
                 for &local in parameters {
+                    let protection = self.protected(local).or(Some(self.depth));
                     self.set(
                         local,
                         LocalState {
-                            protected: true,
-                            binding: false,
+                            protection,
+                            binding: None,
                         },
                     );
                 }
                 for &local in bindings {
-                    // The slot exists, but is not an owner until initialized.
+                    // A future slot protects nothing until initialization.
                     self.set(
                         local,
                         LocalState {
-                            protected: false,
-                            binding: true,
+                            protection: None,
+                            binding: Some(self.depth),
                         },
                     );
                 }
-                self.visit(body);
+                let result = self.visit(body).filter(|depth| *depth <= parent);
+                self.depth = parent;
+                result
             }
             Expr::Let(local, value, body) => {
-                self.visit(value);
-                self.bind(*local, self.covered(value));
-                self.visit(body);
+                let protection = self.visit(value);
+                self.bind(*local, protection);
+                self.visit(body)
             }
             Expr::Match(value, arms) => {
-                self.visit(value);
-                let covered = self.covered(value);
+                let protection = self.visit(value);
+                let mut joined = Some(0);
                 for (pattern, body) in arms {
-                    self.pattern(pattern, covered);
-                    self.visit(body);
+                    self.pattern(pattern, protection);
+                    joined = joined.zip(self.visit(body)).map(|(a, b)| a.max(b));
                     self.restore(mark);
+                }
+                if arms.is_empty() {
+                    None
+                } else {
+                    joined
                 }
             }
             Expr::Trace(_, body)
@@ -124,26 +153,49 @@ impl Scan {
             | Expr::Dup(_, body)
             | Expr::Drop(_, body)
             | Expr::BorrowGlobal(_, _, body) => self.visit(body),
-            Expr::Call(_, args) | Expr::Record(args) | Expr::Construct(_, args) => {
+            Expr::Record(args) => {
+                // The new record's identity is not observable. Every resource
+                // it owns must already have a surviving enclosing owner.
+                let mut joined = Some(0);
                 for arg in args {
-                    self.visit(arg);
+                    joined = joined.zip(self.visit(arg)).map(|(a, b)| a.max(b));
                 }
+                joined
             }
             Expr::Apply(function, args) => {
                 self.visit(function);
+                let mut joined = Some(0);
+                for arg in args {
+                    joined = joined.zip(self.visit(arg)).map(|(a, b)| a.max(b));
+                }
+                // Only an actual unsaturated constructor owns precisely these
+                // captures. A saturated or nullary factory may return anything.
+                if matches!(&**function, Expr::Func(id) if args.len() < self.funcs[*id].arity as usize)
+                {
+                    joined
+                } else {
+                    None
+                }
+            }
+            Expr::Call(_, args) | Expr::Construct(_, args) => {
                 for arg in args {
                     self.visit(arg);
                 }
+                None
             }
             Expr::SetFields(base, fields) => {
                 self.visit(base);
                 for (_, value) in fields {
                     self.visit(value);
                 }
+                None
             }
-            Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
-        }
+            Expr::Local(local) => self.protected(*local),
+            Expr::Const(_) => Some(0), // Validated portable constants own no handles.
+            Expr::Func(id) => (self.funcs[*id].arity > 0).then_some(0),
+        };
         self.restore(mark);
+        result
     }
 }
 
@@ -193,14 +245,22 @@ fn fresh_bindings(expr: &Expr, seen: &mut HashSet<Local>) -> bool {
 /// The caller excludes loop/tail-rebinding bodies. Keys cannot cross tree clones.
 pub(super) fn parameters(
     root: &Expr,
-    locals: usize,
+    locals: &[MT],
     arity: u32,
+    funcs: &[Func],
+    shapes: &Shapes,
 ) -> HashMap<*const Expr, HashSet<Local>> {
     if !fresh_bindings(root, &mut (0..arity).collect()) {
         return HashMap::new();
     }
     let mut scan = Scan {
-        locals: vec![LocalState::default(); locals],
+        locals: vec![LocalState::default(); locals.len()],
+        local_types: locals,
+        shapes,
+        plain: vec![None; locals.len()],
+        plain_types: HashMap::new(),
+        funcs,
+        depth: 0,
         undo: Vec::new(),
         selected: HashMap::new(),
     };
@@ -230,9 +290,108 @@ mod tests {
     }
 
     fn selected(body: &Expr) -> Vec<Local> {
-        let mut result: Vec<_> = parameters(body, 16, 2).into_values().flatten().collect();
+        let mut result: Vec<_> =
+            parameters(body, &vec![MT::con("unknown"); 16], 2, &[], &Shapes::new())
+                .into_values()
+                .flatten()
+                .collect();
         result.sort_unstable();
         result
+    }
+
+    #[test]
+    fn constructed_records_keep_the_oldest_protecting_owner() {
+        let body = region(
+            &[0],
+            &[],
+            bind(
+                2,
+                Expr::Record(vec![Expr::Local(0), unit()]),
+                bind(
+                    3,
+                    region(&[2], &[], Expr::Field(Box::new(Expr::Local(2)), 0)),
+                    region(&[3], &[], unit()),
+                ),
+            ),
+        );
+        assert_eq!(selected(&body), vec![2, 3]);
+        // A new record does not make an unknown sibling field safe.
+        let unknown = region(
+            &[0],
+            &[],
+            bind(
+                2,
+                Expr::Record(vec![Expr::Local(0), Expr::Local(1)]),
+                region(&[2], &[], unit()),
+            ),
+        );
+        assert!(selected(&unknown).is_empty());
+    }
+
+    #[test]
+    fn returned_values_require_an_owner_that_survives_the_exit() {
+        let returned = region(
+            &[0],
+            &[],
+            bind(2, Expr::Record(vec![Expr::Local(0)]), Expr::Local(2)),
+        );
+        let ended = bind(3, returned.clone(), region(&[3], &[], unit()));
+        assert!(selected(&ended).is_empty());
+        // The same returned record is covered when an older owner survives.
+        let alive = region(&[0], &[], ended);
+        assert_eq!(selected(&alive), vec![0, 3]);
+    }
+
+    #[test]
+    fn every_branch_must_return_surviving_protection() {
+        for unknown in [false, true] {
+            let value = Expr::Match(
+                Box::new(unit()),
+                vec![
+                    (Pat::Wild, Expr::Record(vec![Expr::Local(0)])),
+                    (Pat::Wild, Expr::Local(if unknown { 1 } else { 0 })),
+                ],
+            );
+            let body = region(&[0], &[], bind(2, value, region(&[2], &[], unit())));
+            assert_eq!(selected(&body), if unknown { vec![] } else { vec![2] });
+        }
+    }
+
+    #[test]
+    fn only_unsaturated_known_constructors_preserve_capture_protection() {
+        use crate::ir::Body;
+
+        let funcs: Vec<_> = (0..=2)
+            .map(|arity| Func {
+                name: format!("arity{arity}"),
+                arity,
+                locals: vec![MT::con("unknown"); arity as usize],
+                ty: (0..arity).fold(MT::unit(), |result, _| {
+                    MT::Fun(Box::new(MT::con("unknown")), Box::new(result))
+                }),
+                body: Body::Expr(unit()),
+            })
+            .collect();
+        let locals = vec![MT::con("unknown"); 16];
+        for (function, args, expected) in [
+            (Expr::Func(2), vec![Expr::Local(0)], true),
+            (Expr::Func(2), vec![Expr::Local(1)], false),
+            (Expr::Func(1), vec![Expr::Local(0)], false),
+            (Expr::Func(0), vec![], false),
+            (Expr::Local(0), vec![], false),
+        ] {
+            let body = region(
+                &[0],
+                &[],
+                bind(
+                    2,
+                    Expr::Apply(Box::new(function), args),
+                    region(&[2], &[], unit()),
+                ),
+            );
+            let proof = parameters(&body, &locals, 2, &funcs, &Shapes::new());
+            assert_eq!(proof.values().any(|locals| locals.contains(&2)), expected);
+        }
     }
 
     #[test]
@@ -252,8 +411,9 @@ mod tests {
         );
         assert_eq!(selected(&body), vec![2, 3]);
         let clone = body.clone();
-        let original = parameters(&body, 16, 2);
-        let copied = parameters(&clone, 16, 2);
+        let locals = vec![MT::con("unknown"); 16];
+        let original = parameters(&body, &locals, 2, &[], &Shapes::new());
+        let copied = parameters(&clone, &locals, 2, &[], &Shapes::new());
         assert!(original.keys().all(|key| !copied.contains_key(key)));
     }
 

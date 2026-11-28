@@ -1,29 +1,104 @@
 # Current work
 
-Updated 2026-11-27. **Next: finish final-head CI and the complete-log audit for
-the `finish-delivery-hygiene` follow-up, then squash merge.** PR #277 is merged;
-its nine production jobs, documentation and complete-log audit now pass.
-This follow-up records that delivery, completes the repository ignore rules and
-repairs two toolchain failures found by its first CI run. It changes no production
-ownership behavior or performance claim.
+Updated 2026-11-28. **Current delivery: one substantial PR from
+`resource-frame-costs`, with every final-head production, documentation and
+complete-log gate required before merge.** Preparation is complete and retained;
+the checks below are focused evidence, not a substitute for the final matrix.
+Branch starts from verified #278. [PR #279](https://github.com/e6qu/fun-with-pipes/pull/279)
+contains final delivery receipts.
 
-The root checkout is now based on merge `03c742f38d4d4a3f89393d3f05455f9cede0838a`.
-After this follow-up, resume [the ordered investigation](measurements/resource-field-costs.md)
-with HTTP executed counts and callable-field/whole-frame attribution before
-selecting an optimization. Keep the final head unchanged unless a real failure
-requires repair.
-Published preparation: `9b24e6965dd4c7cfb6e88163a34722e0b99ec901`, retained by
-`roadmap/resource-field-census-preparation-2026-11-10`. Focused native census
-run `42830283981` passes both jobs: ARM64 `129878222562`, AMD64 `129878222459`.
-Both complete logs are clean. [Retained census](measurements/resource-field-census-2026-11-10/README.md)
-reconstructs all 17 inputs on both hosts; each C hash and classification agrees.
-Executed counts at `b4b11d4a9f545b03a6af4b03f37612fb15650c9c`, retained by
-`roadmap/resource-field-holds-preparation-2026-11-10`, also pass both jobs in run
-`42833961349`: ARM64 `129891087787`, AMD64 `129891088346`. Complete logs are clean.
-[Both reports](measurements/resource-field-holds-2026-11-10/README.md) reconstruct
-all 34 executions per host, unchanged totals and real extra-pair controls.
+**Next: after delivery, establish a controlled way to explain
+the four original RSS misses.** The completed page-walk diagnostic cannot
+recover the original processes or establish exact transient peaks. Keep their
+5% acceptance limits open; do not rerun unchanged timings to qualify them.
+
+- [The frozen contract](measurements/resource-field-costs.md) predates production
+  code: `a107435fe3b19963e3670a66e29fa211f82a35fa`, retained by
+  `roadmap/resource-value-contract-2026-11-27`.
+- [Native attribution](measurements/resource-frame-attribution-2026-11-27/README.md)
+  passes both hosts in `46063375647`: 44 executions and 12 native images each,
+  real extra-owner and altered-summary controls. Source `041db8772962f0e15ff44d70b56f1142fc8aa103`
+  is retained by `roadmap/resource-frame-attribution-preparation-2026-11-27`.
+- The proof carries surviving ownership through records, known partial captures,
+  returned values and branch joins. Saturated/unknown factories, ended scopes,
+  unsafe joins and rebound locals remain conservative. Ordinary owners and
+  original binding anchors remain intact.
+- Focused `46067857005` passes both native hosts at `33149ad2fd888a66ff36b8eb7f2c5b61faccfccb`:
+  all 11 proof tests, seven resource tests, eight semantic targets, 32 count cases,
+  eight real faults and six altered reports per host. Large cases remove 15–21%
+  of registrations, 13.5–17% of successful retains and 2,048–4,096 allocation
+  requests; charged peak is unchanged and all storage releases. These are counts.
+- [Original compiler costs](measurements/resource-value-costs-2026-11-27/README.md)
+  from `46065857276` reconstruct: 61/64 acceptance, two noisy AMD64 comparisons
+  and a qualified 2.059% generic-512 increase against the frozen 2% limit.
+  The repair classifies only queried locals, caching per local and type. New
+  compiler run `46068984506` passes all 64 comparisons and proves unchanged C
+  for four applications and twelve growth inputs. Focused repair checks
+  `46068988582` pass on both native hosts; counts are identical to the first
+  implementation. Complete logs have no compiler diagnostics.
+  Source-format `46068992809` passes with an empty patch.
+- Ordinary service/peer run `46067853489` passes both jobs: all 32 service time
+  comparisons qualify and meet their limits. Large cases take 5–16% less time.
+  Four process-RSS ratios miss 5%: ARM64 session 2 cancellation; AMD64 session 1
+  small error and session 2 small full-delivery/expiry. Keep these misses open.
+  Page-walk run `46073285460` passes against unchanged binaries, the exact
+  original image and libc 2.39-0ubuntu8.12. All 256 executions and 4,805 snapshots
+  reconstruct, with exact agreement between fast RSS counters and page walks.
+  Later sampled peaks remain close; they do not explain the four original misses.
+  Compiler-only repair measurements preserve exact emitted C, so these runtime
+  observations also apply to the repaired compiler.
+- HTTP cleanup `46065944554` and load `46065948202` pass: 34 load trials,
+  29,756,171 attempts, zero failures and successful shutdowns. All sampled
+  within-trial RSS slopes are zero. This is capacity evidence, not HTTP speedup.
+- Retained frame reader and docs `46067000815` pass. Cost reader/docs
+  `46069448947` and repaired compiler/count reconstruction `46070965850` pass.
+  Final documentation also includes all ordinary runtime and raw page-walk records.
+  Runner exports `46068360511`, `46068364228`, `46068367762`, `46069093836`
+  verify original archive/source identities and reconstruct raw observations.
+  Only small text evidence is downloaded locally; native images stay on runners.
+  Repair exports `46070520960` and `46070235418` also pass raw reconstruction.
+  Runtime/stack export `46073885767` and memory export `46073880453` pass;
+  all original misses remain in the retained report.
+- Initial PR documentation `46074605235` exposed missing mapping-control
+  `.smaps` files in the text export. The exporter now includes them and checks
+  reconstruction after filtering, before publishing the archive. Its corrected
+  export `46075009391` passes, including reconstruction of the filtered archive.
+  Full documentation `46075387053` passes on the repair branch, including both
+  retained 128-execution memory archives. Final PR gates remain pending;
+  original native observations are unchanged. Superseded production
+  `46074605382` had no reported failures before replacement; its cancellation
+  is not acceptance evidence.
+- Earlier failures are preserved: attribution `46062709945` needed scoped hooks
+  and OpenSSL linkage; `46064688201` needed runner-generated formatting;
+  `46065431503` and `46066997172` exposed fixture syntax errors, now fixed and
+  verified. `46065857276` rejected a preparation-tag prefix before service
+  timing; the corrected service run collects that previously unmeasured work.
+  Export jobs initially needed pagination for the many skipped numerical jobs.
+
+Local disk is about 24 GiB free. `python3 scripts/local-guard.py git diff --check`
+refused below the unchanged 64 GiB floor. No local compiler or tests ran and no
+limits were raised. #278 already delivered reviewed ignore rules. Local `main`
+is `5a9047178b88c801f37a279dfeca55b0e190bf07`; worktrees/stashes are preserved.
 
 ## Verified delivery
+
+[PR #278](https://github.com/e6qu/fun-with-pipes/pull/278) squash-merged as
+`5a9047178b88c801f37a279dfeca55b0e190bf07` after every final-head gate passed.
+Both it and tested head `8cdff5dda27f1ae7a79be421fd5cfdb18fdb636b` have tree
+`cc672edd509c28272f48cf19d9002f42a757413c`. The merge message is exactly one
+line, with no body or trailers.
+
+- [Production `46021862122`](https://github.com/e6qu/fun-with-pipes/actions/runs/46021862122): all nine jobs pass.
+- [Documentation `46021862175`](https://github.com/e6qu/fun-with-pipes/actions/runs/46021862175), job `140583233331`: pass.
+- [Complete-log audit `46037710967`](https://github.com/e6qu/fun-with-pipes/actions/runs/46037710967), job `140637239616`: all ten reports pass.
+  Both Linux hosts retain 257 target logs, each regular Mac 131, each ownership
+  Mac 126, and each Windows host 57 logs with all 155 started targets successful.
+- Audit artifact `15217982784`: 1,196,823 bytes; GitHub reports SHA-256
+  `5eb3080e558b5511df91576df17d5ad2f0f59a8e24a3ab6ab76c48edaceac2ff`.
+  Source, coverage and artifact identities were verified on the runner; no local
+  archive verification was performed.
+- Duplicate postmerge runs `46038247521` and `46038247409` were cancelled after
+  proving merge/tested-head tree equality. They are not passing-gate evidence.
 
 [PR #277](https://github.com/e6qu/fun-with-pipes/pull/277) merged as
 `03c742f38d4d4a3f89393d3f05455f9cede0838a`, with the same tree as tested head
@@ -65,31 +140,15 @@ It does not establish the cause of the original RSS misses or replace their limi
 pass: 26,228,542 attempts, no failures, successful shutdowns and flat sampled RSS.
 This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 
-## Prepared census and remaining work
+## Selection and implementation scope
 
-- `resource_field_census.py` reports exact original-frame contexts, concrete types
-  and the current resource classification in a separate diagnostic compiler.
-- `inspect-nested-resource-analysis.py` now requires `--kind nested-borrows` or
-  `--kind plain-fields`; the existing timing workflow supplies its mode explicitly.
-  The new mode compares exact emitted C on 17 inputs, including the exported service.
-- `resource-field-census.yml` builds both compilers on native runners and retains
-  all C, classifications, commands and failures. No ordinary runtime is timed.
-- Census finds five plain field slots in the service and twenty in HTTP; these
-  are emitted sites, not executed counts or a speedup.
-- `measure-resource-field-holds.py` passes GCC O1/O2 on both native hosts using
-  saved service C: baseline totals, attributed holds, one actual added hold/release
-  and all eight cases. Its raw auditor verifies native binaries and rejects changed
-  summaries even with refreshed checksums. No compiler rebuild or timing was needed.
-- Plain fields cause only 1.35–1.70% of successful retains in large service cases.
-  Child decrements are not all removable work. A standalone field-only optimization
-  is not selected; secondary reuse benefits remain unmeasured.
-- Next implementation selection needs HTTP executed counts and attribution of
-  callable-field holds/whole-frame setup. Arrow types do not reveal captures: a
-  later proof must establish actual constructor origin and captured values, reject
-  executed/nullary constructors and preserve branch/loop lifetime boundaries.
-- Scope is separately represented fields. Keep ordinary owners, opaque closures,
-  variants and containers. Do not infer captures from arrow types or classify an
-  ordinary cleanup record as an original resource-lifetime record.
+The earlier [static census](measurements/resource-field-census-2026-11-10/README.md)
+and [plain-field service counts](measurements/resource-field-holds-2026-11-10/README.md)
+remain unchanged evidence. Whole-frame service registrations are 21.6% of all
+registrations; HTTP has 24.3%. Plain HTTP fields cause only 0.09% of successful
+retains. The selected proof extends enclosing ownership; a standalone plain-field
+optimization is rejected. Actual callable constructors/captures are inspected,
+not inferred from arrow types. Keep ordinary owners and original disposal timing.
 
 ## Roadmap status
 
@@ -102,12 +161,12 @@ This is capacity evidence, not an HTTP speedup. Do not repeat unchanged timings.
 | 5 | Verified | #274 applications, compiler reports/growth, HTTP load; all gates | Recorded observation limits apply |
 | 6 | In progress | #275 borrowed types; application speed/memory targets; all gates | Four noisy growth comparisons |
 | 7 | In progress | #276 nested lifetime borrowing, gains, diagnosis; all gates | Original noisy/RSS acceptance |
-| 8 | In progress | #277 static/service-execution censuses; all delivery gates and log audit | HTTP/callable attribution, selected proof and measurements |
+| 8 | In progress | HTTP/callable attribution; constructed-value proof; all timing/compiler targets; lifetime and HTTP checks | Four original RSS limits and final delivery gates |
 
-## Current checkout and local limits
+## #278 checkout recovery and local limits
 
-The root checkout was 133 commits behind `origin/main`; it is now fast-forwarded
-and the cleanup is on `finish-delivery-hygiene`. Current main already ignored
+The root checkout was 133 commits behind `origin/main`; #278 fast-forwarded it
+and completed recovery on `finish-delivery-hygiene`. That main already ignored
 `__pycache__/`. The follow-up adds standalone `*.pyc`/`*.pyo` and `/.worktrees/`,
 so nested worktrees no longer depend on a private `.git/info/exclude` entry.
 Source files, fixtures and measurement reports remain eligible for tracking.
@@ -116,7 +175,7 @@ Source files, fixtures and measurement reports remain eligible for tracking.
 sandbox first denied process sampling; with sampling permitted, the guard stopped
 because free disk is below 64 GiB (about 44 GiB observed). No limits were raised
 and no local build, test suite or benchmark ran. Validation belongs on runners.
-The follow-up's own final-head gates remain pending.
+The follow-up's final-head runner gates and complete-log audit now pass.
 
 Initial head `16fad7b80e6b08f029223b8d8ef6ee1284f9ec80`, production run
 `46020925329`, exposed Rust 1.100's `needless_range_loop` diagnostic in recording
@@ -125,7 +184,8 @@ scope selection and a Windows AMD64 compiler/header mismatch. The loop now uses
 had standalone Clang 20.1.8 and VS 2026 headers requiring Clang 22 or newer;
 setup now selects Visual Studio's bundled AMD64 Clang explicitly. Native ARM64
 keeps its image compiler. Both target-specific C and C++ variables are explicit.
-These repairs still require final-head runner verification.
+Both repairs pass the full final-head native matrix, including standalone
+compiler packaging and the interpreter/native semantic controls.
 
 The old untracked root `docs/measurements/compiler-abort.md` was preserved at
 `/private/tmp/fwp-finish-wip-2026-11-27/compiler-abort.original.md` before checkout;
@@ -148,6 +208,6 @@ Keep 64 GiB free, generated targets below 2 GiB, workload RSS below 1 GiB and th
 180-second guard deadline. Preserve old worktrees,
 stash `451bbf713d451f2d62d80fd7676839404875846a` and backup
 `540b0682408d751afb6e439d58a3b887bdcba373`.
-Source-review notes remain at `/tmp/fwp-resource-cost-review-next.md`; the frozen
-ordinary service C is `/tmp/fwp-nested-current-source/nested-time-peers/original.c`.
+Earlier temporary source-review files are no longer present. The saved census
+archive and selected service/HTTP C are at `/private/tmp/fwp-frame-attribution`.
 Do not download full compiler/binary archives locally or raise transfer limits.

@@ -65,7 +65,39 @@ escaped-link : () -> Option[WeakChannel[WeakLink]] ! {Async}
 escaped-link = const 1 | link-channel | post-link | tap channel.close
     | channel.recv | option.map unlink
 
+# New records and returned aliases may reuse an enclosing lifetime owner.
+# The weak observation must still see the original source frame's channel.
+OwnerBox = { owner: Channel[I64], label: I64 }
+box-owner : Channel[I64] -> OwnerBox
+box-owner = fn owner -> { owner = owner, label = 7 }
+through-box : OwnerBox -> OwnerBox
+through-box = fn box -> let nested = { value = box } in nested | .value
+choose-box : Bool -> OwnerBox -> OwnerBox
+choose-box = fn flag -> fn box -> flag | match
+    True -> { owner = box | .owner, label = 1 }
+    False -> { owner = box | .owner, label = 2 }
+observe-box : OwnerBox -> Bool ! {Async}
+observe-box = fn box ->
+    let weak = box | .owner | channel.downgrade
+    in let discarded = ignore box
+    in channel.upgrade weak | option.is-some
+escaped-box : () -> WeakChannel[I64] ! {Async}
+escaped-box = const 1 | word-channel | box-owner | through-box | .owner | channel.downgrade
+
+# A saturated factory returns a new strong capture. It cannot inherit a proof
+# merely from the argument () or the callback's arrow type.
+capture-owner : Channel[I64] -> () -> Bool ! {Async}
+capture-owner = fn owner -> fn _ -> alive owner
+returned-owner : () -> { callback: () -> Bool ! {Async} } ! {Async}
+returned-owner = fn _ ->
+    let owner = word-channel 1
+    in { callback = capture-owner owner }
+
 main = [
+    word-channel 1 | box-owner | through-box | choose-box True | observe-box | echo,
+    word-channel 1 | box-owner | through-box | choose-box False | observe-box | echo,
+    escaped-box () | channel.upgrade | option.is-none | echo,
+    (returned-owner () | .callback) () | echo,
     link-channel 1 | closed-link | echo,
     escaped-link () | option.map (channel.upgrade | option.is-none) | echo,
     word-channel 1 | weak-pair | uncurry eq | echo,

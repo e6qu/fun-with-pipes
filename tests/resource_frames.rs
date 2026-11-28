@@ -240,6 +240,43 @@ main = "PATH" | file.open | attempt give-error | match
     Err _ -> file.read-all | second file.close | .0 | echo
 "#,
         ),
+        (
+            "returned-record",
+            r#"pack : File -> {file: File, marker: I64}
+pack = fn file -> let record = {file = file, marker = 7} in record
+through : {file: File, marker: I64} -> {nested: {file: File, marker: I64}}
+through = fn record -> let result = {nested = record} in result
+main = "PATH" | file.open | pack | through | .nested.file
+    | file.read-all | second file.close | .0 | echo
+"#,
+        ),
+        (
+            "branch-record-true",
+            r#"choose : (Bool, File) -> {file: File}
+choose = match
+    (True, _) -> make {file = id}
+    (False, _) -> make {file = id}
+main = "PATH" | file.open | curry id True | choose | .file
+    | file.read-all | second file.close | .0 | echo
+"#,
+        ),
+        (
+            "branch-record-false",
+            r#"choose : (Bool, File) -> {file: File}
+choose = match
+    (True, _) -> make {file = id}
+    (False, _) -> make {file = id}
+main = "PATH" | file.open | curry id False | choose | .file
+    | file.read-all | second file.close | .0 | echo
+"#,
+        ),
+        (
+            "returned-factory",
+            r#"factory : () -> {file: File} ! {FileIO, Error[IoError]}
+factory = fn _ -> let file = file.open "PATH" in {file = file}
+main = factory () | .file | file.read-all | second file.close | .0 | echo
+"#,
+        ),
     ] {
         let src = dir.0.join(format!("{name}.fwp"));
         std::fs::write(&src, body.replace("PATH", &data.to_string_lossy())).unwrap();

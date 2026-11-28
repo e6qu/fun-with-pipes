@@ -4,6 +4,7 @@ import copy
 import unittest
 
 from nested_resource_timing import LABELS, order, summarize
+from resource_value_contract import VALUE_REFERENCE
 from weak_callback_timing import ROUNDS
 
 
@@ -31,6 +32,13 @@ class Timing(unittest.TestCase):
         self.assertFalse(result['qualified'])
         self.assertFalse(result['timingTargetMet'])
         self.assertFalse(summarize(self.samples(.1), 4096)['service']['qualified'])
+
+    def test_new_reference_has_its_own_frozen_target(self):
+        self.assertTrue(summarize(self.samples(.94), 4096, VALUE_REFERENCE)['service']['timingTargetMet'])
+        self.assertFalse(summarize(self.samples(.96), 4096, VALUE_REFERENCE)['service']['timingTargetMet'])
+        self.assertFalse(summarize(self.samples(.94), 4096)['service']['timingTargetMet'])
+        with self.assertRaises(AssertionError):
+            summarize(self.samples(.8), 4096, 'unknown-reference')
 
     def test_schedule_and_duration_corruption_are_rejected(self):
         rows = self.samples(.8)

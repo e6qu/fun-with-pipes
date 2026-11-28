@@ -75,19 +75,28 @@ retain one noisy runtime comparison, one noisy compiler comparison and four ARM6
 RSS misses. The separate memory diagnostic does not explain or replace those misses.
 All 34 HTTP load trials pass; they are capacity evidence, not an HTTP speedup.
 
-**Next: count unnecessary plain-data holds in mixed resource-lifetime records.**
+**Current delivery: preserve enclosing resource protection through constructed values.**
 The [investigation](docs/measurements/resource-field-costs.md) first matches exact
 compiler contexts to unchanged generated C, then counts executed holds in the
 queued service and HTTP endpoint. [Both native static censuses pass](docs/measurements/resource-field-census-2026-11-10/README.md),
 identifying five service slots and twenty HTTP slots. [Executed service counts](docs/measurements/resource-field-holds-2026-11-10/README.md)
-attribute only 1.35–1.70% of successful retains to those plain fields. Measure HTTP
-and callable-field/whole-frame work before selecting a field-only change; capture
-origins require their own bounded proof. Select a bounded field proof only after those
-counts show worthwhile work; freeze ordinary measurement targets before changing
-production code. Keep original disposal timing and ordinary argument ownership.
+attribute only 1.35–1.70% of successful retains to those plain fields. The new
+[native HTTP/callable/frame attribution](docs/measurements/resource-field-costs.md#selected-extension-carry-enclosing-lifetime-protection-through-values)
+passes on both architectures: whole original frames account for 21.6% of service
+and 24.3% of HTTP cleanup registrations, while plain HTTP fields contribute only
+0.09% of successful retains. A field-only optimization remains rejected.
+The selected extension carries surviving owner provenance through new records,
+known partial captures and returned aliases. Its correctness, count, ordinary
+timing, memory and compiler-cost targets were frozen before implementation.
+The [measured extension](docs/measurements/resource-value-costs-2026-11-27/README.md)
+passes all 32 service timing comparisons (5–16% less large-case time), all 64
+repaired compiler-cost comparisons and focused lifetime/count/HTTP checks.
+Four original process-RSS limits miss 5%; page walks do not explain those misses
+or replace their acceptance. Keep step 8 open and finish the full delivery matrix.
+Original disposal timing and ordinary argument ownership remain intact.
 
-The 4,096-message full-delivery service still takes 14.93–16.78 times C's time
-and 4.32–5.34 times Swift's. Different representations and synchronization matter;
+The contemporary 4,096-message full-delivery service takes 13.26–15.73 times C's
+time and 4.00–4.78 times Swift's. Different representations and synchronization matter;
 the entire gap is not an ARC cost. Preserve explicit profile limitations and do
 not repeat unchanged timings to obtain qualification. Keep the experimental
 local-pair helper and public gradient API unchanged without representative evidence.
