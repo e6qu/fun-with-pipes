@@ -1,14 +1,26 @@
 #define _GNU_SOURCE
 #include <signal.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
+static void *sleeper(void *argument) {
+    (void)argument;
+    sleep(10);
+    return NULL;
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) return 110;
     if (!strcmp(argv[1], "sleep")) { sleep(10); return 0; }
+    if (!strcmp(argv[1], "thread")) {
+        pthread_t worker;
+        if (pthread_create(&worker, NULL, sleeper, NULL)) return 119;
+        return pthread_join(worker, NULL) ? 120 : 0;
+    }
     if (!strcmp(argv[1], "fork")) {
         pid_t child = fork();
         if (child < 0) return 111;

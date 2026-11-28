@@ -8,7 +8,11 @@ own child at fork, exec and exit and preserves ordinary untraced controls.
 **Next: verify native lifecycle/failure controls, then collect and reconstruct
 all fixed service observations on both architectures.** Native control run
 `46159844843` passes all seven actual lifecycle/failure tests on both hosts;
-raw-reconstruction controls are being added before service collection.
+raw-reconstruction run `46160161430` passes all nine tests on both hosts.
+Fixed service collection `46160536010` is running at `d14c9c0b` in the original
+pinned image. The protocol was frozen at `4baf1339`, retained by immutable tag
+`roadmap/exec-memory-contract-2026-11-28`. A tenth control explicitly checks
+unexpected thread creation; it awaits native verification.
 The original four 5% RSS misses remain open; this work
 does not repeat timing acceptance or recover the original processes.
 

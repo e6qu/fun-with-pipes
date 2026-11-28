@@ -89,7 +89,7 @@ def main():
     env.update(LC_ALL='C', FWP_LTO='0', FWP_STACK='1')
     commands = []
     for name in ('launch', 'control'):
-        command = ['gcc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-fno-lto',
+        command = ['gcc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-fno-lto', '-pthread',
                    '-march=' + {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.arch],
                    str(ROOT / 'tests/fixtures' / f'exec_memory_{name}.c'), '-o', str(folder / name)]
         subprocess.run(command, check=True, env=env)

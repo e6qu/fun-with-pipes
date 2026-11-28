@@ -23,7 +23,7 @@ class ExecMemory(unittest.TestCase):
         cls.launcher = cls.root / 'launcher'
         cls.control = cls.root / 'control'
         for source, output in (('exec_memory_launch.c', cls.launcher), ('exec_memory_control.c', cls.control)):
-            subprocess.run(['gcc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
+            subprocess.run(['gcc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-pthread',
                             str(ROOT / 'tests/fixtures' / source), '-o', str(output)], check=True)
 
     @classmethod
@@ -81,6 +81,11 @@ class ExecMemory(unittest.TestCase):
     def test_extra_process_is_rejected_and_reaped(self):
         with self.assertRaisesRegex(AssertionError, 'unexpected process or thread'):
             self.run_control('fork')
+        self.assert_reaped(self.root / self.id().split('.')[-1])
+
+    def test_extra_thread_is_rejected_and_reaped(self):
+        with self.assertRaisesRegex(AssertionError, 'unexpected process or thread'):
+            self.run_control('thread')
         self.assert_reaped(self.root / self.id().split('.')[-1])
 
     def test_signals_are_delivered_and_failure_is_rejected(self):
